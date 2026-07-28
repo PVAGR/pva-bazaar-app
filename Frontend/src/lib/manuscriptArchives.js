@@ -53,23 +53,95 @@ export async function uploadToInternetArchive(file, identifier) {
 }
 
 /**
- * Storacha upload is disabled. Throws immediately.
+ * Upload a file to Storacha (IPFS + Filecoin) via the backend proxy.
  */
-export async function uploadToStoracha(file, filename) {
-  throw new Error('Storacha upload is temporarily disabled');
+export async function uploadToStoracha(file, identifier) {
+  console.log('[ARCHIVES] Uploading via Storacha proxy:', { identifier, size: file.size });
+
+  let manuscriptMarkdown;
+  try {
+    manuscriptMarkdown = await file.text();
+  } catch (_e) {
+    manuscriptMarkdown = '';
+  }
+
+  const body = JSON.stringify({
+    identifier,
+    filename: file.name || `${identifier}.md`,
+    manuscriptMarkdown,
+  });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+  try {
+    const res = await fetch(`${getApi()}/book-publishing/storacha-upload-url`, {
+      method: 'POST',
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      body,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Storacha upload failed (${res.status})`);
+    }
+    const json = await res.json();
+    console.log('[ARCHIVES] Storacha upload succeeded:', json.url);
+    return { url: json.url, cid: json.cid };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
- * Upload a manuscript to Internet Archive via the backend proxy.
- * Throws if the upload fails — the caller catches and falls back
- * to sending manuscriptMarkdown directly to the backend.
+ * Upload a file to Pinata IPFS via the backend proxy.
+ */
+export async function uploadToPinata(file, identifier) {
+  console.log('[ARCHIVES] Uploading via Pinata proxy:', { identifier, size: file.size });
+
+  let manuscriptMarkdown;
+  try {
+    manuscriptMarkdown = await file.text();
+  } catch (_e) {
+    manuscriptMarkdown = '';
+  }
+
+  const body = JSON.stringify({
+    identifier,
+    filename: file.name || `${identifier}.md`,
+    manuscriptMarkdown,
+  });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+  try {
+    const res = await fetch(`${getApi()}/book-publishing/pinata-upload-proxy`, {
+      method: 'POST',
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      body,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Pinata upload failed (${res.status})`);
+    }
+    const json = await res.json();
+    console.log('[ARCHIVES] Pinata upload succeeded:', json.url);
+    return { url: json.url, hash: json.hash };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Upload a manuscript to all three archive angles (IA + Storacha + Pinata)
+ * in parallel. Each failure is logged but does not block the others.
  *
  * @param {File|Blob} file - The manuscript file
- * @param {string} slug - Book slug used as IA identifier
- * @returns {Promise<{archiveOrgUrl: string, ipfsCid: null, ipfsUrl: null, format: string, fileSize: number, wordCount: number}>}
+ * @param {string} slug - Book slug used as identifier
+ * @returns {Promise<{archiveOrgUrl: string, storachaUrl: string, pinataUrl: string, ipfsCid: string, ipfsUrl: string, format: string, fileSize: number, wordCount: number}>}
  */
 export async function uploadManuscriptToArchives(file, slug) {
-  console.log('[ARCHIVES] Starting IA proxy upload for:', slug, 'size:', file.size, 'type:', file.type);
+  console.log('[ARCHIVES] Starting parallel archive upload for:', slug, 'size:', file.size, 'type:', file.type);
   const fileSize = file.size || 0;
 
   let wordCount = 0;
@@ -78,9 +150,44 @@ export async function uploadManuscriptToArchives(file, slug) {
     wordCount = text.split(/\s+/).filter(Boolean).length;
   } catch (_e) {}
 
-  const archiveOrgUrl = await uploadToInternetArchive(file, slug);
+  const [iaResult, storachaResult, pinataResult] = await Promise.allSettled([
+    uploadToInternetArchive(file, slug).then(url => ({ url })),
+    uploadToStoracha(file, slug).then(r => r),
+    uploadToPinata(file, slug).then(r => r),
+  ]);
 
-  return { archiveOrgUrl, ipfsCid: null, ipfsUrl: null, format: 'md', fileSize, wordCount };
+  let archiveOrgUrl = '';
+  let storachaUrl = '';
+  let pinataUrl = '';
+  let ipfsCid = '';
+  let ipfsUrl = '';
+
+  if (iaResult.status === 'fulfilled') {
+    archiveOrgUrl = iaResult.value.url;
+    console.log('[ARCHIVES] IA upload succeeded:', archiveOrgUrl);
+  } else {
+    console.warn('[ARCHIVES] IA upload failed:', iaResult.reason?.message);
+  }
+
+  if (storachaResult.status === 'fulfilled') {
+    storachaUrl = storachaResult.value.url;
+    ipfsCid = storachaResult.value.cid || '';
+    ipfsUrl = storachaUrl;
+    console.log('[ARCHIVES] Storacha upload succeeded:', storachaUrl);
+  } else {
+    console.warn('[ARCHIVES] Storacha upload failed:', storachaResult.reason?.message);
+  }
+
+  if (pinataResult.status === 'fulfilled') {
+    pinataUrl = pinataResult.value.url;
+    if (!ipfsCid) ipfsCid = pinataResult.value.hash || '';
+    if (!ipfsUrl) ipfsUrl = pinataUrl;
+    console.log('[ARCHIVES] Pinata upload succeeded:', pinataUrl);
+  } else {
+    console.warn('[ARCHIVES] Pinata upload failed:', pinataResult.reason?.message);
+  }
+
+  return { archiveOrgUrl, storachaUrl, pinataUrl, ipfsCid, ipfsUrl, format: 'md', fileSize, wordCount };
 }
 
 /**
@@ -96,6 +203,8 @@ export async function fetchManuscriptFromMirrors(book) {
   const mirrorUrls = [
     book.mirrors?.archiveOrg,
     book.mirrors?.ipfs,
+    book.mirrors?.storacha,
+    book.mirrors?.pinata,
     book.manuscriptUrl,
   ].filter(Boolean);
 

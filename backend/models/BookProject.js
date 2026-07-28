@@ -45,6 +45,8 @@ const bookProjectSchema = new mongoose.Schema(
         archiveOrg: { type: String, default: '' },
         ipfs: { type: String, default: '' },
         ipfsCid: { type: String, default: '' },
+        storacha: { type: String, default: '' },
+        pinata: { type: String, default: '' },
         github: { type: String, default: '' },
       },
       default: {},

@@ -351,7 +351,7 @@ export default function BookPublishingPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, uploading: false });
+  const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
@@ -775,7 +775,7 @@ export default function BookPublishingPage() {
         if (fileToUpload) {
           const slug = form.slug || `book-${Date.now()}`;
           console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
-          setArchiveStatus({ ia: false, ipfs: false, uploading: true });
+          setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
           const ARCHIVE_TIMEOUT_MS = 60000;
           const archiveTimeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
@@ -792,13 +792,15 @@ export default function BookPublishingPage() {
             setArchiveStatus({
               ia: Boolean(archiveData.archiveOrgUrl),
               ipfs: Boolean(archiveData.ipfsUrl),
+              storacha: Boolean(archiveData.storachaUrl),
+              pinata: Boolean(archiveData.pinataUrl),
               uploading: false,
             });
           } catch (archiveErr) {
             console.warn('[PUBLISH-FLOW] Archive upload failed or timed out:', archiveErr.message);
             console.warn('[PUBLISH-FLOW] Falling back to direct backend upload with manuscriptMarkdown');
             archiveData = null;
-            setArchiveStatus({ ia: false, ipfs: false, uploading: false });
+            setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
             // Continue — will fall back to sending manuscriptMarkdown to backend
           }
         }
@@ -825,6 +827,8 @@ export default function BookPublishingPage() {
             archiveOrg: archiveData.archiveOrgUrl || '',
             ipfs: archiveData.ipfsUrl || '',
             ipfsCid: archiveData.ipfsCid || '',
+            storacha: archiveData.storachaUrl || '',
+            pinata: archiveData.pinataUrl || '',
           }));
           if (archiveData.format) payload.append('format', archiveData.format);
           if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
@@ -1299,12 +1303,12 @@ export default function BookPublishingPage() {
             <div className="book-publish__editorActions">
               {archiveStatus.uploading && (
                 <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.8, marginBottom: '0.5rem' }}>
-                  Uploading to permanent archives… {archiveStatus.ia ? '✓ IA' : '○ IA'} · {archiveStatus.ipfs ? '✓ IPFS' : '○ IPFS'}
+                  Uploading to permanent archives… {archiveStatus.ia ? '✓ IA' : '○ IA'} · {archiveStatus.storacha ? '✓ Storacha' : '○ Storacha'} · {archiveStatus.pinata ? '✓ Pinata' : '○ Pinata'}
                 </div>
               )}
-              {!archiveStatus.uploading && (archiveStatus.ia || archiveStatus.ipfs) && (
+              {!archiveStatus.uploading && (archiveStatus.ia || archiveStatus.storacha || archiveStatus.pinata) && (
                 <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.7, marginBottom: '0.5rem' }}>
-                  Archives: {archiveStatus.ia ? '✓ Internet Archive' : '✗ IA'} · {archiveStatus.ipfs ? '✓ IPFS/Filecoin' : '✗ IPFS'}
+                  Archives: {archiveStatus.ia ? '✓ Internet Archive' : '✗ IA'} · {archiveStatus.storacha ? '✓ Storacha (IPFS/Filecoin)' : '✗ Storacha'} · {archiveStatus.pinata ? '✓ Pinata (IPFS)' : '✗ Pinata'}
                 </div>
               )}
               <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving}>

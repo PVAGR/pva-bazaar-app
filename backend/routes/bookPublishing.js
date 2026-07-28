@@ -1159,14 +1159,98 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
   }
 });
 
-// ── Storacha (IPFS + Filecoin) upload delegation ────────────────────────────
+// ── Storacha (IPFS + Filecoin) upload proxy ─────────────────────────────────
 router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res) => {
-  console.log('[STORACHA] Request received — Storacha temporarily disabled');
-  return res.status(503).json({
-    ok: false,
-    error: 'Storacha upload is temporarily disabled. Internet Archive upload is still available.',
-    disabled: true,
-  });
+  try {
+    console.log('[STORACHA] Request received', { contentType: req.headers['content-type'] });
+
+    const file = req.files?.manuscriptFile?.[0] || req.file;
+    const bodyMarkdown = req.body?.manuscriptMarkdown;
+    const fileBuffer = file?.buffer || (bodyMarkdown ? Buffer.from(bodyMarkdown, 'utf8') : null);
+    const filename = sanitizeText(req.body?.filename || file?.originalname || 'manuscript.md', 200);
+
+    if (!fileBuffer) {
+      return res.status(400).json({ ok: false, error: 'No manuscript content provided' });
+    }
+
+    const apiKey = process.env.STORACHA_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ ok: false, error: 'Storacha API key not configured' });
+    }
+
+    // Storacha upload API
+    const FormData = require('form-data');
+    const formData = new FormData();
+    formData.append('file', fileBuffer, { filename, contentType: 'text/markdown' });
+
+    const response = await axios.post('https://api.storacha.network/upload', formData, {
+      headers: {
+        ...formData.getHeaders(),
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      timeout: 30000,
+      maxBodyLength: Infinity,
+    });
+
+    const cid = response.data?.cid || response.data?.hash || response.data?.IpfsHash || '';
+    const gatewayUrl = `https://w3s.link/ipfs/${cid}`;
+
+    console.log('[STORACHA] Upload succeeded:', { cid, gatewayUrl });
+    return res.json({ ok: true, url: gatewayUrl, cid, filename });
+  } catch (error) {
+    const detail = error.response?.data ? JSON.stringify(error.response.data).slice(0, 500) : error.message?.slice(0, 300) || String(error);
+    console.error('[STORACHA] Upload failed:', detail);
+    return res.status(502).json({ ok: false, error: `Storacha upload failed: ${detail}` });
+  }
+});
+
+// ── Pinata IPFS upload proxy ─────────────────────────────────────────────────
+router.post('/pinata-upload-proxy', authenticateBookPublishing, async (req, res) => {
+  try {
+    console.log('[PINATA] Request received', { contentType: req.headers['content-type'] });
+
+    const file = req.files?.manuscriptFile?.[0] || req.file;
+    const bodyMarkdown = req.body?.manuscriptMarkdown;
+    const fileBuffer = file?.buffer || (bodyMarkdown ? Buffer.from(bodyMarkdown, 'utf8') : null);
+    const filename = sanitizeText(req.body?.filename || file?.originalname || 'manuscript.md', 200);
+
+    if (!fileBuffer) {
+      return res.status(400).json({ ok: false, error: 'No manuscript content provided' });
+    }
+
+    if (!process.env.PINATA_API_KEY || !process.env.PINATA_API_SECRET) {
+      return res.status(503).json({ ok: false, error: 'Pinata API credentials not configured' });
+    }
+
+    const FormData = require('form-data');
+    const formData = new FormData();
+    formData.append('file', fileBuffer, { filename, contentType: 'text/markdown' });
+    formData.append('pinataMetadata', JSON.stringify({
+      name: filename,
+      keyvalues: { uploadedBy: 'pvabazaar-book-publishing', timestamp: new Date().toISOString() },
+    }));
+    formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
+
+    const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
+      headers: {
+        ...formData.getHeaders(),
+        pinata_api_key: process.env.PINATA_API_KEY,
+        pinata_secret_api_key: process.env.PINATA_API_SECRET,
+      },
+      timeout: 30000,
+      maxBodyLength: Infinity,
+    });
+
+    const hash = response.data?.IpfsHash || '';
+    const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${hash}`;
+
+    console.log('[PINATA] Upload succeeded:', { hash, gatewayUrl });
+    return res.json({ ok: true, url: gatewayUrl, hash, filename });
+  } catch (error) {
+    const detail = error.response?.data ? JSON.stringify(error.response.data).slice(0, 500) : error.message?.slice(0, 300) || String(error);
+    console.error('[PINATA] Upload failed:', detail);
+    return res.status(502).json({ ok: false, error: `Pinata upload failed: ${detail}` });
+  }
 });
 
 // ── Diagnostic: test-publish endpoint ───────────────────────────────────────
@@ -1178,6 +1262,7 @@ router.get('/test-publish', (req, res) => {
     env: {
       ia: !!process.env.IA_ACCESS_KEY,
       storacha: !!process.env.STORACHA_API_KEY,
+      pinata: !!(process.env.PINATA_API_KEY && process.env.PINATA_API_SECRET),
       mongodb: !!process.env.MONGODB_URI,
       nodeEnv: process.env.NODE_ENV || 'unknown',
     },
@@ -1206,6 +1291,7 @@ router.post('/test-publish-direct', authenticateBookPublishing, bookUpload, asyn
       env: {
         ia: !!process.env.IA_ACCESS_KEY,
         storacha: !!process.env.STORACHA_API_KEY,
+        pinata: !!(process.env.PINATA_API_KEY && process.env.PINATA_API_SECRET),
         mongodb: !!process.env.MONGODB_URI,
       },
     });
