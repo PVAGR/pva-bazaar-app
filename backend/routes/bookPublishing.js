@@ -1016,6 +1016,7 @@ function lightweightPublicSummary(book) {
     wordCount: book.wordCount || 0,
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || null,
+    manuscriptMarkdown: book.manuscriptMarkdown || '',
     manuscriptPdfUrl: book.manuscriptPdfUrl || '',
     manuscriptDocxUrl: book.manuscriptDocxUrl || '',
     manuscriptHtml: book.manuscriptHtml || '',
