@@ -1590,12 +1590,14 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     const archiveFormat = sanitizeText(req.body?.format || '', 10);
     const archiveFileSize = parseInt(req.body?.fileSize, 10) || 0;
 
-    if (mirrors.archiveOrg || mirrors.ipfs) {
+    if (mirrors.archiveOrg || mirrors.ipfs || mirrors.storacha || mirrors.pinata) {
       book.mirrors = {
         archiveOrg: sanitizeText(mirrors.archiveOrg || '', 500),
         ipfs: sanitizeText(mirrors.ipfs || '', 500),
         ipfsCid: sanitizeText(mirrors.ipfsCid || '', 200),
         github: sanitizeText(mirrors.github || '', 500),
+        storacha: sanitizeText(mirrors.storacha || '', 500),
+        pinata: sanitizeText(mirrors.pinata || '', 500),
       };
       if (archiveFormat) book.format = archiveFormat;
       if (archiveFileSize > 0) book.fileSize = archiveFileSize;
