@@ -838,8 +838,7 @@ export default function BookPublishingPage() {
         payload.append('audience', form.audience);
         payload.append('language', form.language);
         
-        // Send manuscript text if available, otherwise send Cloudinary URL
-        // If archive upload succeeded, send archive URLs instead of manuscript text
+        // Send archive mirrors if archive upload succeeded
         if (archiveData) {
           if (archiveData.archiveOrgUrl) payload.append('manuscriptUrl', archiveData.archiveOrgUrl);
           payload.append('mirrors', JSON.stringify({
@@ -851,8 +850,10 @@ export default function BookPublishingPage() {
           }));
           if (archiveData.format) payload.append('format', archiveData.format);
           if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
-          // Do NOT append manuscriptMarkdown — it now lives in archives
-        } else if (form.manuscriptMarkdown) {
+        }
+        // Always send manuscriptMarkdown as fallback (reader page uses this
+        // when mirrors are unavailable, e.g. during IA indexing delay)
+        if (form.manuscriptMarkdown) {
           payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         } else if (manuscriptResult) {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);

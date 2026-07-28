@@ -1607,11 +1607,9 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
         book.manuscriptUrl = book.mirrors.archiveOrg;
       }
 
-      // Clear manuscriptMarkdown from DB — the text now lives in archives
-      if (book.manuscriptMarkdown) {
-        console.log('[book-publishing] Archive mirrors present; manuscriptMarkdown cleared from DB record');
-        book.manuscriptMarkdown = '';
-      }
+      // Keep manuscriptMarkdown as local fallback even when archives exist.
+      // The reader page tries mirrors first and falls back to manuscriptMarkdown,
+      // which is important during the ~2 min IA indexing delay after first publish.
     }
 
     if (!book.manuscriptMarkdown && !book.manuscriptUrl && !book.mirrors?.archiveOrg && !book.mirrors?.ipfs) {
