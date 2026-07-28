@@ -1178,21 +1178,45 @@ router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res)
       return res.status(503).json({ ok: false, error: 'Storacha API key not configured' });
     }
 
-    // Storacha upload API
+    // Storacha / web3.storage upload API
     const FormData = require('form-data');
     const formData = new FormData();
     formData.append('file', fileBuffer, { filename, contentType: 'text/markdown' });
 
-    const response = await axios.post('https://api.storacha.network/upload', formData, {
-      headers: {
-        ...formData.getHeaders(),
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      timeout: 30000,
-      maxBodyLength: Infinity,
-    });
+    const storachaEndpoints = [
+      'https://api.web3.storage/upload',
+      'https://up.storacha.network/upload',
+    ];
 
-    const cid = response.data?.cid || response.data?.hash || response.data?.IpfsHash || '';
+    let cid = '';
+    let lastError = '';
+
+    for (const endpoint of storachaEndpoints) {
+      try {
+        console.log('[STORACHA] Trying endpoint:', endpoint);
+        const response = await axios.post(endpoint, formData, {
+          headers: {
+            ...formData.getHeaders(),
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          timeout: 15000,
+          maxBodyLength: Infinity,
+        });
+        cid = response.data?.cid || response.data?.hash || response.data?.IpfsHash || '';
+        if (cid) {
+          console.log('[STORACHA] Upload succeeded via:', endpoint, { cid });
+          break;
+        }
+      } catch (err) {
+        lastError = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : err.message?.slice(0, 200) || String(err);
+        console.warn('[STORACHA] Endpoint failed:', endpoint, lastError);
+      }
+    }
+
+    if (!cid) {
+      return res.status(502).json({ ok: false, error: `All Storacha endpoints failed: ${lastError}` });
+    }
+
     const gatewayUrl = `https://w3s.link/ipfs/${cid}`;
 
     console.log('[STORACHA] Upload succeeded:', { cid, gatewayUrl });
