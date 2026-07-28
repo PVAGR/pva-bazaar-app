@@ -814,7 +814,7 @@ function bookSummary(book, { publicView = false } = {}) {
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || null,
     createdAt: book.createdAt || null,
-    manuscriptMarkdown: publicView ? undefined : book.manuscriptMarkdown || '',
+    manuscriptMarkdown: book.manuscriptMarkdown || (publicView ? undefined : ''),
     manuscriptUrl: book.manuscriptUrl || '',
     manuscriptPdfUrl: book.manuscriptPdfUrl || '',
     manuscriptDocxUrl: book.manuscriptDocxUrl || '',
