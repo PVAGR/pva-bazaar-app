@@ -1316,7 +1316,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
             'x-archive-meta-collection': 'opensource',
             'x-archive-meta-mediatype': 'texts',
           },
-          timeout: 25000,
+          timeout: 60000,
         };
         const iaReq = https.request(reqOpts, (iaRes) => {
           let body = '';
