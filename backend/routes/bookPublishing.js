@@ -635,7 +635,7 @@ async function listPublishedBooks() {
   }
 
   const mongoBooks = await BookProject.find({ status: 'published' })
-    .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
+    .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt mirrors format fileSize manuscriptUrl frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
     .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
     .lean();
 
