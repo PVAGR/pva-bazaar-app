@@ -351,6 +351,8 @@ export default function BookPublishingPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [savedBookSlug, setSavedBookSlug] = useState('');
+  const [formErrors, setFormErrors] = useState({});
   const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
@@ -590,7 +592,14 @@ export default function BookPublishingPage() {
 
   function handleFieldChange(event) {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'title' && !prev.slug && !prev.bookId) {
+        next.slug = value.toLowerCase().replace(/['"]+/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || prev.slug;
+      }
+      return next;
+    });
+    setFormErrors((prev) => ({ ...prev, [name]: '' }));
   }
 
   function handleCoverChange(event, setFile, setPreview) {
@@ -669,6 +678,16 @@ export default function BookPublishingPage() {
     setSaving(true);
     setError('');
     setSuccess('');
+    setSavedBookSlug('');
+    const errors = {};
+    if (!form.title.trim()) errors.title = 'Title is required';
+    if (!form.manuscriptMarkdown.trim() && !manuscriptFile) errors.manuscriptMarkdown = 'Manuscript content is required';
+    if (Object.keys(errors).length) {
+      setFormErrors(errors);
+      setSaving(false);
+      setError('Please fix the highlighted fields before saving.');
+      return;
+    }
     const requestUrl = getBookPublishRequestUrl();
     const authToken = (() => {
       try {
@@ -776,7 +795,7 @@ export default function BookPublishingPage() {
           const slug = form.slug || `book-${Date.now()}`;
           console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
           setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
-          const ARCHIVE_TIMEOUT_MS = 60000;
+          const ARCHIVE_TIMEOUT_MS = 30000;
           const archiveTimeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
           );
@@ -892,6 +911,7 @@ export default function BookPublishingPage() {
           return [saved, ...withoutDuplicate].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
         });
         setSelectedBookId(saved.id);
+        setSavedBookSlug(publish ? saved.slug || '' : '');
         setSuccess(
           publish
             ? `"${saved.title}" is published online and visible on the public bookshelf.`
@@ -1056,8 +1076,21 @@ export default function BookPublishingPage() {
             </div>
 
             {loading ? <p className="book-publish__muted">Loading your books…</p> : null}
-            {error ? <div className="book-publish__error" role="alert">{error}</div> : null}
-            {success ? <div className="book-publish__success" role="status">{success}</div> : null}
+            {error ? (
+              <div className="book-publish__error" role="alert">
+                <strong>Error:</strong> {error}
+              </div>
+            ) : null}
+            {success ? (
+              <div className="book-publish__success" role="status">
+                <strong>{success}</strong>
+                {savedBookSlug ? (
+                  <Link className="book-publish__button book-publish__button--primary" to={`/books/read/${savedBookSlug}`} style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+                    View your published book
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="book-publish__list">
               {books.length ? books.map((book) => (
@@ -1105,9 +1138,10 @@ export default function BookPublishingPage() {
             </div>
 
             <div className="book-publish__form">
-              <label>
+              <label className={formErrors.title ? 'book-publish__field--error' : ''}>
                 Title
                 <input name="title" value={form.title} onChange={handleFieldChange} placeholder="Your book title" />
+                {formErrors.title ? <span className="book-publish__fieldError">{formErrors.title}</span> : null}
               </label>
               <label>
                 Subtitle
@@ -1212,7 +1246,7 @@ export default function BookPublishingPage() {
                 {manuscriptHint}
               </p>
 
-              <label>
+              <label className={formErrors.manuscriptMarkdown ? 'book-publish__field--error' : ''}>
                 Manuscript content
                 <textarea
                   name="manuscriptMarkdown"
@@ -1221,6 +1255,7 @@ export default function BookPublishingPage() {
                   rows={18}
                   placeholder={`# Chapter One\nYour manuscript text here.\n\n## Another section\nMore writing...`}
                 />
+                {formErrors.manuscriptMarkdown ? <span className="book-publish__fieldError">{formErrors.manuscriptMarkdown}</span> : null}
               </label>
 
               <div className="book-publish__formatSection">
@@ -1303,12 +1338,18 @@ export default function BookPublishingPage() {
             <div className="book-publish__editorActions">
               {archiveStatus.uploading && (
                 <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.8, marginBottom: '0.5rem' }}>
-                  Uploading to permanent archives… {archiveStatus.ia ? '✓ IA' : '○ IA'} · {archiveStatus.storacha ? '✓ Storacha' : '○ Storacha'} · {archiveStatus.pinata ? '✓ Pinata' : '○ Pinata'}
+                  <span style={{ fontWeight: 700 }}>Uploading to permanent archives…</span>
+                  <span style={{ marginLeft: '0.5rem' }}>{archiveStatus.ia ? '✓ IA' : '○ IA'}</span>
+                  <span style={{ marginLeft: '0.3rem' }}>{archiveStatus.storacha ? '✓ Storacha' : '○ Storacha'}</span>
+                  <span style={{ marginLeft: '0.3rem' }}>{archiveStatus.pinata ? '✓ Pinata' : '○ Pinata'}</span>
                 </div>
               )}
               {!archiveStatus.uploading && (archiveStatus.ia || archiveStatus.storacha || archiveStatus.pinata) && (
                 <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.7, marginBottom: '0.5rem' }}>
-                  Archives: {archiveStatus.ia ? '✓ Internet Archive' : '✗ IA'} · {archiveStatus.storacha ? '✓ Storacha (IPFS/Filecoin)' : '✗ Storacha'} · {archiveStatus.pinata ? '✓ Pinata (IPFS)' : '✗ Pinata'}
+                  <span style={{ fontWeight: 600 }}>Archives:</span>
+                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.ia ? '#1a7d3a' : '#999' }}>{archiveStatus.ia ? '✓' : '✗'} Internet Archive</span>
+                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.storacha ? '#1a7d3a' : '#999' }}>{archiveStatus.storacha ? '✓' : '✗'} Storacha</span>
+                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.pinata ? '#1a7d3a' : '#999' }}>{archiveStatus.pinata ? '✓' : '✗'} Pinata IPFS</span>
                 </div>
               )}
               <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving}>

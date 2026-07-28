@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import { fetchPublicBookProject, getApiBase } from '../lib/api';
+import { fetchManuscriptFromMirrors } from '../lib/manuscriptArchives';
 import { findLocalPublishedBookBySlug } from '../lib/localBookVault';
 import './BookReaderPage.css';
 
@@ -17,12 +20,16 @@ export default function BookReaderPage() {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [manuscriptText, setManuscriptText] = useState('');
+  const [manuscriptLoading, setManuscriptLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('iframe');
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
       setError('');
+      setManuscriptText('');
       try {
         const data = await fetchPublicBookProject(slug);
         if (!data?.ok || !data?.item) {
@@ -31,10 +38,11 @@ export default function BookReaderPage() {
         if (!cancelled) setBook(data.item);
       } catch (err) {
         const localBook = findLocalPublishedBookBySlug(slug);
-        if (!cancelled) setError(err.message || 'Failed to load book');
         if (!cancelled && localBook) {
           setBook(localBook);
           setError('');
+        } else if (!cancelled) {
+          setError(err.message || 'Failed to load book');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -42,10 +50,24 @@ export default function BookReaderPage() {
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [slug]);
+
+  useEffect(() => {
+    if (!book || manuscriptText) return;
+    let cancelled = false;
+    setManuscriptLoading(true);
+    fetchManuscriptFromMirrors(book)
+      .then((text) => {
+        if (!cancelled && text && text.length > 100) {
+          setManuscriptText(text);
+          if (!book.links?.apiView) setViewMode('markdown');
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setManuscriptLoading(false); });
+    return () => { cancelled = true; };
+  }, [book, manuscriptText]);
 
   const viewLinks = useMemo(() => {
     if (!book?.links) return null;
@@ -97,9 +119,22 @@ export default function BookReaderPage() {
         <section className="book-reader__grid">
           <article className="book-reader__card">
             <h2>Reader view</h2>
+
             {loading ? <p className="book-reader__muted">Loading book…</p> : null}
             {error ? <div className="book-reader__error" role="alert">{error}</div> : null}
-            {!loading && !error && readerIframeSrc ? (
+
+            {!loading && !error && readerIframeSrc && manuscriptText ? (
+              <div className="book-reader__tabs">
+                <button className={`book-reader__tab ${viewMode === 'iframe' ? 'is-active' : ''}`} onClick={() => setViewMode('iframe')}>
+                  Rendered view
+                </button>
+                <button className={`book-reader__tab ${viewMode === 'markdown' ? 'is-active' : ''}`} onClick={() => setViewMode('markdown')}>
+                  Plain text
+                </button>
+              </div>
+            ) : null}
+
+            {!loading && !error && viewMode === 'iframe' && readerIframeSrc ? (
               <div className="book-reader__iframeWrap">
                 <iframe
                   src={readerIframeSrc}
@@ -109,7 +144,20 @@ export default function BookReaderPage() {
                 />
               </div>
             ) : null}
-            {!loading && !error && !readerIframeSrc ? (
+
+            {!loading && !error && viewMode === 'markdown' && manuscriptText ? (
+              <div className="book-reader__localRender">
+                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                  {manuscriptText}
+                </ReactMarkdown>
+              </div>
+            ) : null}
+
+            {!loading && !error && manuscriptLoading ? (
+              <p className="book-reader__muted">Loading manuscript text…</p>
+            ) : null}
+
+            {!loading && !error && !readerIframeSrc && !manuscriptText && !manuscriptLoading ? (
               <p className="book-reader__muted">This book does not have rendered content yet.</p>
             ) : null}
           </article>
@@ -123,6 +171,19 @@ export default function BookReaderPage() {
               {book?.wordCount ? <li><strong>Words:</strong> {book.wordCount}</li> : null}
               {book?.status ? <li><strong>Status:</strong> {book.status}</li> : null}
             </ul>
+
+            {book?.mirrors ? (
+              <div className="book-reader__archives">
+                <h3>Archive mirrors</h3>
+                <ul className="book-reader__archiveList">
+                  {book.mirrors.archiveOrg ? <li>✓ Internet Archive</li> : null}
+                  {book.mirrors.pinata ? <li>✓ Pinata IPFS</li> : null}
+                  {book.mirrors.ipfs ? <li>✓ IPFS</li> : null}
+                  {book.mirrors.storacha ? <li>✓ Storacha</li> : null}
+                  {!book.mirrors.archiveOrg && !book.mirrors.pinata && !book.mirrors.ipfs && !book.mirrors.storacha ? <li>No archive mirrors</li> : null}
+                </ul>
+              </div>
+            ) : null}
 
             {viewLinks?.frontCover ? (
               <div className="book-reader__cover">

@@ -411,3 +411,22 @@
   color: var(--site-accent-strong);
   font-size: 1.05rem;
 }
+
+.book-publish__field--error input,
+.book-publish__field--error textarea {
+  border-color: #b33737;
+  box-shadow: 0 0 0 1px rgba(179, 55, 55, 0.3);
+}
+
+.book-publish__fieldError {
+  color: #b33737;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.book-publish__archiveStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
+}

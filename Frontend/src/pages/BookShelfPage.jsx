@@ -182,6 +182,14 @@ export default function BookShelfPage() {
                   {book.subtitle ? <p className="book-shelf__subtitle">{book.subtitle}</p> : null}
                   <p className="book-shelf__author">by {book.authorName || 'Unknown'}</p>
                   {book.wordCount ? <p className="book-shelf__stats">{book.wordCount.toLocaleString()} words</p> : null}
+                  {book.mirrors ? (
+                    <div className="book-shelf__badges">
+                      {book.mirrors.archiveOrg ? <span className="book-shelf__badge" title="Archived on Internet Archive">IA</span> : null}
+                      {book.mirrors.pinata ? <span className="book-shelf__badge" title="Archived on Pinata IPFS">Pinata</span> : null}
+                      {book.mirrors.ipfs ? <span className="book-shelf__badge" title="Archived on IPFS">IPFS</span> : null}
+                      {book.mirrors.storacha ? <span className="book-shelf__badge" title="Archived on Storacha">Storacha</span> : null}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="book-shelf__actions">
                   <Link className="book-shelf__button" to={`/books/read/${book.slug || book.id || book._id}`}>

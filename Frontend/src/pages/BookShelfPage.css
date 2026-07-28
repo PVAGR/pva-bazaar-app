@@ -452,3 +452,22 @@
   padding: 2rem;
   font-size: 1.1rem;
 }
+
+.book-shelf__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.book-shelf__badge {
+  border: 1px solid #1a4a2a;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  background: rgba(118, 201, 125, 0.1);
+  color: #76c97d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

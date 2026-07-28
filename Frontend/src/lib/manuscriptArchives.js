@@ -32,7 +32,7 @@ export async function uploadToInternetArchive(file, identifier) {
   });
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch(`${getApi()}/book-publishing/ia-upload-proxy`, {
       method: 'POST',
@@ -72,7 +72,7 @@ export async function uploadToStoracha(file, identifier) {
   });
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const res = await fetch(`${getApi()}/book-publishing/storacha-upload-url`, {
       method: 'POST',
@@ -112,7 +112,7 @@ export async function uploadToPinata(file, identifier) {
   });
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch(`${getApi()}/book-publishing/pinata-upload-proxy`, {
       method: 'POST',
