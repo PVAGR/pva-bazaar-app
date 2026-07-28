@@ -1129,7 +1129,7 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
     const expires = Math.floor(Date.now() / 1000) + 3600; // 1 hour
 
     // AWS Signature V2 for IA S3
-    const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
+    const stringToSign = `PUT\n\n${contentType}\n${expires}\nx-amz-auto-make-bucket:1\nx-archive-meta-collection:opensource\nx-archive-meta-mediatype:texts\n${resource}`;
     const hmac = crypto.createHmac('sha1', iaSecretKey);
     hmac.update(stringToSign);
     const signature = hmac.digest('base64');
@@ -1138,7 +1138,18 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
     console.log('[IA-SIGNED] Signed URL generated', { identifier, filename, finalUrl });
-    return res.json({ ok: true, uploadUrl, finalUrl });
+    return res.json({
+      ok: true,
+      uploadUrl,
+      finalUrl,
+      identifier,
+      filename,
+      headers: {
+        'x-amz-auto-make-bucket': '1',
+        'x-archive-meta-collection': 'opensource',
+        'x-archive-meta-mediatype': 'texts',
+      },
+    });
   } catch (error) {
     console.error('[IA-SIGNED] Error generating signed URL:', {
       message: error.message,
@@ -1288,7 +1299,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
     const resource = `/${bucket}/${filename}`;
     const expires = Math.floor(Date.now() / 1000) + 3600;
 
-    const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
+    const stringToSign = `PUT\n\n${contentType}\n${expires}\nx-amz-auto-make-bucket:1\nx-archive-meta-collection:opensource\nx-archive-meta-mediatype:texts\n${resource}`;
     const signature = crypto.createHmac('sha1', iaSecretKey).update(stringToSign).digest('base64');
     const uploadUrl = new URL(`https://${host}${resource}`);
     uploadUrl.searchParams.set('AWSAccessKeyId', iaAccessKey);
@@ -1308,8 +1319,14 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
           hostname: urlObj.hostname,
           path: urlObj.pathname + urlObj.search,
           method: 'PUT',
-          headers: { 'Content-Type': contentType, 'Content-Length': fileBuffer.length },
-          timeout: 20000,
+          headers: {
+            'Content-Type': contentType,
+            'Content-Length': fileBuffer.length,
+            'x-amz-auto-make-bucket': '1',
+            'x-archive-meta-collection': 'opensource',
+            'x-archive-meta-mediatype': 'texts',
+          },
+          timeout: 25000,
         };
         const iaReq = https.request(reqOpts, (iaRes) => {
           let body = '';
@@ -1328,8 +1345,48 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
       return res.status(502).json({ ok: false, error: `S3 upload failed: ${String(uploadErr).slice(0, 300)}`, finalUrl });
     }
 
-    console.log('[IA-PROXY] Upload result:', uploadStatus.status, finalUrl);
-    return res.json({ ok: true, status: uploadStatus.status, url: finalUrl, identifier, filename });
+    console.log('[IA-PROXY] S3 upload result:', uploadStatus.status, finalUrl);
+
+    if (uploadStatus.status === 403) {
+      console.log('[IA-PROXY] S3 returned 403, falling back to IA metadata API');
+      try {
+        const iaRes = await axios.post('https://archive.org/metadata/' + identifier, {
+          metadata: {
+            mediatype: 'texts',
+            collection: 'opensource',
+            title: filename,
+          },
+          files: {
+            [filename]: fileBuffer.toString('utf-8'),
+          },
+        }, {
+          headers: {
+            'Authorization': `LOW ${iaAccessKey}:${iaSecretKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000,
+        });
+
+        console.log('[IA-PROXY] Metadata API result:', iaRes.status, finalUrl);
+        return res.json({ ok: true, status: iaRes.status, url: finalUrl, identifier, filename, method: 'metadata-api' });
+      } catch (metaErr) {
+        const metaBody = metaErr?.response?.data ? JSON.stringify(metaErr.response.data).slice(0, 500) : String(metaErr).slice(0, 300);
+        console.error('[IA-PROXY] Metadata API also failed:', metaBody);
+        return res.status(502).json({
+          ok: false,
+          error: `Both S3 (403) and metadata API failed: ${metaBody}`,
+          s3Body: uploadStatus.body,
+          finalUrl,
+        });
+      }
+    }
+
+    if (uploadStatus.status >= 400) {
+      console.error('[IA-PROXY] S3 error status:', uploadStatus.status, uploadStatus.body);
+      return res.status(502).json({ ok: false, error: `S3 returned ${uploadStatus.status}`, body: uploadStatus.body, finalUrl });
+    }
+
+    return res.json({ ok: true, status: uploadStatus.status, url: finalUrl, identifier, filename, method: 's3' });
   } catch (error) {
     const errMsg = String(error?.message || 'IA proxy upload failed').slice(0, 500);
     console.error('[IA-PROXY] Upload failed:', errMsg);
