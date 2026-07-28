@@ -1160,72 +1160,19 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
 });
 
 // ── Storacha (IPFS + Filecoin) upload proxy ─────────────────────────────────
+// NOTE: Storacha's w3up API (successor to web3.storage) uses UCAN-based auth
+// which requires the @storacha/client library + a delegation proof. The legacy
+// api.web3.storage endpoint is in maintenance mode as of mid-2026.
+// Until Storacha restores a simple HTTP upload endpoint, this route reports a
+// clear error. Pinata IPFS fills the IPFS/Filecoin angle in the meantime.
 router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res) => {
-  try {
-    console.log('[STORACHA] Request received', { contentType: req.headers['content-type'] });
-
-    const file = req.files?.manuscriptFile?.[0] || req.file;
-    const bodyMarkdown = req.body?.manuscriptMarkdown;
-    const fileBuffer = file?.buffer || (bodyMarkdown ? Buffer.from(bodyMarkdown, 'utf8') : null);
-    const filename = sanitizeText(req.body?.filename || file?.originalname || 'manuscript.md', 200);
-
-    if (!fileBuffer) {
-      return res.status(400).json({ ok: false, error: 'No manuscript content provided' });
-    }
-
-    const apiKey = process.env.STORACHA_API_KEY;
-    if (!apiKey) {
-      return res.status(503).json({ ok: false, error: 'Storacha API key not configured' });
-    }
-
-    // Storacha / web3.storage upload API
-    const FormData = require('form-data');
-    const formData = new FormData();
-    formData.append('file', fileBuffer, { filename, contentType: 'text/markdown' });
-
-    const storachaEndpoints = [
-      'https://api.web3.storage/upload',
-      'https://up.storacha.network/upload',
-    ];
-
-    let cid = '';
-    let lastError = '';
-
-    for (const endpoint of storachaEndpoints) {
-      try {
-        console.log('[STORACHA] Trying endpoint:', endpoint);
-        const response = await axios.post(endpoint, formData, {
-          headers: {
-            ...formData.getHeaders(),
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          timeout: 15000,
-          maxBodyLength: Infinity,
-        });
-        cid = response.data?.cid || response.data?.hash || response.data?.IpfsHash || '';
-        if (cid) {
-          console.log('[STORACHA] Upload succeeded via:', endpoint, { cid });
-          break;
-        }
-      } catch (err) {
-        lastError = err.response?.data ? JSON.stringify(err.response.data).slice(0, 300) : err.message?.slice(0, 200) || String(err);
-        console.warn('[STORACHA] Endpoint failed:', endpoint, lastError);
-      }
-    }
-
-    if (!cid) {
-      return res.status(502).json({ ok: false, error: `All Storacha endpoints failed: ${lastError}` });
-    }
-
-    const gatewayUrl = `https://w3s.link/ipfs/${cid}`;
-
-    console.log('[STORACHA] Upload succeeded:', { cid, gatewayUrl });
-    return res.json({ ok: true, url: gatewayUrl, cid, filename });
-  } catch (error) {
-    const detail = error.response?.data ? JSON.stringify(error.response.data).slice(0, 500) : error.message?.slice(0, 300) || String(error);
-    console.error('[STORACHA] Upload failed:', detail);
-    return res.status(502).json({ ok: false, error: `Storacha upload failed: ${detail}` });
-  }
+  console.log('[STORACHA] Request received — Storacha w3up API requires UCAN client library');
+  return res.status(503).json({
+    ok: false,
+    error: 'Storacha upload is temporarily unavailable. Legacy web3.storage API is in maintenance mode. Pinata IPFS upload is still available.',
+    disabled: true,
+    hint: 'https://docs.storacha.network/how-to/upload',
+  });
 });
 
 // ── Pinata IPFS upload proxy ─────────────────────────────────────────────────
