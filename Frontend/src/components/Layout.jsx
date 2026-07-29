@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
@@ -27,6 +27,22 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const token = getToken();
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pva:cart');
+      setCartCount(raw ? JSON.parse(raw).length : 0);
+    } catch { setCartCount(0); }
+    const handler = () => {
+      try {
+        const raw = localStorage.getItem('pva:cart');
+        setCartCount(raw ? JSON.parse(raw).length : 0);
+      } catch { setCartCount(0); }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [location]);
   const hasUserAccess = Boolean(token);
   const hasAdminAccess = useMemo(() => {
     const payload = parseJwtPayload(token);
@@ -120,6 +136,9 @@ export default function Layout({ children }) {
           </nav>
 
           <div className="layout__status" aria-live="polite">
+            <NavLink className="layout__statusAction" to="/cart" style={{ fontWeight: 600, marginRight: '8px', position: 'relative' }} title="Shopping Cart">
+              Cart{cartCount > 0 ? <span style={{ background: '#1a7d3a', color: '#fff', borderRadius: '50%', padding: '0 6px', fontSize: '11px', fontWeight: 700, marginLeft: '4px' }}>{cartCount}</span> : null}
+            </NavLink>
             {hasUserAccess ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {hasAdminAccess && (

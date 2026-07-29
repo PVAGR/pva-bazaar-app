@@ -23,6 +23,7 @@ const DealsPage = lazy(() => import('./pages/DealsPage.jsx'));
 const DealJoinPage = lazy(() => import('./pages/DealJoinPage.jsx'));
 const DealPublicPage = lazy(() => import('./pages/DealPublicPage.jsx'));
 const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage.jsx'));
+const CartPage = lazy(() => import('./pages/CartPage.jsx'));
 const CheckoutCancelPage = lazy(() => import('./pages/CheckoutCancelPage.jsx'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard.jsx'));
 const GovernanceConferencePage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceConferencePage })));
@@ -173,6 +174,7 @@ export default function App() {
         <Route path="/download-app" element={<Layout><DownloadAppPage /></Layout>} />
         <Route path="/recovery" element={<Layout><RecoveryPage /></Layout>} />
         <Route path="/heelkawn" element={<Layout><HeelKawnPage /></Layout>} />
+        <Route path="/cart" element={<Layout><CartPage /></Layout>} />
         <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
         <Route path="*" element={<Navigate to="/" replace />} />

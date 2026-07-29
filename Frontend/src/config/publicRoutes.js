@@ -315,6 +315,16 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'cart',
+    to: '/cart',
+    navLabel: 'Cart',
+    title: 'Shopping Cart',
+    description: 'Review items in your cart and proceed to checkout.',
+    group: 'support',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'heelkawn',
     to: '/heelkawn',
     navLabel: 'HeelKawn',

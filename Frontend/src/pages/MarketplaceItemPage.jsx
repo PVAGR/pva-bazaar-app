@@ -73,6 +73,18 @@ export default function MarketplaceItemPage() {
   const [cryptoTxHash, setCryptoTxHash] = useState("");
   const [cryptoError, setCryptoError] = useState("");
   const [cryptoSuccess, setCryptoSuccess] = useState("");
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  function addToCart(id) {
+    try {
+      const raw = localStorage.getItem('pva:cart');
+      const items = raw ? JSON.parse(raw) : [];
+      if (!items.includes(id)) items.push(id);
+      localStorage.setItem('pva:cart', JSON.stringify(items));
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch {}
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -512,6 +524,14 @@ export default function MarketplaceItemPage() {
             }}
           >
             {buying ? "Redirecting..." : "Buy"}
+          </button>
+          <button
+            className="buy-btn"
+            style={{ background: 'var(--site-bg)', border: '2px solid #1a7d3a', color: '#1a7d3a' }}
+            disabled={!item.priceCents || !item.id}
+            onClick={() => addToCart(item._id || item.slug || item.id)}
+          >
+            {addedToCart ? 'Added!' : 'Add to Cart'}
           </button>
 
           <section className="item-crypto-panel" aria-label="Crypto checkout">

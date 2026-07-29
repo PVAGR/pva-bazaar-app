@@ -606,6 +606,19 @@ export async function refundOrder(id, { amountCents, reason } = {}) {
     return { ok: false, error: err.message };
   }
 }
+// Create Stripe Checkout Session for multiple items (cart)
+export async function createCartSession(itemIds) {
+  try {
+    const response = await apiPost("/checkout/create-cart-session", { itemIds });
+    if (response && response.ok && response.url) {
+      return { ok: true, url: response.url };
+    }
+    return { ok: false, error: response?.error || "Failed to create cart session" };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 // Create Stripe Checkout Session
 export async function createCheckoutSession(itemId) {
   try {

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Artifact = require('../models/Artifact');
 const { authenticateToken } = require('../middleware/auth');
 const multer = require('multer');
@@ -91,6 +92,15 @@ router.get('/', async (req, res) => {
       query = query.sort({ 'fractionalization.soldShares': -1, createdAt: -1 });
     } else if (req.query.sort === 'newest') {
       query = query.sort({ createdAt: -1 });
+    }
+    if (req.query.ids) {
+      const ids = req.query.ids.split(',').map(s => s.trim()).filter(Boolean);
+      const byId = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
+      const bySlug = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+      const conditions = [];
+      if (byId.length) conditions.push({ _id: { $in: byId } });
+      if (bySlug.length) conditions.push({ slug: { $in: bySlug } });
+      if (conditions.length) query = Artifact.find({ $or: conditions });
     }
     if (req.query.limit) {
       const limit = parseInt(req.query.limit, 10);

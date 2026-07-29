@@ -182,6 +182,94 @@ router.post("/create-session", async (req, res) => {
   }
 });
 
+// POST /api/checkout/create-cart-session
+// Creates a single Stripe Checkout Session for multiple items (cart checkout).
+router.post("/create-cart-session", async (req, res) => {
+  try {
+    const buyerId = extractUserIdFromAuth(req);
+    let { itemIds } = req.body;
+    if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.status(400).json({ ok: false, error: "Missing itemIds array" });
+    }
+    // Deduplicate
+    itemIds = [...new Set(itemIds.map(id => String(id)))];
+    if (itemIds.length > 50) return res.status(400).json({ ok: false, error: "Too many items (max 50)" });
+
+    const artifacts = await Artifact.find({ $or: [{ _id: { $in: itemIds } }, { slug: { $in: itemIds } }] });
+    if (artifacts.length === 0) return res.status(404).json({ ok: false, error: "No items found" });
+
+    const lineItems = [];
+    const orders = [];
+    const errors = [];
+
+    for (const artifact of artifacts) {
+      if (artifact.status !== "published") { errors.push(`${artifact.name || artifact.slug}: not available`); continue; }
+      if (isMarkedSold(artifact)) { errors.push(`${artifact.name || artifact.slug}: already sold`); continue; }
+      const item = toPublicItem(artifact);
+      if (!item.priceCents || !item.currency) { errors.push(`${item.name}: missing price`); continue; }
+
+      const reservationId = uuidv4();
+      const reserve = await reserveOne(item.id, reservationId);
+      if (!reserve.ok) { errors.push(`${item.name}: sold out`); continue; }
+
+      const order = await Order.create({
+        buyerId,
+        itemId: item.id,
+        itemSnapshot: { name: item.name, slug: item.slug, priceCents: item.priceCents, currency: item.currency, media0: item.media?.[0] },
+        stripeSessionId: null,
+        paymentStatus: "pending",
+        isLocked: false,
+        amountTotal: item.priceCents,
+        currency: item.currency,
+        reservationId,
+      });
+      orders.push(order);
+      lineItems.push({
+        price_data: {
+          currency: item.currency.toLowerCase(),
+          unit_amount: item.priceCents,
+          product_data: { name: item.name, description: item.description || undefined, images: item.media?.[0] ? [item.media[0]] : undefined },
+        },
+        quantity: 1,
+      });
+    }
+
+    if (orders.length === 0) return res.status(400).json({ ok: false, error: "No purchasable items", errors });
+
+    const orderIds = orders.map(o => o._id.toString());
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: lineItems,
+        success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${PUBLIC_SITE_URL}/#/checkout/cancel?session_id={CHECKOUT_SESSION_ID}`,
+        client_reference_id: orderIds.join(','),
+        metadata: { orderIds: orderIds.join(','), itemCount: String(orders.length) },
+      });
+    } catch (stripeError) {
+      for (const order of orders) {
+        if (order.reservationId) await releaseReservation(order.reservationId).catch(() => {});
+        order.paymentStatus = 'cancelled';
+        order.isLocked = false;
+        await order.save().catch(() => {});
+      }
+      throw stripeError;
+    }
+
+    for (const order of orders) {
+      order.stripeSessionId = session.id;
+      order.isLocked = true;
+      await order.save();
+    }
+
+    return res.json({ ok: true, url: session.url, orderCount: orders.length, errors: errors.length ? errors : undefined });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /api/checkout/cancel-session
 // Cancels a pending checkout session and releases any inventory reservation.
 router.post('/cancel-session', async (req, res) => {

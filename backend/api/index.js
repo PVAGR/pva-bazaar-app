@@ -722,14 +722,6 @@ try {
   console.warn('⚠️ Optional route disabled: seller', err?.message || err);
 }
 
-// Autonomous Agent for payments, billing, and self-maintenance
-try {
-  const autonomousAgentRoutes = require('../routes/autonomous-agent');
-  app.use(autonomousAgentRoutes);
-} catch (err) {
-  console.warn('⚠️ Optional route disabled: autonomous-agent', err?.message || err);
-}
-
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
 mountOptionalRoute('/api/oauth', '../routes/oauthTwitch', 'oauth-twitch');
 mountOptionalRoute('/api/oauth', '../routes/oauthYouTube', 'oauth-youtube');
