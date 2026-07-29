@@ -1,5 +1,3 @@
-import '../data/entries.js';
-
 const CUSTOM_KEY = 'journal:customEntries';
 
 function normalize(raw) {

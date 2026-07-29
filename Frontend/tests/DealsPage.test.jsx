@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import DealsPage from './DealsPage.jsx';
+import DealsPage from '../src/pages/DealsPage.jsx';
 
 vi.mock('../lib/api', () => {
   const apiGet = vi.fn(async (path) => {
