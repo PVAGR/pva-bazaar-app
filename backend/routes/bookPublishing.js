@@ -862,6 +862,10 @@ function notFound(res, message = 'Book not found') {
   return res.status(404).json({ ok: false, error: message });
 }
 
+function forbidden(res, message = 'Forbidden') {
+  return res.status(403).json({ ok: false, error: message });
+}
+
 function renderNotFoundHtml(message) {
   return `<!doctype html>
 <html lang="en">
@@ -2060,6 +2064,125 @@ router.get('/public/:slug/view/docx', async (req, res) => {
     return res.status(200).type('html').send(wrapHtmlContent(book, htmlContent));
   } catch (error) {
     return res.status(500).type('html').send(renderNotFoundHtml(error.message || 'Unable to render DOCX'));
+  }
+});
+
+// ── Manuscript Version History ─────────────────────────────────────────────
+const ManuscriptVersion = require('../models/ManuscriptVersion');
+
+function wordCount(str) {
+  if (!str) return 0;
+  return str.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length;
+}
+
+// GET /:bookId/versions - list all versions for a book
+router.get('/:bookId/versions', authenticateBookPublishing, async (req, res) => {
+  try {
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+    if (!canViewBook(req, book)) return forbidden(res);
+
+    const versions = await ManuscriptVersion.find({ bookId: book._id || book.id })
+      .sort({ version: -1 })
+      .select('version wordCount fileSize changeDescription createdAt')
+      .lean();
+
+    return res.json({ ok: true, versions });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /:bookId/versions - create a version snapshot of current manuscript
+router.post('/:bookId/versions', authenticateBookPublishing, async (req, res) => {
+  try {
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+    if (!canEditBook(req, book)) return forbidden(res);
+
+    const { changeDescription } = req.body || {};
+    const last = await ManuscriptVersion.findOne({ bookId: book._id || book.id }).sort({ version: -1 }).lean();
+    const nextVersion = (last?.version || 0) + 1;
+
+    const md = book.manuscriptMarkdown || '';
+    const version = await ManuscriptVersion.create({
+      bookId: book._id || book.id,
+      version: nextVersion,
+      manuscriptMarkdown: md,
+      manuscriptUrl: book.manuscriptUrl || '',
+      manuscriptPdfUrl: book.manuscriptPdfUrl || '',
+      manuscriptDocxUrl: book.manuscriptDocxUrl || '',
+      manuscriptHtml: book.manuscriptHtml || '',
+      fileSize: book.fileSize || Buffer.byteLength(md, 'utf8'),
+      wordCount: wordCount(md),
+      changeDescription: changeDescription || `Version ${nextVersion}`,
+      createdBy: req.user?.id || null,
+    });
+
+    return res.status(201).json({ ok: true, version });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /:bookId/versions/:versionId - get a specific version's full manuscript
+router.get('/:bookId/versions/:versionId', authenticateBookPublishing, async (req, res) => {
+  try {
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+    if (!canViewBook(req, book)) return forbidden(res);
+
+    const version = await ManuscriptVersion.findOne({ _id: req.params.versionId, bookId: book._id || book.id });
+    if (!version) return res.status(404).json({ ok: false, error: 'Version not found' });
+
+    return res.json({ ok: true, version });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /:bookId/versions/:versionId/restore - restore manuscript to a previous version
+router.post('/:bookId/versions/:versionId/restore', authenticateBookPublishing, async (req, res) => {
+  try {
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+    if (!canEditBook(req, book)) return forbidden(res);
+
+    const version = await ManuscriptVersion.findOne({ _id: req.params.versionId, bookId: book._id || book.id });
+    if (!version) return res.status(404).json({ ok: false, error: 'Version not found' });
+
+    // Snapshot current before restoring (so restore is reversible)
+    const last = await ManuscriptVersion.findOne({ bookId: book._id || book.id }).sort({ version: -1 }).lean();
+    const currentMd = book.manuscriptMarkdown || '';
+    if (currentMd !== version.manuscriptMarkdown) {
+      await ManuscriptVersion.create({
+        bookId: book._id || book.id,
+        version: (last?.version || 0) + 1,
+        manuscriptMarkdown: currentMd,
+        manuscriptUrl: book.manuscriptUrl || '',
+        manuscriptPdfUrl: book.manuscriptPdfUrl || '',
+        manuscriptDocxUrl: book.manuscriptDocxUrl || '',
+        manuscriptHtml: book.manuscriptHtml || '',
+        fileSize: book.fileSize || 0,
+        wordCount: wordCount(currentMd),
+        changeDescription: `Auto-snapshot before restore to version ${version.version}`,
+        createdBy: req.user?.id || null,
+      });
+    }
+
+    // Apply the restored version to the book
+    book.manuscriptMarkdown = version.manuscriptMarkdown;
+    book.manuscriptUrl = version.manuscriptUrl;
+    book.manuscriptPdfUrl = version.manuscriptPdfUrl;
+    book.manuscriptDocxUrl = version.manuscriptDocxUrl;
+    book.manuscriptHtml = version.manuscriptHtml;
+    book.fileSize = version.fileSize;
+    book.wordCount = version.wordCount;
+    await saveBook(book);
+
+    return res.json({ ok: true, message: `Restored to version ${version.version}`, version });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 

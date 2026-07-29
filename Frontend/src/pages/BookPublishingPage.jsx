@@ -10,6 +10,7 @@ import {
   saveBookProject,
 } from '../lib/api';
 import { uploadToInternetArchive, uploadToPinata } from '../lib/manuscriptArchives';
+import ManuscriptVersionPanel from '../components/ManuscriptVersionPanel';
 import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
@@ -1669,6 +1670,8 @@ export default function BookPublishingPage() {
                 </>
               );
             })()}
+
+            {form.bookId ? <ManuscriptVersionPanel bookId={form.bookId} onRestore={() => { loadBooks(); }} /> : null}
 
             {selectedBook ? (
               <div className="book-publish__links">
