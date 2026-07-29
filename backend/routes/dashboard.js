@@ -39,7 +39,7 @@ router.get('/stats', adminSession, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Dashboard stats error:', err);
+    console.error('[dashboard] getStats error:', err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -65,7 +65,7 @@ router.get('/recent-activity', adminSession, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Recent activity error:', err);
+    console.error('[dashboard] getRecentActivity error:', err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });

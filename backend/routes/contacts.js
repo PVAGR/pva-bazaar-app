@@ -25,7 +25,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const total = await Contact.countDocuments(query);
     res.json({ ok: true, items, total });
   } catch (err) {
-    console.error('Error fetching contacts:', err);
+    console.error('[contacts] listContacts error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch contacts' });
   }
 });
@@ -57,7 +57,7 @@ router.post('/', authMiddleware, async (req, res) => {
     await contact.save();
     res.status(201).json({ ok: true, item: contact });
   } catch (err) {
-    console.error('Error creating contact:', err);
+    console.error('[contacts] createContact error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create contact' });
   }
 });
@@ -70,7 +70,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     if (!contact) return res.status(404).json({ ok: false, error: 'Contact not found' });
     res.json({ ok: true, item: contact });
   } catch (err) {
-    console.error('Error fetching contact:', err);
+    console.error('[contacts] getContact error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch contact' });
   }
 });
@@ -100,7 +100,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await contact.save();
     res.json({ ok: true, item: contact });
   } catch (err) {
-    console.error('Error updating contact:', err);
+    console.error('[contacts] updateContact error:', err);
     res.status(500).json({ ok: false, error: 'Failed to update contact' });
   }
 });
@@ -120,7 +120,7 @@ router.post('/:id/outreach', authMiddleware, async (req, res) => {
     await contact.save();
     res.json({ ok: true, item: contact });
   } catch (err) {
-    console.error('Error logging outreach:', err);
+    console.error('[contacts] logOutreach error:', err);
     res.status(500).json({ ok: false, error: 'Failed to log outreach' });
   }
 });
@@ -132,7 +132,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!result) return res.status(404).json({ ok: false, error: 'Contact not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('Error deleting contact:', err);
+    console.error('[contacts] deleteContact error:', err);
     res.status(500).json({ ok: false, error: 'Failed to delete contact' });
   }
 });

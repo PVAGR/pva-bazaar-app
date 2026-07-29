@@ -67,7 +67,7 @@ router.get('/:userId', authenticateToken, async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Portfolio error:', err);
+    console.error('[portfolio] getUserPortfolio error:', err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });
@@ -100,7 +100,7 @@ router.get('/stats/global', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Global stats error:', err);
+    console.error('[portfolio] getGlobalStats error:', err);
     res.status(500).json({ ok: false, message: err.message });
   }
 });

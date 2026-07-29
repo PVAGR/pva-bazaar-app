@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('OpenAI error:', response.status, err);
+      console.error('[chat] openAIChatCompletion error:', response.status, err);
       return res.status(502).json({
         ok: false,
         error: 'AI service error. Check OPENAI_API_KEY and model.',
@@ -103,7 +103,7 @@ router.post('/', async (req, res) => {
 
     res.json({ ok: true, reply });
   } catch (err) {
-    console.error('Chat error:', err);
+    console.error('[chat] richardAIChat error:', err);
     res.status(500).json({ ok: false, error: err.message || 'Chat failed' });
   }
 });

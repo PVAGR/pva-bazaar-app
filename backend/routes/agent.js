@@ -102,7 +102,7 @@ async function generateAIResponse(messages, temperature = 0.35, maxTokens = 2000
       provider: response.provider,
     };
   } catch (err) {
-    console.error('❌ AI Response Generation Error:', err);
+    console.error('[agent] generateAIResponse error:', err);
     return {
       success: false,
       error: `Failed to generate response: ${err.message}`,
@@ -220,7 +220,7 @@ router.post('/chat', async (req, res) => {
       messageCount: thread.messages.length,
     });
   } catch (err) {
-    console.error('Agent chat error:', err);
+    console.error('[agent] agentChat error:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
@@ -493,7 +493,7 @@ Be specific and actionable in your feedback.`;
       threadId: thread._id,
     });
   } catch (err) {
-    console.error('❌ Code Analysis Error:', err);
+    console.error('[agent] analyzeCode error:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
@@ -582,7 +582,7 @@ Provide the complete, runnable code.`;
       threadId: thread._id,
     });
   } catch (err) {
-    console.error('❌ Code Generation Error:', err);
+    console.error('[agent] generateCode error:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
@@ -774,7 +774,7 @@ Keep it brief (2-3 sentences).`,
       reasoning: change.reasoning.reasoning,
     });
   } catch (err) {
-    console.error('❌ GitHub Propose Change Error:', err);
+    console.error('[agent] proposeGitHubChange error:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });

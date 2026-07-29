@@ -114,7 +114,7 @@ router.post('/bank-account', requireAuth, async (req, res) => {
       settlementStatus: bankAccount.settlementStatus,
     });
   } catch (error) {
-    console.error('Bank account save error:', error);
+    console.error('[bankIntegration] saveBankAccount error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -238,7 +238,7 @@ router.post('/bank-webhook', async (req, res) => {
 
     res.json({ received: true, updated: true });
   } catch (error) {
-    console.error('Bank webhook error:', error);
+    console.error('[bankIntegration] processBankWebhook error:', error);
     res.status(500).json({ error: error.message });
   }
 });

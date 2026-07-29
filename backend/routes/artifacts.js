@@ -59,7 +59,7 @@ async function getCryptoPrices() {
       );
 
       req.on('error', (error) => {
-        console.error('Error fetching crypto prices:', error);
+        console.error('[artifacts] fetchCryptoPrices error:', error);
         resolve({
           bitcoin: 111000,
           ethereum: 4300,

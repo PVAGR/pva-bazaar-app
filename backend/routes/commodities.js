@@ -25,7 +25,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const total = await Commodity.countDocuments(query);
     res.json({ ok: true, items, total });
   } catch (err) {
-    console.error('Error fetching commodities:', err);
+    console.error('[commodities] listCommodities error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch commodities' });
   }
 });
@@ -56,7 +56,7 @@ router.post('/', authMiddleware, async (req, res) => {
     await commodity.save();
     res.status(201).json({ ok: true, item: commodity });
   } catch (err) {
-    console.error('Error creating commodity:', err);
+    console.error('[commodities] createCommodity error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create commodity' });
   }
 });
@@ -70,7 +70,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     if (!commodity) return res.status(404).json({ ok: false, error: 'Commodity not found' });
     res.json({ ok: true, item: commodity });
   } catch (err) {
-    console.error('Error fetching commodity:', err);
+    console.error('[commodities] getCommodity error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch commodity' });
   }
 });
@@ -99,7 +99,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await commodity.save();
     res.json({ ok: true, item: commodity });
   } catch (err) {
-    console.error('Error updating commodity:', err);
+    console.error('[commodities] updateCommodity error:', err);
     res.status(500).json({ ok: false, error: 'Failed to update commodity' });
   }
 });
@@ -111,7 +111,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!result) return res.status(404).json({ ok: false, error: 'Commodity not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('Error deleting commodity:', err);
+    console.error('[commodities] deleteCommodity error:', err);
     res.status(500).json({ ok: false, error: 'Failed to delete commodity' });
   }
 });

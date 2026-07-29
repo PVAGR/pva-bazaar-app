@@ -16,7 +16,7 @@ router.get('/', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, items: databases });
   } catch (error) {
-    console.error('Error fetching databases:', error);
+    console.error('[databases] listDatabases error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch databases' });
   }
 });
@@ -39,7 +39,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: database });
   } catch (error) {
-    console.error('Error fetching database:', error);
+    console.error('[databases] getDatabase error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch database' });
   }
 });
@@ -76,7 +76,7 @@ router.post('/', authenticateToken, async (req, res) => {
     
     res.status(201).json({ ok: true, item: database });
   } catch (error) {
-    console.error('Error creating database:', error);
+    console.error('[databases] createDatabase error:', error);
     res.status(500).json({ ok: false, error: 'Failed to create database' });
   }
 });
@@ -116,7 +116,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: database });
   } catch (error) {
-    console.error('Error updating database:', error);
+    console.error('[databases] updateDatabase error:', error);
     res.status(500).json({ ok: false, error: 'Failed to update database' });
   }
 });
@@ -146,7 +146,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, message: 'Database deleted' });
   } catch (error) {
-    console.error('Error deleting database:', error);
+    console.error('[databases] deleteDatabase error:', error);
     res.status(500).json({ ok: false, error: 'Failed to delete database' });
   }
 });
@@ -211,7 +211,7 @@ router.post('/:id/entries', authenticateToken, async (req, res) => {
     
     res.status(201).json({ ok: true, item: database });
   } catch (error) {
-    console.error('Error adding entry:', error);
+    console.error('[databases] addEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to add entry' });
   }
 });
@@ -249,7 +249,7 @@ router.delete('/:id/entries/:entryId', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: database });
   } catch (error) {
-    console.error('Error removing entry:', error);
+    console.error('[databases] removeEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to remove entry' });
   }
 });
@@ -271,7 +271,7 @@ router.get('/public/feed', async (req, res) => {
     
     res.json({ ok: true, items: databases });
   } catch (error) {
-    console.error('Error fetching public databases:', error);
+    console.error('[databases] listPublicDatabases error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch public databases' });
   }
 });

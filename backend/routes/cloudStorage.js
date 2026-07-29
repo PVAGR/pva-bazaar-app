@@ -91,7 +91,7 @@ router.get('/providers', adminSession, async (req, res) => {
 
     res.json({ ok: true, providers });
   } catch (error) {
-    console.error('Get providers error:', error);
+    console.error('[cloudStorage] getProviders error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -114,7 +114,7 @@ router.get('/status', adminSession, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Cloud storage status error:', error);
+    console.error('[cloudStorage] getStatus error:', error);
     return res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -170,7 +170,7 @@ router.post('/upload/cloudinary', adminSession, upload.single('file'), async (re
       size: result.bytes
     });
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
+    console.error('[cloudStorage] cloudinaryUpload error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -221,7 +221,7 @@ router.post('/upload/pinata', adminSession, upload.single('file'), async (req, r
       size: response.data.PinSize
     });
   } catch (error) {
-    console.error('Pinata upload error:', error);
+    console.error('[cloudStorage] pinataUpload error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -256,7 +256,7 @@ router.post('/upload/local', adminSession, upload.single('file'), async (req, re
       size: req.file.size
     });
   } catch (error) {
-    console.error('Local upload error:', error);
+    console.error('[cloudStorage] localUpload error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -308,13 +308,13 @@ router.get('/files', adminSession, async (req, res) => {
           });
         }
       } catch (err) {
-        console.error('Pinata list error:', err.message);
+        console.error('[cloudStorage] pinataListFiles error:', err.message);
       }
     }
 
     res.json({ ok: true, files });
   } catch (error) {
-    console.error('List files error:', error);
+    console.error('[cloudStorage] listFiles error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -368,7 +368,7 @@ router.delete('/delete/:provider/:id', adminSession, async (req, res) => {
 
     res.status(400).json({ ok: false, error: 'Unknown provider' });
   } catch (error) {
-    console.error('Delete file error:', error);
+    console.error('[cloudStorage] deleteFile error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
@@ -418,7 +418,7 @@ router.post('/test-connection/:provider', adminSession, async (req, res) => {
 
     res.status(400).json({ ok: false, error: 'Unknown provider' });
   } catch (error) {
-    console.error('Test connection error:', error);
+    console.error('[cloudStorage] testConnection error:', error);
     res.json({ ok: false, connected: false, message: error.message });
   }
 });

@@ -32,7 +32,7 @@ router.get('/', authenticateToken, async (req, res) => {
       hasMore: skip + entries.length < total,
     });
   } catch (error) {
-    console.error('Error fetching journal entries:', error);
+    console.error('[journal] listEntries error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch journal entries' });
   }
 });
@@ -55,7 +55,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: entry });
   } catch (error) {
-    console.error('Error fetching journal entry:', error);
+    console.error('[journal] getEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch journal entry' });
   }
 });
@@ -104,7 +104,7 @@ router.post('/', authenticateToken, async (req, res) => {
     
     res.status(201).json({ ok: true, item: entry });
   } catch (error) {
-    console.error('Error creating journal entry:', error);
+    console.error('[journal] createEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to create journal entry' });
   }
 });
@@ -158,7 +158,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: entry });
   } catch (error) {
-    console.error('Error updating journal entry:', error);
+    console.error('[journal] updateEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to update journal entry' });
   }
 });
@@ -188,7 +188,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, message: 'Journal entry deleted' });
   } catch (error) {
-    console.error('Error deleting journal entry:', error);
+    console.error('[journal] deleteEntry error:', error);
     res.status(500).json({ ok: false, error: 'Failed to delete journal entry' });
   }
 });
@@ -211,7 +211,7 @@ router.get('/public/feed', async (req, res) => {
     
     res.json({ ok: true, items: entries });
   } catch (error) {
-    console.error('Error fetching public feed:', error);
+    console.error('[journal] listPublicFeed error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch public feed' });
   }
 });

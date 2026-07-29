@@ -47,7 +47,7 @@ router.get('/', authenticateToken, async (req, res) => {
       hasMore: skip + streams.length < total,
     });
   } catch (error) {
-    console.error('Error fetching streams:', error);
+    console.error('[streams] listStreams error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch streams' });
   }
 });
@@ -63,7 +63,7 @@ router.get('/drafts', authenticateToken, async (req, res) => {
     const draft = user?.preferences?.drafts?.streams || null;
     res.json({ ok: true, draft });
   } catch (error) {
-    console.error('Error fetching stream draft:', error);
+    console.error('[streams] getDraft error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch stream draft' });
   }
 });
@@ -89,7 +89,7 @@ router.put('/drafts', authenticateToken, async (req, res) => {
 
     res.json({ ok: true, draft: user?.preferences?.drafts?.streams || null });
   } catch (error) {
-    console.error('Error saving stream draft:', error);
+    console.error('[streams] saveDraft error:', error);
     res.status(500).json({ ok: false, error: 'Failed to save stream draft' });
   }
 });
@@ -109,7 +109,7 @@ router.delete('/drafts', authenticateToken, async (req, res) => {
 
     res.json({ ok: true, draft: null });
   } catch (error) {
-    console.error('Error clearing stream draft:', error);
+    console.error('[streams] clearDraft error:', error);
     res.status(500).json({ ok: false, error: 'Failed to clear stream draft' });
   }
 });
@@ -132,7 +132,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: stream });
   } catch (error) {
-    console.error('Error fetching stream:', error);
+    console.error('[streams] getStream error:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch stream' });
   }
 });
@@ -167,7 +167,7 @@ router.post('/', authenticateToken, async (req, res) => {
     
     res.status(201).json({ ok: true, item: stream });
   } catch (error) {
-    console.error('Error creating stream:', error);
+    console.error('[streams] createStream error:', error);
     res.status(500).json({ ok: false, error: 'Failed to create stream' });
   }
 });
@@ -220,7 +220,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, item: stream });
   } catch (error) {
-    console.error('Error updating stream:', error);
+    console.error('[streams] updateStream error:', error);
     res.status(500).json({ ok: false, error: 'Failed to update stream' });
   }
 });
@@ -243,7 +243,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     
     res.json({ ok: true, message: 'Stream deleted' });
   } catch (error) {
-    console.error('Error deleting stream:', error);
+    console.error('[streams] deleteStream error:', error);
     res.status(500).json({ ok: false, error: 'Failed to delete stream' });
   }
 });
@@ -324,7 +324,7 @@ router.post('/:id/webhook', async (req, res) => {
     
     res.json({ ok: true, received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('[streams] processWebhook error:', error);
     res.status(500).json({ ok: false, error: 'Webhook processing failed' });
   }
 });

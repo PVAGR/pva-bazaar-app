@@ -56,7 +56,7 @@ router.get('/snapshots', authMiddleware, async (req, res) => {
       items: items.map(buildSummary),
     });
   } catch (error) {
-    console.error('Recovery list error:', error);
+    console.error('[recovery] listSnapshots error:', error);
     return res.status(500).json({ ok: false, error: 'Failed to load recovery snapshots' });
   }
 });
@@ -171,7 +171,7 @@ router.post('/snapshots', authMiddleware, async (req, res) => {
       item: buildSummary(doc),
     });
   } catch (error) {
-    console.error('Recovery create error:', error);
+    console.error('[recovery] createSnapshot error:', error);
     return res.status(500).json({ ok: false, error: 'Failed to save recovery snapshot' });
   }
 });
@@ -205,7 +205,7 @@ router.get('/snapshots/:id', authMiddleware, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Recovery get error:', error);
+    console.error('[recovery] getSnapshot error:', error);
     return res.status(500).json({ ok: false, error: 'Failed to fetch recovery snapshot' });
   }
 });
@@ -221,7 +221,7 @@ router.delete('/snapshots/:id', authMiddleware, async (req, res) => {
     }
     return res.json({ ok: true });
   } catch (error) {
-    console.error('Recovery delete error:', error);
+    console.error('[recovery] deleteSnapshot error:', error);
     return res.status(500).json({ ok: false, error: 'Failed to delete recovery snapshot' });
   }
 });

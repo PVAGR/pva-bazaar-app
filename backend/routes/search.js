@@ -47,7 +47,7 @@ router.get('/vector', async (req, res) => {
     const data = await vectorSearch.search(q, { limit: parseInt(limit) });
     res.json({ success: true, ...data });
   } catch (error) {
-    console.error('Vector search error:', error);
+    console.error('[search] vectorSearch error:', error);
     res.status(500).json({ success: false, error: 'An error occurred during search' });
   }
 });
@@ -89,7 +89,7 @@ router.get('/text', async (req, res) => {
       : searchStaticArchive(qSafe, lim);
     res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
-    console.error('Text search error:', error);
+    console.error('[search] textSearch error:', error);
     const { q, limit = 10 } = req.query || {};
     const qSafe = String(q || '').slice(0, 100);
     const lim = Math.min(parseInt(limit, 10) || 10, 50);
@@ -142,7 +142,7 @@ router.get('/artifacts', async (req, res) => {
 
     return res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
-    console.error('Artifact search error:', error);
+    console.error('[search] artifactSearch error:', error);
     return res.status(500).json({ success: false, error: 'An error occurred during artifact search' });
   }
 });
@@ -242,7 +242,7 @@ router.get('/all', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Combined search error:', error);
+    console.error('[search] combinedSearch error:', error);
     const { q, limit = 10 } = req.query || {};
     const qSafe = String(q || '').slice(0, 100);
     const lim = Math.min(parseInt(limit, 10) || 10, 50);
@@ -298,7 +298,7 @@ router.get('/hybrid', async (req, res) => {
       count: combinedResults.length,
     });
   } catch (error) {
-    console.error('Hybrid search error:', error);
+    console.error('[search] hybridSearch error:', error);
     res.status(500).json({ success: false, error: 'An error occurred during search' });
   }
 });
@@ -314,7 +314,7 @@ router.post('/reindex', async (req, res) => {
     const count = await vectorSearch.indexAllArtifacts();
     res.json({ success: true, message: `Successfully indexed ${count} artifacts` });
   } catch (error) {
-    console.error('Reindexing error:', error);
+    console.error('[search] reindexAll error:', error);
     res.status(500).json({ success: false, error: 'Failed to reindex artifacts' });
   }
 });

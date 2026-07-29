@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
     };
     res.json({ ok: true, data: certificateData });
   } catch (error) {
-    console.error('Certificate error:', error);
+    console.error('[certificates] getCertificate error:', error);
     res.status(500).json({ ok: false, message: 'Failed to fetch certificate' });
   }
 });
@@ -50,7 +50,7 @@ router.post('/verify/:id', async (req, res) => {
       chainOfCustody: artifact.ownershipHistory || [],
       attestations: [],
       verificationStatus: 'verified',
-    })).catch(err => console.warn('[Certificates] Operation failed:', err?.message || err));
+    })).catch(err => console.warn('[certificates] dispatchProvenanceEvent failed:', err?.message || err));
 
     res.json({
       ok: true,
@@ -58,7 +58,7 @@ router.post('/verify/:id', async (req, res) => {
       data: { lastVerification: artifact.lastVerification },
     });
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error('[certificates] verifyArtifact error:', error);
     res.status(500).json({ ok: false, message: 'Failed to verify artifact' });
   }
 });

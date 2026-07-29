@@ -163,7 +163,7 @@ router.post('/register', async (req, res) => {
     
     // Send welcome email in non-blocking mode.
     sendWelcomeEmail(user).catch((emailErr) => {
-      console.warn('Welcome email failed (non-blocking):', emailErr?.message || emailErr);
+      console.warn('[auth] sendWelcomeEmail failed (non-blocking):', emailErr?.message || emailErr);
     });
     
     res

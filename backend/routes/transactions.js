@@ -81,7 +81,7 @@ router.post('/shares/buy', authenticateToken, async (req, res) => {
 			sharesPurchased: sharesNum,
 			sharePrice: artifact.fractionalization.sharePrice || 0,
 			buyerId: wallet,
-		}, { amountUSD: amountUSD || 0, wallet })).catch(err => console.warn('[Transactions] Operation failed:', err?.message || err));
+		}, { amountUSD: amountUSD || 0, wallet })).catch(err => console.warn('[transactions] dispatchFractionalPurchaseEvent failed:', err?.message || err));
 
 		res.json({ ok: true, message: 'Shares purchased successfully', data: { artifactId, newSoldShares: artifact.fractionalization.soldShares, amountUSD: amountUSD || 0, buyer: wallet } });
 	} catch (error) {

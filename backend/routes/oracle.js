@@ -40,7 +40,7 @@ router.post('/assessment', authenticateToken, async (req, res) => {
         return assessment.save();
       })
       .catch((error) => {
-        console.error('Error generating assessment:', error);
+        console.error('[oracle] generateAssessment error:', error);
         assessment.status = 'failed';
         return assessment.save();
       });
@@ -56,7 +56,7 @@ router.post('/assessment', authenticateToken, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error creating assessment:', error);
+    console.error('[oracle] createAssessment error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to create assessment',
@@ -89,7 +89,7 @@ router.get('/assessment/:id', authenticateToken, async (req, res) => {
       assessment,
     });
   } catch (error) {
-    console.error('Error fetching assessment:', error);
+    console.error('[oracle] getAssessment error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to fetch assessment',
@@ -127,7 +127,7 @@ router.get('/assessments', authenticateToken, async (req, res) => {
       hasMore: skip + assessments.length < total,
     });
   } catch (error) {
-    console.error('Error fetching assessments:', error);
+    console.error('[oracle] listAssessments error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to fetch assessments',
@@ -166,7 +166,7 @@ router.post('/assessment/:id/regenerate', authenticateToken, async (req, res) =>
         return assessment.save();
       })
       .catch((error) => {
-        console.error('Error regenerating assessment:', error);
+        console.error('[oracle] regenerateAssessment error:', error);
         assessment.status = 'failed';
         return assessment.save();
       });
@@ -180,7 +180,7 @@ router.post('/assessment/:id/regenerate', authenticateToken, async (req, res) =>
       },
     });
   } catch (error) {
-    console.error('Error regenerating assessment:', error);
+    console.error('[oracle] regenerateAssessment error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to regenerate assessment',
@@ -212,7 +212,7 @@ router.delete('/assessment/:id', authenticateToken, async (req, res) => {
       message: 'Assessment deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting assessment:', error);
+    console.error('[oracle] deleteAssessment error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to delete assessment',

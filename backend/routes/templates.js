@@ -24,7 +24,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const total = await Template.countDocuments(query);
     res.json({ ok: true, items, total });
   } catch (err) {
-    console.error('Error fetching templates:', err);
+    console.error('[templates] listTemplates error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch templates' });
   }
 });
@@ -49,7 +49,7 @@ router.post('/', authMiddleware, async (req, res) => {
     await template.save();
     res.status(201).json({ ok: true, item: template });
   } catch (err) {
-    console.error('Error creating template:', err);
+    console.error('[templates] createTemplate error:', err);
     res.status(500).json({ ok: false, error: 'Failed to create template' });
   }
 });
@@ -61,7 +61,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     if (!template) return res.status(404).json({ ok: false, error: 'Template not found' });
     res.json({ ok: true, item: template });
   } catch (err) {
-    console.error('Error fetching template:', err);
+    console.error('[templates] getTemplate error:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch template' });
   }
 });
@@ -82,7 +82,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     await template.save();
     res.json({ ok: true, item: template });
   } catch (err) {
-    console.error('Error updating template:', err);
+    console.error('[templates] updateTemplate error:', err);
     res.status(500).json({ ok: false, error: 'Failed to update template' });
   }
 });
@@ -94,7 +94,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!result) return res.status(404).json({ ok: false, error: 'Template not found' });
     res.json({ ok: true });
   } catch (err) {
-    console.error('Error deleting template:', err);
+    console.error('[templates] deleteTemplate error:', err);
     res.status(500).json({ ok: false, error: 'Failed to delete template' });
   }
 });
