@@ -171,25 +171,7 @@ async function compressCoverFile(file, fallbackName) {
   }
 }
 
-async function uploadToCloudinary(file, cloudName, uploadPreset, resourceType = 'image') {
-  if (!file || !cloudName || !uploadPreset) return null;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', uploadPreset);
-  const endpoint = resourceType === 'raw' 
-    ? `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
-    : `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    body: formData,
-  });
-  if (!response.ok) {
-    const errBody = await response.json().catch(() => ({}));
-    throw new Error(errBody.error?.message || `Cloudinary upload failed (${response.status})`);
-  }
-  const data = await response.json();
-  return { secure_url: data.secure_url, public_id: data.public_id };
-}
+
 
 function minifyHtml(html) {
   if (!html || typeof html !== 'string') return html;
@@ -704,80 +686,62 @@ export default function BookPublishingPage() {
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
       ]);
 
-      // Upload covers directly to Cloudinary to avoid Vercel payload limits.
+      const apiBase = getApiBase();
       let frontCoverResult = null;
       let backCoverResult = null;
       let manuscriptResult = null;
-      let cloudinaryAvailable = true;
-      const cloudinaryFallbacks = { frontCover: false, backCover: false, manuscript: false };
-      try {
-        if (preparedFrontCover) {
-          try {
-            frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
-          } catch (e) {
-            console.warn('Cloudinary front cover upload failed:', e.message);
-            cloudinaryFallbacks.frontCover = true;
-          }
+      let htmlResult = null;
+      let pdfResult = null;
+      let docxResult = null;
+
+      // Upload all files directly to Cloudinary using signed URLs from the
+      // backend to avoid sending binary data through the Vercel proxy which
+      // causes network errors on large payloads.
+      if (preparedFrontCover) {
+        try {
+          frontCoverResult = await uploadFormatFileViaSignedUrl(preparedFrontCover, 'pva-bazaar-books/book-covers', 'image', apiBase, authToken);
+        } catch (e) {
+          console.warn('Cloudinary front cover upload failed:', e.message);
         }
-        if (preparedBackCover) {
-          try {
-            backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
-          } catch (e) {
-            console.warn('Cloudinary back cover upload failed:', e.message);
-            cloudinaryFallbacks.backCover = true;
-          }
+      }
+      if (preparedBackCover) {
+        try {
+          backCoverResult = await uploadFormatFileViaSignedUrl(preparedBackCover, 'pva-bazaar-books/book-covers', 'image', apiBase, authToken);
+        } catch (e) {
+          console.warn('Cloudinary back cover upload failed:', e.message);
         }
-        // Upload manuscript to Cloudinary first to avoid sending large text
-        // through the Vercel proxy which causes network errors on large payloads.
-        if (form.manuscriptMarkdown || manuscriptFile) {
-          try {
-            const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
-            const fileToUpload = manuscriptFile
-              ? manuscriptFile
-              : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
-            manuscriptResult = await uploadToCloudinary(fileToUpload, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
-          } catch (e) {
-            console.warn('Cloudinary manuscript upload failed:', e.message);
-            cloudinaryFallbacks.manuscript = true;
-          }
+      }
+      if (form.manuscriptMarkdown || manuscriptFile) {
+        try {
+          const fileToUpload = manuscriptFile
+            ? manuscriptFile
+            : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+          manuscriptResult = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
+        } catch (e) {
+          console.warn('Cloudinary manuscript upload via signed URL failed:', e.message);
         }
-        // Format files (HTML, PDF, DOCX) are uploaded directly to Cloudinary
-        // using signed upload URLs from the backend. This avoids sending binary
-        // data through the Vercel proxy which causes network errors on large payloads.
-        const apiBase = getApiBase();
-        let htmlResult = null;
-        let pdfResult = null;
-        let docxResult = null;
-        if (htmlFile) {
-          try {
-            const compressed = await compressFileForUpload(htmlFile);
-            htmlResult = await uploadFormatFileViaSignedUrl(compressed, 'pva-bazaar-books/book-html', 'raw', apiBase, authToken);
-          } catch (e) {
-            console.warn('HTML upload via signed URL failed:', e.message);
-          }
+      }
+      if (htmlFile) {
+        try {
+          const compressed = await compressFileForUpload(htmlFile);
+          htmlResult = await uploadFormatFileViaSignedUrl(compressed, 'pva-bazaar-books/book-html', 'raw', apiBase, authToken);
+        } catch (e) {
+          console.warn('HTML upload via signed URL failed:', e.message);
         }
-        if (pdfFile) {
-          try {
-            pdfResult = await uploadFormatFileViaSignedUrl(pdfFile, 'pva-bazaar-books/book-pdfs', 'raw', apiBase, authToken);
-          } catch (e) {
-            console.warn('PDF upload via signed URL failed:', e.message);
-          }
+      }
+      if (pdfFile) {
+        try {
+          pdfResult = await uploadFormatFileViaSignedUrl(pdfFile, 'pva-bazaar-books/book-pdfs', 'raw', apiBase, authToken);
+        } catch (e) {
+          console.warn('PDF upload via signed URL failed:', e.message);
         }
-        if (docxFile) {
-          try {
-            docxResult = await uploadFormatFileViaSignedUrl(docxFile, 'pva-bazaar-books/book-docx', 'raw', apiBase, authToken);
-          } catch (e) {
-            console.warn('DOCX upload via signed URL failed:', e.message);
-          }
+      }
+      if (docxFile) {
+        try {
+          docxResult = await uploadFormatFileViaSignedUrl(docxFile, 'pva-bazaar-books/book-docx', 'raw', apiBase, authToken);
+        } catch (e) {
+          console.warn('DOCX upload via signed URL failed:', e.message);
         }
-        // Only disable cloudinary if ALL direct uploads failed
-        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult || htmlResult || pdfResult || docxResult;
-        if (!anySucceeded && (cloudinaryFallbacks.frontCover || cloudinaryFallbacks.backCover || cloudinaryFallbacks.manuscript)) {
-          cloudinaryAvailable = false;
-        }
-      } catch (cloudErr) {
-        console.warn('Cloudinary direct upload failed, falling back to backend upload:', cloudErr.message);
-        cloudinaryAvailable = false;
       }
 
       // ── Archive upload (Internet Archive + IPFS) ─────────────────────────
@@ -799,7 +763,7 @@ export default function BookPublishingPage() {
           const slug = form.slug || `book-${Date.now()}`;
           console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
           setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
-          const ARCHIVE_TIMEOUT_MS = 30000;
+          const ARCHIVE_TIMEOUT_MS = 70000;
           const archiveTimeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
           );
@@ -867,10 +831,14 @@ export default function BookPublishingPage() {
         } else if (form.manuscriptMarkdown && (!hasArchiveUrls || !form.bookId)) {
           // Send raw markdown as fallback only when we have no archive URLs
           // or this is the first save (no bookId yet). Subsequent saves skip it.
-          payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
-        } else if (manuscriptFile && cloudinaryFallbacks.manuscript) {
-          // Fallback: send manuscript file to backend
-          payload.append('manuscriptFile', manuscriptFile);
+          // To avoid Vercel proxy timeout/body-limit issues, truncate at 500KB.
+          const MAX_INLINE_MD = 500000;
+          if (form.manuscriptMarkdown.length > MAX_INLINE_MD) {
+            console.warn(`[PUBLISH-FLOW] Truncating markdown to ${MAX_INLINE_MD} bytes (was ${form.manuscriptMarkdown.length})`);
+            payload.append('manuscriptMarkdown', form.manuscriptMarkdown.slice(0, MAX_INLINE_MD));
+          } else {
+            payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
+          }
         }
         
         payload.append('publish', publish ? 'true' : 'false');
@@ -878,15 +846,11 @@ export default function BookPublishingPage() {
         if (frontCoverResult) {
           payload.append('frontCoverUrl', frontCoverResult.secure_url);
           payload.append('frontCoverPublicId', frontCoverResult.public_id);
-        } else if (preparedFrontCover && cloudinaryFallbacks.frontCover) {
-          payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || 'front-cover.jpg');
         }
         
         if (backCoverResult) {
           payload.append('backCoverUrl', backCoverResult.secure_url);
           payload.append('backCoverPublicId', backCoverResult.public_id);
-        } else if (preparedBackCover && cloudinaryFallbacks.backCover) {
-          payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
 
         // Send format file Cloudinary URLs (no binary in FormData)
