@@ -727,11 +727,15 @@ export default function BookPublishingPage() {
             cloudinaryFallbacks.backCover = true;
           }
         }
-        // Upload manuscript directly to Cloudinary if it's a file
-        if (manuscriptFile && !form.manuscriptMarkdown) {
+        // Upload manuscript to Cloudinary first to avoid sending large text
+        // through the Vercel proxy which causes network errors on large payloads.
+        if (form.manuscriptMarkdown || manuscriptFile) {
           try {
             const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
-            manuscriptResult = await uploadToCloudinary(manuscriptFile, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
+            const fileToUpload = manuscriptFile
+              ? manuscriptFile
+              : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+            manuscriptResult = await uploadToCloudinary(fileToUpload, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
           } catch (e) {
             console.warn('Cloudinary manuscript upload failed:', e.message);
             cloudinaryFallbacks.manuscript = true;
@@ -838,8 +842,11 @@ export default function BookPublishingPage() {
         payload.append('audience', form.audience);
         payload.append('language', form.language);
         
-        // Send archive mirrors if archive upload succeeded
-        if (archiveData) {
+        // Check if archive upload actually produced any usable URLs
+        const hasArchiveUrls = archiveData && (
+          archiveData.archiveOrgUrl || archiveData.ipfsUrl || archiveData.storachaUrl || archiveData.pinataUrl
+        );
+        if (hasArchiveUrls) {
           if (archiveData.archiveOrgUrl) payload.append('manuscriptUrl', archiveData.archiveOrgUrl);
           payload.append('mirrors', JSON.stringify({
             archiveOrg: archiveData.archiveOrgUrl || '',
@@ -851,15 +858,16 @@ export default function BookPublishingPage() {
           if (archiveData.format) payload.append('format', archiveData.format);
           if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
         }
-        // Send manuscriptMarkdown as fallback only if we have no archive mirrors
-        // or this is the first save (no bookId yet). Subsequent saves skip it
-        // since the backend already stored it.
-        if (form.manuscriptMarkdown && (!archiveData || !form.bookId)) {
-          payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
-        } else if (manuscriptResult) {
+        // Send manuscript content — prefer Cloudinary URL over raw text to
+        // keep the backend POST payload small and avoid Vercel proxy timeouts.
+        if (manuscriptResult) {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);
           payload.append('manuscriptType', manuscriptFile?.name?.toLowerCase().endsWith('.pdf') ? 'pdf' : 
                          manuscriptFile?.name?.toLowerCase().endsWith('.docx') ? 'docx' : 'raw');
+        } else if (form.manuscriptMarkdown && (!hasArchiveUrls || !form.bookId)) {
+          // Send raw markdown as fallback only when we have no archive URLs
+          // or this is the first save (no bookId yet). Subsequent saves skip it.
+          payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         } else if (manuscriptFile && cloudinaryFallbacks.manuscript) {
           // Fallback: send manuscript file to backend
           payload.append('manuscriptFile', manuscriptFile);
