@@ -11,12 +11,62 @@ function getAuthHeaders() {
 }
 
 /**
- * Upload a file to Internet Archive via the backend proxy.
- * The backend handles presigned URL generation and S3 upload,
- * avoiding CORS and browser-blocking issues.
+ * Upload a file to Internet Archive via direct browser→S3 PUT.
+ * Gets LOW auth config from the backend (no secret key in JS bundle),
+ * then PUTs the file directly to s3.us.archive.org.
+ * Falls back to the backend proxy for small files.
  */
 export async function uploadToInternetArchive(file, identifier) {
-  console.log('[ARCHIVES] Uploading via IA proxy:', { identifier, size: file.size });
+  const filename = file.name || `${identifier}.md`;
+  console.log('[ARCHIVES] Uploading to IA:', { identifier, filename, size: file.size });
+
+  // Get IA upload config from backend (returns LOW auth headers + S3 URL)
+  const configUrl = `${getApi()}/book-publishing/ia-upload-config?identifier=${encodeURIComponent(identifier)}&filename=${encodeURIComponent(filename)}`;
+  let config;
+  try {
+    const configRes = await fetch(configUrl, { headers: getAuthHeaders() });
+    if (!configRes.ok) {
+      const err = await configRes.json().catch(() => ({}));
+      throw new Error(err.error || `IA config fetch failed (${configRes.status})`);
+    }
+    config = await configRes.json();
+  } catch (configErr) {
+    console.warn('[ARCHIVES] IA config fetch failed:', configErr.message);
+    // Fall back to proxy for small files
+    if (file.size > 4000000) throw new Error('IA config unavailable for large file upload');
+    return uploadToInternetArchiveViaProxy(file, identifier);
+  }
+
+  // PUT file directly to IA S3 (bypasses Vercel, no size limit)
+  console.log('[ARCHIVES] Direct upload to IA S3:', config.uploadUrl);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 120000);
+  try {
+    const uploadRes = await fetch(config.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        ...config.headers,
+        'Authorization': config.authHeader,
+      },
+      signal: controller.signal,
+    });
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text().catch(() => '');
+      throw new Error(`IA S3 direct upload failed (${uploadRes.status}): ${errText.slice(0, 200)}`);
+    }
+    console.log('[ARCHIVES] IA direct upload succeeded:', config.finalUrl);
+    return config.finalUrl;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Fallback: upload via backend proxy (for small files only).
+ */
+async function uploadToInternetArchiveViaProxy(file, identifier) {
+  console.log('[ARCHIVES] Falling back to IA proxy:', { identifier, size: file.size });
 
   let manuscriptMarkdown;
   try {

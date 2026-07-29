@@ -1168,6 +1168,47 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
   }
 });
 
+// ── Internet Archive direct browser upload config ────────────────────────────
+// Returns the LOW auth headers and IA S3 URL so the browser can PUT the file
+// directly to s3.us.archive.org without going through the Vercel proxy.
+// This is required for large manuscripts (>4.5MB) that would exceed Vercel's
+// request body limit or timeout.
+router.get('/ia-upload-config', authenticateBookPublishing, (req, res) => {
+  try {
+    const iaAccessKey = process.env.IA_ACCESS_KEY;
+    const iaSecretKey = process.env.IA_SECRET_KEY;
+    if (!iaAccessKey || !iaSecretKey) {
+      return res.status(503).json({ ok: false, error: 'IA credentials not configured' });
+    }
+
+    const identifier = sanitizeText(req.query?.identifier || '', 120);
+    const filename = sanitizeText(req.query?.filename || 'manuscript.md', 200);
+    if (!identifier) {
+      return res.status(400).json({ ok: false, error: 'identifier query param is required' });
+    }
+
+    const uploadUrl = `https://s3.us.archive.org/${identifier}/${filename}`;
+    const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
+
+    console.log('[IA-CONFIG] Returning LOW auth config for', { identifier, filename });
+    return res.json({
+      ok: true,
+      uploadUrl,
+      finalUrl,
+      authHeader: `LOW ${iaAccessKey}:${iaSecretKey}`,
+      headers: {
+        'Content-Type': 'text/markdown',
+        'x-amz-auto-make-bucket': '1',
+        'x-archive-meta-collection': 'opensource',
+        'x-archive-meta-mediatype': 'texts',
+      },
+    });
+  } catch (error) {
+    console.error('[IA-CONFIG] Error:', error.message);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 // ── Storacha (IPFS + Filecoin) upload proxy ─────────────────────────────────
 // NOTE: Storacha's w3up API (successor to web3.storage) uses UCAN-based auth
 // which requires the @storacha/client library + a delegation proof. The legacy
