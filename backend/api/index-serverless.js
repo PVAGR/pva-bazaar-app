@@ -93,10 +93,20 @@ async function ensureDatabaseState() {
 app.use(async (req, res, next) => {
   res.setHeader('Vary', 'Origin');
   const origin = req.headers.origin || '';
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
+
+  const allowedOrigins = new Set([
+    'https://pvabazaar.org',
+    'https://www.pvabazaar.org',
+    ...(process.env.ALLOWED_ORIGIN
+      ? process.env.ALLOWED_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+      : []),
+  ]);
+
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const corsOrigin = allowedOrigins.has(origin) || isLocalhost ? origin : 'https://pvabazaar.org';
+
+  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept');
   if (req.method === 'OPTIONS') {

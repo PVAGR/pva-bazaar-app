@@ -30,23 +30,17 @@ export const Telemetry = {
   },
 };
 
-if (globalThis.window && globalThis.MutationObserver) {
-  let currentPath = globalThis.window.location.hash;
+if (globalThis.window) {
+  let lastPath = globalThis.window.location.hash.replace(/^#\/?/, '') || '/';
 
-  const startObserver = () => {
-    const observer = new globalThis.MutationObserver(() => {
-      if (globalThis.window.location.hash !== currentPath) {
-        currentPath = globalThis.window.location.hash;
-        Telemetry.trackPageView(currentPath);
-      }
-    });
-
-    observer.observe(globalThis.document.body, { childList: true, subtree: true });
-  };
-
-  if (globalThis.document?.body) {
-    startObserver();
-  } else {
-    globalThis.window.addEventListener('DOMContentLoaded', startObserver, { once: true });
+  function trackHashChange() {
+    const path = globalThis.window.location.hash.replace(/^#\/?/, '') || '/';
+    if (path !== lastPath) {
+      lastPath = path;
+      Telemetry.trackPageView(path);
+    }
   }
+
+  globalThis.window.addEventListener('hashchange', trackHashChange);
+  trackHashChange();
 }
