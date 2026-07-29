@@ -674,7 +674,7 @@ mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto
 // NEW FEATURES: Payment Splitting, Voting, Item Reclaim
 try {
   const bankIntegrationRoutes = require('../routes/bankIntegration');
-  app.use('/api/payouts', bankIntegrationRoutes);
+  app.use('/api/bank-accounts', bankIntegrationRoutes);
 } catch (err) {
   console.warn('⚠️ Optional route disabled: bankIntegration', err?.message || err);
 }
