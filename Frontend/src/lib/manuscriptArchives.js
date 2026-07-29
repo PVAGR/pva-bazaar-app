@@ -37,10 +37,9 @@ export async function uploadToInternetArchive(file, identifier) {
     return uploadToInternetArchiveViaProxy(file, identifier);
   }
 
-  // PUT file directly to IA S3 (bypasses Vercel, no size limit)
+  // PUT file directly to IA S3 (bypasses Vercel, no size limit).
+  // No AbortController timeout — IA can take minutes to process large files.
   console.log('[ARCHIVES] Direct upload to IA S3:', config.uploadUrl);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 120000);
   try {
     const uploadRes = await fetch(config.uploadUrl, {
       method: 'PUT',
@@ -49,7 +48,6 @@ export async function uploadToInternetArchive(file, identifier) {
         ...config.headers,
         'Authorization': config.authHeader,
       },
-      signal: controller.signal,
     });
     if (!uploadRes.ok) {
       const errText = await uploadRes.text().catch(() => '');
@@ -57,8 +55,6 @@ export async function uploadToInternetArchive(file, identifier) {
     }
     console.log('[ARCHIVES] IA direct upload succeeded:', config.finalUrl);
     return config.finalUrl;
-  } finally {
-    clearTimeout(timer);
   }
 }
 

@@ -1199,6 +1199,7 @@ router.get('/ia-upload-config', authenticateBookPublishing, (req, res) => {
       headers: {
         'Content-Type': 'text/markdown',
         'x-amz-auto-make-bucket': '1',
+        'x-archive-interactive-priority': '1',
         'x-archive-meta-collection': 'opensource',
         'x-archive-meta-mediatype': 'texts',
       },
