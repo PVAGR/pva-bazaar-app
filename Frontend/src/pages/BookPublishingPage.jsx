@@ -851,9 +851,10 @@ export default function BookPublishingPage() {
           if (archiveData.format) payload.append('format', archiveData.format);
           if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
         }
-        // Always send manuscriptMarkdown as fallback (reader page uses this
-        // when mirrors are unavailable, e.g. during IA indexing delay)
-        if (form.manuscriptMarkdown) {
+        // Send manuscriptMarkdown as fallback only if we have no archive mirrors
+        // or this is the first save (no bookId yet). Subsequent saves skip it
+        // since the backend already stored it.
+        if (form.manuscriptMarkdown && (!archiveData || !form.bookId)) {
           payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         } else if (manuscriptResult) {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);
@@ -913,6 +914,9 @@ export default function BookPublishingPage() {
         });
         setSelectedBookId(saved.id);
         setSavedBookSlug(publish ? saved.slug || '' : '');
+        if (saved.slug) {
+          setForm(prev => ({ ...prev, slug: saved.slug }));
+        }
         setSuccess(
           publish
             ? `"${saved.title}" is published online and visible on the public bookshelf.`

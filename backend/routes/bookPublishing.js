@@ -581,34 +581,42 @@ async function resolveUniqueSlug(baseSlug, excludeId = null) {
   const seed = slugify(String(baseSlug || 'book'), { lower: true, strict: true });
   const base = seed || 'book';
   let candidate = base;
-  let suffix = 2;
 
-  while (true) {
-    let match = null;
-    let cloudinaryMatch = null;
+  async function slugExists(slug) {
     if (shouldUseFileBookStore()) {
       const books = await listFileBooks();
-      match = books.find((book) => {
-        if (String(book.slug || '') !== candidate) return false;
+      return books.some((book) => {
+        if (String(book.slug || '') !== slug) return false;
         if (!excludeId) return true;
         return String(book._id || '') !== String(excludeId);
-      }) || null;
-    } else {
-      match = await BookProject.findOne({
-        slug: candidate,
-        ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-      })
-        .select('_id')
-        .lean();
-      if (!match && isCloudinaryConfigured()) {
-        cloudinaryMatch = await loadCloudinaryBookManifest(candidate);
-      }
+      });
     }
-
-    if (!match && !cloudinaryMatch) return candidate;
-    candidate = `${base}-${suffix}`;
-    suffix += 1;
+    const match = await BookProject.findOne({
+      slug,
+      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+    })
+      .select('_id')
+      .lean();
+    if (match) return true;
+    if (isCloudinaryConfigured()) {
+      const cloudMatch = await loadCloudinaryBookManifest(slug);
+      if (cloudMatch) return true;
+    }
+    return false;
   }
+
+  // Try exact slug first
+  if (!(await slugExists(candidate))) return candidate;
+
+  // Append short random suffix for cleaner slugs (e.g. "my-book-a3f" not "my-book-2")
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const suffix = Math.random().toString(36).substring(2, 5);
+    candidate = `${base}-${suffix}`;
+    if (!(await slugExists(candidate))) return candidate;
+  }
+
+  // Last resort: timestamp suffix
+  return `${base}-${Date.now().toString(36)}`;
 }
 
 async function listUserBooks(userId) {

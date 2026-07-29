@@ -1,6 +1,5 @@
 const express = require('express');
 const helmet = require('helmet');
-const cors = require('cors');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 const { getBuildInfo } = require('../lib/buildInfo');
@@ -48,22 +47,7 @@ app.use(helmet({
   },
 }));
 
-// CORS - restrict to specific origins in production
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:5173', 'https://pvabazaar.org'];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // Allow requests with no origin (mobile apps, curl)
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS policy violation'));
-    }
-  },
-  credentials: true,
-}));
+// Body parsers
 app.use(express.json({ limit: '30mb' }));
 app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
