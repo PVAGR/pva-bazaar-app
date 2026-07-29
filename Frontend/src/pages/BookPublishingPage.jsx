@@ -341,6 +341,8 @@ export default function BookPublishingPage() {
   const [pinataUploadState, setPinataUploadState] = useState({ status: 'idle', url: '' });
   const [batchUploading, setBatchUploading] = useState(false);
   const [manuscriptSizeBytes, setManuscriptSizeBytes] = useState(0);
+  const [dragOverField, setDragOverField] = useState('');
+  const [uploadProgress, setUploadProgress] = useState({ ia: 0, cloudinary: 0, pinata: 0 });
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
@@ -360,6 +362,37 @@ export default function BookPublishingPage() {
 
   useEffect(() => {
     loadBooks();
+  }, []);
+
+  // Auto-save draft to localStorage every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const hasContent = form.title || form.manuscriptMarkdown || frontCoverFile || backCoverFile || manuscriptFile;
+      if (!hasContent) return;
+      try {
+        const draft = {
+          form,
+          manuscriptFileName,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem('pva:bookDraft', JSON.stringify(draft));
+      } catch (_e) {}
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [form, manuscriptFileName, frontCoverFile, backCoverFile, manuscriptFile]);
+
+  // Restore auto-saved draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pva:bookDraft');
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft?.form && draft?.timestamp > Date.now() - 86400000) {
+          setForm(draft.form);
+          if (draft.manuscriptFileName) setManuscriptFileName(draft.manuscriptFileName);
+        }
+      }
+    } catch (_e) {}
   }, []);
 
   useEffect(() => {
@@ -673,6 +706,57 @@ export default function BookPublishingPage() {
     setDocxFileName(file?.name || '');
   }
 
+  function handleDragOver(e, fieldName) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer?.types?.includes('Files')) {
+      setDragOverField(fieldName);
+    }
+  }
+
+  function handleDragLeave(e, fieldName) {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX; const y = e.clientY;
+    if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+      if (dragOverField === fieldName) setDragOverField('');
+    }
+  }
+
+  function handleDropFile(e, fieldName) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverField('');
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (fieldName === 'frontCover') {
+      setFrontCoverFile(file);
+      setFrontCoverPreview(URL.createObjectURL(file));
+    } else if (fieldName === 'backCover') {
+      setBackCoverFile(file);
+      setBackCoverPreview(URL.createObjectURL(file));
+    } else if (fieldName === 'manuscript') {
+      const event = { target: { files: [file] } };
+      handleManuscriptFile(event);
+    } else if (fieldName === 'html') {
+      setHtmlFile(file);
+      setHtmlFileName(file.name);
+    } else if (fieldName === 'pdf') {
+      setPdfFile(file);
+      setPdfFileName(file.name);
+    } else if (fieldName === 'docx') {
+      setDocxFile(file);
+      setDocxFileName(file.name);
+    }
+  }
+
+  function dropStyle(fieldName) {
+    return dragOverField === fieldName
+      ? { border: '2px dashed #1a7d3a', borderRadius: '14px', padding: '0.65rem', background: 'color-mix(in srgb, #1a7d3a 6%, transparent)' }
+      : {};
+  }
+
   async function handleUploadToCloudinary() {
     const fileToUpload = manuscriptFile
       || new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
@@ -705,9 +789,12 @@ export default function BookPublishingPage() {
       return;
     }
     setIaUploadState({ status: 'uploading', url: '' });
+    setUploadProgress(prev => ({ ...prev, ia: 0 }));
     try {
       const slug = form.slug || `manuscript-${Date.now()}`;
-      const url = await uploadToInternetArchive(fileToUpload, slug);
+      const url = await uploadToInternetArchive(fileToUpload, slug, (pct) => {
+        setUploadProgress(prev => ({ ...prev, ia: pct }));
+      });
       setIaUploadState({ status: 'done', url });
       setError('');
       setSuccess('Manuscript uploaded to Internet Archive.');
@@ -756,8 +843,11 @@ export default function BookPublishingPage() {
     // IA — always eligible
     tasks.push((async () => {
       setIaUploadState({ status: 'uploading', url: '' });
+      setUploadProgress(prev => ({ ...prev, ia: 0 }));
       try {
-        const url = await uploadToInternetArchive(fileToUpload, slug);
+        const url = await uploadToInternetArchive(fileToUpload, slug, (pct) => {
+          setUploadProgress(prev => ({ ...prev, ia: pct }));
+        });
         setIaUploadState({ status: 'done', url });
         return { service: 'IA', ok: true };
       } catch (e) {
@@ -1236,7 +1326,13 @@ export default function BookPublishingPage() {
                 </label>
               </div>
 
-              <div className="book-publish__field">
+              <div
+                className="book-publish__field"
+                style={dropStyle('frontCover')}
+                onDragOver={(e) => handleDragOver(e, 'frontCover')}
+                onDragLeave={(e) => handleDragLeave(e, 'frontCover')}
+                onDrop={(e) => handleDropFile(e, 'frontCover')}
+              >
                 <span>Front cover image</span>
                 <div className="book-publish__fileRow">
                   <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="frontCoverUpload">
@@ -1255,7 +1351,13 @@ export default function BookPublishingPage() {
                   onChange={(e) => handleCoverChange(e, setFrontCoverFile, setFrontCoverPreview)}
                 />
               </div>
-              <div className="book-publish__field">
+              <div
+                className="book-publish__field"
+                style={dropStyle('backCover')}
+                onDragOver={(e) => handleDragOver(e, 'backCover')}
+                onDragLeave={(e) => handleDragLeave(e, 'backCover')}
+                onDrop={(e) => handleDropFile(e, 'backCover')}
+              >
                 <span>Back cover image</span>
                 <div className="book-publish__fileRow">
                   <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="backCoverUpload">
@@ -1274,7 +1376,13 @@ export default function BookPublishingPage() {
                   onChange={(e) => handleCoverChange(e, setBackCoverFile, setBackCoverPreview)}
                 />
               </div>
-              <div className="book-publish__field">
+              <div
+                className="book-publish__field"
+                style={dropStyle('manuscript')}
+                onDragOver={(e) => handleDragOver(e, 'manuscript')}
+                onDragLeave={(e) => handleDragLeave(e, 'manuscript')}
+                onDrop={(e) => handleDropFile(e, 'manuscript')}
+              >
                 <span>Manuscript file</span>
                 <div className="book-publish__fileRow">
                   <button
@@ -1319,7 +1427,13 @@ export default function BookPublishingPage() {
                   Upload specific file formats for different reading experiences. HTML renders on the website, PDF is downloadable, DOCX is readable on site.
                 </p>
 
-                <div className="book-publish__field">
+                <div
+                  className="book-publish__field"
+                  style={dropStyle('html')}
+                  onDragOver={(e) => handleDragOver(e, 'html')}
+                  onDragLeave={(e) => handleDragLeave(e, 'html')}
+                  onDrop={(e) => handleDropFile(e, 'html')}
+                >
                   <span>HTML version (for web reader)</span>
                   <div className="book-publish__fileRow">
                     <button
@@ -1342,7 +1456,13 @@ export default function BookPublishingPage() {
                   />
                 </div>
 
-                <div className="book-publish__field">
+                <div
+                  className="book-publish__field"
+                  style={dropStyle('pdf')}
+                  onDragOver={(e) => handleDragOver(e, 'pdf')}
+                  onDragLeave={(e) => handleDragLeave(e, 'pdf')}
+                  onDrop={(e) => handleDropFile(e, 'pdf')}
+                >
                   <span>PDF version (for download)</span>
                   <div className="book-publish__fileRow">
                     <button
@@ -1365,7 +1485,13 @@ export default function BookPublishingPage() {
                   />
                 </div>
 
-                <div className="book-publish__field">
+                <div
+                  className="book-publish__field"
+                  style={dropStyle('docx')}
+                  onDragOver={(e) => handleDragOver(e, 'docx')}
+                  onDragLeave={(e) => handleDragLeave(e, 'docx')}
+                  onDrop={(e) => handleDropFile(e, 'docx')}
+                >
                   <span>DOCX version (for reading on site)</span>
                   <div className="book-publish__fileRow">
                     <button
@@ -1409,6 +1535,24 @@ export default function BookPublishingPage() {
                       {manuscriptSizeBytes > 0 ? <span> File size: <strong>{formatBytes(manuscriptSizeBytes)}</strong>.</span> : null}
                     </p>
                     {!hasContent ? <p className="book-publish__muted" style={{ color: '#b33737', fontWeight: 600 }}>Add manuscript text or select a file first.</p> : null}
+                    {anyUploading ? (
+                      <div style={{ width: '100%', marginBottom: '0.5rem' }}>
+                        {['ia', 'cloudinary', 'pinata'].map(svc => {
+                          const pct = uploadProgress[svc] || 0;
+                          const state = svc === 'ia' ? iaUploadState.status : svc === 'cloudinary' ? cloudinaryUploadState.status : pinataUploadState.status;
+                          if (state !== 'uploading') return null;
+                          return (
+                            <div key={svc} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', fontSize: '0.8rem' }}>
+                              <span style={{ minWidth: '5rem', fontWeight: 600 }}>{svc === 'ia' ? 'IA' : svc === 'cloudinary' ? 'Cloudinary' : 'Pinata'}</span>
+                              <div style={{ flex: 1, height: '8px', background: 'var(--site-border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', background: '#1a7d3a', borderRadius: '4px', transition: 'width 0.3s ease' }} />
+                              </div>
+                              <span style={{ minWidth: '3rem', textAlign: 'right', color: 'var(--site-text-muted)' }}>{pct}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.65rem' }}>
                       {/* Batch upload: Upload to all available */}
                       {hasContent ? (
@@ -1491,13 +1635,13 @@ export default function BookPublishingPage() {
                         );
                       })()}
 
-                      {/* Storacha — always disabled */}
+                      {/* Storacha — permanently disabled */}
                       <button
                         type="button"
                         className="book-publish__button"
-                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.5, cursor: 'not-allowed', fontSize: '0.85rem' }}
+                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.4, cursor: 'not-allowed', fontSize: '0.8rem' }}
                         disabled
-                        title="Storacha endpoint is currently unavailable"
+                        title="Storacha backend is not available"
                       >
                         ✗ Storacha
                       </button>

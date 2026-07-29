@@ -16,7 +16,7 @@ function getAuthHeaders() {
  * then PUTs the file directly to s3.us.archive.org.
  * Falls back to the backend proxy for small files.
  */
-export async function uploadToInternetArchive(file, identifier) {
+export async function uploadToInternetArchive(file, identifier, onProgress) {
   const filename = file.name || `${identifier}.md`;
   console.log('[ARCHIVES] Uploading to IA:', { identifier, filename, size: file.size });
 
@@ -37,27 +37,34 @@ export async function uploadToInternetArchive(file, identifier) {
     return uploadToInternetArchiveViaProxy(file, identifier);
   }
 
-  // PUT file directly to IA S3 (bypasses Vercel, no size limit).
+  // PUT file directly to IA S3 (bypasses Vercel, no size limit) via XHR for progress.
   // No AbortController timeout — IA can take minutes to process large files.
   console.log('[ARCHIVES] Direct upload to IA S3:', config.uploadUrl);
-  try {
-    const uploadRes = await fetch(config.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        ...config.headers,
-        'Authorization': config.authHeader,
-      },
-    });
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text().catch(() => '');
-      throw new Error(`IA S3 direct upload failed (${uploadRes.status}): ${errText.slice(0, 200)}`);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', config.uploadUrl);
+    for (const [key, value] of Object.entries(config.headers || {})) {
+      xhr.setRequestHeader(key, value);
     }
-    console.log('[ARCHIVES] IA direct upload succeeded:', config.finalUrl);
-    return config.finalUrl;
-  } catch (uploadErr) {
-    throw new Error(`IA direct upload error: ${uploadErr.message}`);
-  }
+    xhr.setRequestHeader('Authorization', config.authHeader);
+    if (onProgress && typeof onProgress === 'function') {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        console.log('[ARCHIVES] IA direct upload succeeded:', config.finalUrl);
+        resolve(config.finalUrl);
+      } else {
+        reject(new Error(`IA S3 direct upload failed (${xhr.status})`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('IA S3 direct upload network error'));
+    xhr.send(file);
+  });
 }
 
 /**
