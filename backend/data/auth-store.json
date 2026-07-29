@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "_id": "1",
+      "name": "PVA Admin",
+      "username": "admin",
+      "email": "admin@pvabazaar.org",
+      "password": "$2a$10$Zcv4WTXXJiD3XOMy.wEolOIyna/TMZW0goiF9e28Mi7ePUzsXEK.K",
+      "role": "admin",
+      "createdAt": "2026-07-29T21:55:13.527Z",
+      "updatedAt": "2026-07-29T21:55:13.527Z"
+    },
+    {
+      "_id": "2",
+      "name": "Richy Rich",
+      "username": "richyrichaii",
+      "email": "richyrichaii@local",
+      "password": "$2a$10$CXl0kW4n5XP3h96KIIcwd.YLVlKGSOfMYvc8M5U0/LetoagqWxHT6",
+      "role": "admin",
+      "createdAt": "2026-07-29T21:55:13.643Z",
+      "updatedAt": "2026-07-29T21:55:13.643Z"
+    }
+  ],
+  "seeded": true,
+  "nextId": 3,
+  "updatedAt": "2026-07-29T21:55:13.645Z"
+}

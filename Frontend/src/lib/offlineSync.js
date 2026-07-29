@@ -73,7 +73,7 @@ const browserWindow = globalThis?.window;
 if (browserWindow) {
   browserWindow.addEventListener('online', () => {
     if (syncHandler) {
-      OfflineSync.dequeue(syncHandler).catch(() => {});
+      OfflineSync.dequeue(syncHandler).catch(() => { /* fire-and-forget online sync */ });
     }
   });
 

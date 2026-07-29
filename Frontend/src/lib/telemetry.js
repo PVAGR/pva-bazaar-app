@@ -18,7 +18,7 @@ export const Telemetry = {
           ts: Date.now(),
           locale: globalThis.navigator?.language,
         }),
-      }).catch(() => {});
+      }).catch(() => { /* fire-and-forget telemetry */ });
     }
 
     if (import.meta.env.DEV) console.log('[Telemetry]', event, data);

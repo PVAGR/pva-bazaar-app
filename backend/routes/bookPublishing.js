@@ -932,60 +932,6 @@ router.get('/mine', authenticateBookPublishing, async (req, res) => {
   }
 });
 
-router.get('/debug/public-counts', async (_req, res) => {
-  try {
-    setNoCacheHeaders(res);
-
-    const mongoState = getMongoState();
-    const mongoConnected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
-    const storeMode = mongoConnected ? 'mongo' : mongoState.mode || 'unknown';
-
-    let totalBooks = 0;
-    let publishedBooks = 0;
-    let draftBooks = 0;
-    let samplePublishedBookIds = [];
-    let areIdsMongoStyle = false;
-
-    if (mongoConnected) {
-      const total = await BookProject.estimatedDocumentCount();
-      const published = await BookProject.countDocuments({ status: 'published' });
-      const draft = await BookProject.countDocuments({ status: 'draft' });
-      const sample = await BookProject.find({ status: 'published' })
-        .select('_id')
-        .limit(5)
-        .lean();
-
-      totalBooks = Number(total || 0);
-      publishedBooks = Number(published || 0);
-      draftBooks = Number(draft || 0);
-      samplePublishedBookIds = (sample || []).map((d) => String(d?._id || ''));
-      areIdsMongoStyle = samplePublishedBookIds.some((id) => /^[0-9a-fA-F]{24}$/.test(id));
-    } else {
-      // Avoid calling private store details; rely on cached store functions only.
-      // Mongo not connected: public counts are intentionally limited.
-      // Do not expose store internal structures or fall back to any mock content in production.
-      totalBooks = 0;
-      publishedBooks = 0;
-      draftBooks = 0;
-      samplePublishedBookIds = [];
-      areIdsMongoStyle = false;
-    }
-
-    return res.json({
-      ok: true,
-      mongoConnected,
-      storeMode,
-      totalBooks,
-      publishedBooks,
-      draftBooks,
-      samplePublishedBookIds,
-      areIdsMongoStyle,
-    });
-  } catch (e) {
-    return res.status(500).json({ ok: false, error: 'Failed to compute public counts' });
-  }
-});
-
 function setNoCacheHeaders(res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, s-maxage=0');
   res.setHeader('Pragma', 'no-cache');
@@ -2387,11 +2333,11 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
 
     if (book.frontCover?.provider === 'local' && book.frontCover?.localFilename) {
       const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.frontCover.localFilename));
-      await fsp.rm(filePath, { force: true }).catch(() => {});
+      await fsp.rm(filePath, { force: true }).catch(err => console.warn('[book-publishing] failed to delete front cover file:', err?.message || err));
     }
     if (book.backCover?.provider === 'local' && book.backCover?.localFilename) {
       const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.backCover.localFilename));
-      await fsp.rm(filePath, { force: true }).catch(() => {});
+      await fsp.rm(filePath, { force: true }).catch(err => console.warn('[book-publishing] failed to delete back cover file:', err?.message || err));
     }
 
     if (isCloudinaryConfigured()) {
@@ -2417,7 +2363,7 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
       }
 
       if (idsToDelete.length) {
-        await cloudinary.api.delete_resources(idsToDelete, { resource_type: 'raw' }).catch(() => {});
+        await cloudinary.api.delete_resources(idsToDelete, { resource_type: 'raw' }).catch(err => console.warn('[book-publishing] failed to delete cloudinary resources:', err?.message || err));
       }
     }
 

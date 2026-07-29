@@ -2830,7 +2830,7 @@ router.get('/persona/context', async (req, res) => {
       await OpenClawMemory.updateMany(
         { _id: { $in: ids } },
         { $set: { lastAccessedAt: new Date() } },
-      ).catch(() => {});
+      ).catch(err => console.warn('[openclaw] failed to update memory lastAccessedAt:', err?.message || err));
     }
 
     const summary = {

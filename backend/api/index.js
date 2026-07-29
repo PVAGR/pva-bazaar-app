@@ -663,6 +663,15 @@ app.use('/api/blockchain', blockchainRoutes);
 const bountiesRoutes = require('../routes/bounties');
 app.use('/api/bounties', bountiesRoutes);
 
+function mountOptionalRoute(mountPath, requirePath, label) {
+  try {
+    const route = require(requirePath);
+    app.use(mountPath, route);
+  } catch (err) {
+    console.warn(`⚠️ Optional route disabled: ${label}`, err?.message || err);
+  }
+}
+
 // ORACLE, VERIFICATION, DEALS, MANIFESTO AI
 mountOptionalRoute('/api/oracle', '../routes/oracle', 'oracle');
 mountOptionalRoute('/api/verification', '../routes/verification', 'verification');
@@ -737,15 +746,6 @@ app.use('/blockchain', legacyGate, blockchainRoutes);
 app.use('/api/certificates', legacyGate, certificatesRoutes);
 app.use('/api/dashboard', legacyGate, dashboardRoutes);
 app.use('/api/activity', legacyGate, activityRoutes);
-
-function mountOptionalRoute(mountPath, requirePath, label) {
-  try {
-    const route = require(requirePath);
-    app.use(mountPath, route);
-  } catch (err) {
-    console.warn(`⚠️ Optional route disabled: ${label}`, err?.message || err);
-  }
-}
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {

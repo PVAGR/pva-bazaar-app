@@ -104,7 +104,7 @@ const expertServiceSchema = new mongoose.Schema({
     googleMeet: { enabled: Boolean },
     custom: { enabled: Boolean, url: String },
     phone: { enabled: Boolean },
-    email: { enabled: Boolean, default: true },
+    email: { enabled: { type: Boolean, default: true } },
   },
 
   // Status
