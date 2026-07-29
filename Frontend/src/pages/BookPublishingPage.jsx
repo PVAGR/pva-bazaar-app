@@ -9,7 +9,7 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
-import { uploadManuscriptToArchives } from '../lib/manuscriptArchives';
+import { uploadToInternetArchive } from '../lib/manuscriptArchives';
 import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
@@ -744,93 +744,31 @@ export default function BookPublishingPage() {
         }
       }
 
-      // ── Archive upload (Internet Archive + IPFS) ─────────────────────────
-      // After cover uploads and before building the backend payload, upload
-      // the manuscript to permanent archival storage. The browser sends the
-      // file directly to IA and Storacha — no backend proxy needed.
-      // SAFETY: Wrapped in a hard 15-second timeout. If archive upload fails
-      // or times out, we fall back to sending manuscriptMarkdown to the backend.
-      let archiveData = null;
-      const hasManuscriptContent = form.manuscriptMarkdown || manuscriptFile;
-      const alreadyHasArchives = selectedBook?.mirrors?.archiveOrg || selectedBook?.mirrors?.ipfs;
-      if (hasManuscriptContent && !alreadyHasArchives) {
-        let fileToUpload = manuscriptFile;
-        if (!fileToUpload && form.manuscriptMarkdown) {
-          const blob = new Blob([form.manuscriptMarkdown], { type: 'text/markdown' });
-          fileToUpload = new File([blob], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
-        }
-        if (fileToUpload) {
-          const slug = form.slug || `book-${Date.now()}`;
-          console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
-          setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
-          const ARCHIVE_TIMEOUT_MS = 70000;
-          const archiveTimeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
-          );
-          try {
-            archiveData = await Promise.race([
-              uploadManuscriptToArchives(fileToUpload, slug),
-              archiveTimeout,
-            ]);
-            console.log('[PUBLISH-FLOW] Archive upload succeeded:', {
-              ia: Boolean(archiveData?.archiveOrgUrl),
-              ipfs: Boolean(archiveData?.ipfsUrl),
-            });
-            setArchiveStatus({
-              ia: Boolean(archiveData.archiveOrgUrl),
-              ipfs: Boolean(archiveData.ipfsUrl),
-              storacha: Boolean(archiveData.storachaUrl),
-              pinata: Boolean(archiveData.pinataUrl),
-              uploading: false,
-            });
-          } catch (archiveErr) {
-            console.warn('[PUBLISH-FLOW] Archive upload failed or timed out:', archiveErr.message);
-            console.warn('[PUBLISH-FLOW] Falling back to direct backend upload with manuscriptMarkdown');
-            archiveData = null;
-            setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
-            // Continue — will fall back to sending manuscriptMarkdown to backend
-          }
-        }
-      }
-      console.log('[PUBLISH-FLOW] Building payload, archiveData:', !!archiveData, 'hasMarkdown:', !!form.manuscriptMarkdown);
-
-      const buildPayload = () => {
+      const buildPayload = (overrides = {}) => {
         const payload = new FormData();
-        if (form.bookId) payload.append('bookId', form.bookId);
-        payload.append('title', form.title);
-        payload.append('subtitle', form.subtitle);
-        payload.append('authorName', form.authorName);
-        payload.append('slug', form.slug);
-        payload.append('description', form.description);
-        payload.append('genre', form.genre);
-        payload.append('audience', form.audience);
-        payload.append('language', form.language);
-        
-        // Check if archive upload actually produced any usable URLs
-        const hasArchiveUrls = archiveData && (
-          archiveData.archiveOrgUrl || archiveData.ipfsUrl || archiveData.storachaUrl || archiveData.pinataUrl
-        );
-        if (hasArchiveUrls) {
-          if (archiveData.archiveOrgUrl) payload.append('manuscriptUrl', archiveData.archiveOrgUrl);
-          payload.append('mirrors', JSON.stringify({
-            archiveOrg: archiveData.archiveOrgUrl || '',
-            ipfs: archiveData.ipfsUrl || '',
-            ipfsCid: archiveData.ipfsCid || '',
-            storacha: archiveData.storachaUrl || '',
-            pinata: archiveData.pinataUrl || '',
-          }));
-          if (archiveData.format) payload.append('format', archiveData.format);
-          if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
-        }
+        if (overrides.bookId || form.bookId) payload.append('bookId', overrides.bookId || form.bookId);
+        payload.append('title', overrides.title || form.title);
+        payload.append('subtitle', overrides.subtitle || form.subtitle);
+        payload.append('authorName', overrides.authorName || form.authorName);
+        payload.append('slug', overrides.slug || form.slug);
+        payload.append('description', overrides.description || form.description);
+        payload.append('genre', overrides.genre || form.genre);
+        payload.append('audience', overrides.audience || form.audience);
+        payload.append('language', overrides.language || form.language);
         // Send manuscript content — prefer Cloudinary URL over raw text to
         // keep the backend POST payload small and avoid Vercel proxy timeouts.
-        if (manuscriptResult) {
+        if (overrides.manuscriptUrl) {
+          payload.append('manuscriptUrl', overrides.manuscriptUrl);
+          payload.append('manuscriptType', overrides.manuscriptType || 'raw');
+        } else if (manuscriptResult) {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);
           payload.append('manuscriptType', manuscriptFile?.name?.toLowerCase().endsWith('.pdf') ? 'pdf' : 
                          manuscriptFile?.name?.toLowerCase().endsWith('.docx') ? 'docx' : 'raw');
-        } else if (form.manuscriptMarkdown && (!hasArchiveUrls || !form.bookId)) {
-          // Send raw markdown as fallback only when we have no archive URLs
-          // or this is the first save (no bookId yet). Subsequent saves skip it.
+        } else if (overrides.manuscriptMarkdown) {
+          payload.append('manuscriptMarkdown', overrides.manuscriptMarkdown);
+        } else if (form.manuscriptMarkdown && !overrides.skipMarkdown) {
+          // Send raw markdown — only for first save (no bookId yet).
+          // Subsequent saves send only the manuscriptUrl.
           // To avoid Vercel proxy timeout/body-limit issues, truncate at 500KB.
           const MAX_INLINE_MD = 500000;
           if (form.manuscriptMarkdown.length > MAX_INLINE_MD) {
@@ -840,20 +778,19 @@ export default function BookPublishingPage() {
             payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
           }
         }
-        
-        payload.append('publish', publish ? 'true' : 'false');
+        if (overrides.mirrors) {
+          payload.append('mirrors', JSON.stringify(overrides.mirrors));
+        }
+        payload.append('publish', overrides.publish !== undefined ? String(overrides.publish) : publish ? 'true' : 'false');
         
         if (frontCoverResult) {
           payload.append('frontCoverUrl', frontCoverResult.secure_url);
           payload.append('frontCoverPublicId', frontCoverResult.public_id);
         }
-        
         if (backCoverResult) {
           payload.append('backCoverUrl', backCoverResult.secure_url);
           payload.append('backCoverPublicId', backCoverResult.public_id);
         }
-
-        // Send format file Cloudinary URLs (no binary in FormData)
         if (htmlResult) {
           payload.append('manuscriptHtmlUrl', htmlResult.secure_url);
         }
@@ -863,7 +800,6 @@ export default function BookPublishingPage() {
         if (docxResult) {
           payload.append('manuscriptDocxUrl', docxResult.secure_url);
         }
-
         return payload;
       };
 
@@ -889,6 +825,39 @@ export default function BookPublishingPage() {
         if (saved.slug) {
           setForm(prev => ({ ...prev, slug: saved.slug }));
         }
+
+        // ── Background archive upload ──────────────────────────────────────
+        // After the book is saved, upload the manuscript to Internet Archive
+        // via direct browser→IA S3 PUT (no Vercel proxy, no size limit).
+        // When the upload completes, update the book's mirrors with a second
+        // POST. This runs fire-and-forget — the user sees success immediately.
+        const finalSlug = saved.slug || form.slug;
+        const hasContent = form.manuscriptMarkdown || manuscriptFile;
+        const alreadyArchived = saved.mirrors?.archiveOrg || selectedBook?.mirrors?.archiveOrg;
+        if (hasContent && !alreadyArchived && finalSlug) {
+          const fileForIa = manuscriptFile
+            ? manuscriptFile
+            : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${finalSlug}.md`, { type: 'text/markdown' });
+          setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
+          (async () => {
+            try {
+              const iaUrl = await uploadToInternetArchive(fileForIa, finalSlug);
+              console.log('[PUBLISH-FLOW] Background IA upload done:', iaUrl);
+              const updatePayload = buildPayload({
+                bookId: saved.id,
+                slug: finalSlug,
+                skipMarkdown: true,
+                mirrors: { archiveOrg: iaUrl, ipfs: '', ipfsCid: '', storacha: '', pinata: '' },
+              });
+              await saveBookProject(updatePayload);
+              setArchiveStatus({ ia: true, ipfs: false, storacha: false, pinata: false, uploading: false });
+            } catch (iaErr) {
+              console.warn('[PUBLISH-FLOW] Background IA upload failed:', iaErr.message);
+              setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
+            }
+          })();
+        }
+
         setSuccess(
           publish
             ? `"${saved.title}" is published online and visible on the public bookshelf.`
