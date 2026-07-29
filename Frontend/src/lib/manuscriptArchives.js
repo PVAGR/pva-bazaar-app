@@ -55,6 +55,8 @@ export async function uploadToInternetArchive(file, identifier) {
     }
     console.log('[ARCHIVES] IA direct upload succeeded:', config.finalUrl);
     return config.finalUrl;
+  } catch (uploadErr) {
+    throw new Error(`IA direct upload error: ${uploadErr.message}`);
   }
 }
 

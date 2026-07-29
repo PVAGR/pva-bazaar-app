@@ -336,6 +336,9 @@ export default function BookPublishingPage() {
   const [savedBookSlug, setSavedBookSlug] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
+  const [iaUploadState, setIaUploadState] = useState({ status: 'idle', url: '' });
+  const [cloudinaryUploadState, setCloudinaryUploadState] = useState({ status: 'idle', url: '' });
+  const [manuscriptSizeBytes, setManuscriptSizeBytes] = useState(0);
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
@@ -383,6 +386,9 @@ export default function BookPublishingPage() {
     setPdfFileName('');
     setDocxFile(null);
     setDocxFileName('');
+    setIaUploadState({ status: 'idle', url: '' });
+    setCloudinaryUploadState({ status: 'idle', url: '' });
+    setManuscriptSizeBytes(0);
   }, [selectedBook]);
 
   async function syncLocalPublishedBooks(remoteBooks = [], localBooks = []) {
@@ -566,6 +572,9 @@ export default function BookPublishingPage() {
     setPdfFileName('');
     setDocxFile(null);
     setDocxFileName('');
+    setIaUploadState({ status: 'idle', url: '' });
+    setCloudinaryUploadState({ status: 'idle', url: '' });
+    setManuscriptSizeBytes(0);
   }
 
   function selectBook(book) {
@@ -598,6 +607,9 @@ export default function BookPublishingPage() {
     const file = event.target.files?.[0] || null;
     setManuscriptFile(file);
     setManuscriptFileName(file?.name || '');
+    setManuscriptSizeBytes(file?.size || 0);
+    setIaUploadState({ status: 'idle', url: '' });
+    setCloudinaryUploadState({ status: 'idle', url: '' });
     manuscriptImportedTextRef.current = '';
     if (!file) return;
 
@@ -656,6 +668,50 @@ export default function BookPublishingPage() {
     setDocxFileName(file?.name || '');
   }
 
+  async function handleUploadToCloudinary() {
+    const fileToUpload = manuscriptFile
+      || new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+    if (!form.manuscriptMarkdown && !manuscriptFile) {
+      setError('Add manuscript text or select a file first');
+      return;
+    }
+    setCloudinaryUploadState({ status: 'uploading', url: '' });
+    try {
+      const apiBase = getApiBase();
+      const authToken = (() => {
+        try { return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || ''; }
+        catch (_e) { return ''; }
+      })();
+      const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
+      setCloudinaryUploadState({ status: 'done', url: result.secure_url });
+      setError('');
+      setSuccess('Manuscript uploaded to Cloudinary.');
+    } catch (e) {
+      setCloudinaryUploadState({ status: 'error', url: '' });
+      setError(`Cloudinary upload failed: ${e.message}`);
+    }
+  }
+
+  async function handleUploadToIA() {
+    const fileToUpload = manuscriptFile
+      || new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+    if (!form.manuscriptMarkdown && !manuscriptFile) {
+      setError('Add manuscript text or select a file first');
+      return;
+    }
+    setIaUploadState({ status: 'uploading', url: '' });
+    try {
+      const slug = form.slug || `manuscript-${Date.now()}`;
+      const url = await uploadToInternetArchive(fileToUpload, slug);
+      setIaUploadState({ status: 'done', url });
+      setError('');
+      setSuccess('Manuscript uploaded to Internet Archive.');
+    } catch (e) {
+      setIaUploadState({ status: 'error', url: '' });
+      setError(`Internet Archive upload failed: ${e.message}`);
+    }
+  }
+
   async function submitBook(publish) {
     setSaving(true);
     setError('');
@@ -689,7 +745,6 @@ export default function BookPublishingPage() {
       const apiBase = getApiBase();
       let frontCoverResult = null;
       let backCoverResult = null;
-      let manuscriptResult = null;
       let htmlResult = null;
       let pdfResult = null;
       let docxResult = null;
@@ -709,16 +764,6 @@ export default function BookPublishingPage() {
           backCoverResult = await uploadFormatFileViaSignedUrl(preparedBackCover, 'pva-bazaar-books/book-covers', 'image', apiBase, authToken);
         } catch (e) {
           console.warn('Cloudinary back cover upload failed:', e.message);
-        }
-      }
-      if (form.manuscriptMarkdown || manuscriptFile) {
-        try {
-          const fileToUpload = manuscriptFile
-            ? manuscriptFile
-            : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
-          manuscriptResult = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
-        } catch (e) {
-          console.warn('Cloudinary manuscript upload via signed URL failed:', e.message);
         }
       }
       if (htmlFile) {
@@ -755,21 +800,18 @@ export default function BookPublishingPage() {
         payload.append('genre', overrides.genre || form.genre);
         payload.append('audience', overrides.audience || form.audience);
         payload.append('language', overrides.language || form.language);
-        // Send manuscript content — prefer Cloudinary URL over raw text to
-        // keep the backend POST payload small and avoid Vercel proxy timeouts.
+        // Prefer manually uploaded URL, then overrides, then inline fallback.
+        const uploadUrl = iaUploadState.url || cloudinaryUploadState.url;
         if (overrides.manuscriptUrl) {
           payload.append('manuscriptUrl', overrides.manuscriptUrl);
           payload.append('manuscriptType', overrides.manuscriptType || 'raw');
-        } else if (manuscriptResult) {
-          payload.append('manuscriptUrl', manuscriptResult.secure_url);
+        } else if (uploadUrl) {
+          payload.append('manuscriptUrl', uploadUrl);
           payload.append('manuscriptType', manuscriptFile?.name?.toLowerCase().endsWith('.pdf') ? 'pdf' : 
                          manuscriptFile?.name?.toLowerCase().endsWith('.docx') ? 'docx' : 'raw');
         } else if (overrides.manuscriptMarkdown) {
           payload.append('manuscriptMarkdown', overrides.manuscriptMarkdown);
         } else if (form.manuscriptMarkdown && !overrides.skipMarkdown) {
-          // Send raw markdown — only for first save (no bookId yet).
-          // Subsequent saves send only the manuscriptUrl.
-          // To avoid Vercel proxy timeout/body-limit issues, truncate at 500KB.
           const MAX_INLINE_MD = 500000;
           if (form.manuscriptMarkdown.length > MAX_INLINE_MD) {
             console.warn(`[PUBLISH-FLOW] Truncating markdown to ${MAX_INLINE_MD} bytes (was ${form.manuscriptMarkdown.length})`);
@@ -824,39 +866,6 @@ export default function BookPublishingPage() {
         setSavedBookSlug(publish ? saved.slug || '' : '');
         if (saved.slug) {
           setForm(prev => ({ ...prev, slug: saved.slug }));
-        }
-
-        // ── Background archive upload ──────────────────────────────────────
-        // After the book is saved, upload the manuscript to Internet Archive
-        // via direct browser→IA S3 PUT (no Vercel proxy, no size limit).
-        // When the upload completes, update the book's mirrors with a second
-        // POST. This runs fire-and-forget — the user sees success immediately.
-        const finalSlug = saved.slug || form.slug;
-        const hasContent = form.manuscriptMarkdown || manuscriptFile;
-        const alreadyArchived = saved.mirrors?.archiveOrg || selectedBook?.mirrors?.archiveOrg;
-        if (hasContent && !alreadyArchived && finalSlug) {
-          const fileForIa = manuscriptFile
-            ? manuscriptFile
-            : new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${finalSlug}.md`, { type: 'text/markdown' });
-          setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: true });
-          (async () => {
-            try {
-              const iaUrl = await uploadToInternetArchive(fileForIa, finalSlug);
-              console.log('[PUBLISH-FLOW] Background IA upload done:', iaUrl);
-              const updatePayload = buildPayload({
-                bookId: saved.id,
-                slug: finalSlug,
-                manuscriptUrl: iaUrl,
-                skipMarkdown: true,
-                mirrors: { archiveOrg: iaUrl, ipfs: '', ipfsCid: '', storacha: '', pinata: '' },
-              });
-              await saveBookProject(updatePayload);
-              setArchiveStatus({ ia: true, ipfs: false, storacha: false, pinata: false, uploading: false });
-            } catch (iaErr) {
-              console.warn('[PUBLISH-FLOW] Background IA upload failed:', iaErr.message);
-              setArchiveStatus({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
-            }
-          })();
         }
 
         setSuccess(
@@ -1282,35 +1291,110 @@ export default function BookPublishingPage() {
               </div>
             </div>
 
-            <div className="book-publish__editorActions">
-              {archiveStatus.uploading && (
-                <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.8, marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 700 }}>Uploading to permanent archives…</span>
-                  <span style={{ marginLeft: '0.5rem' }}>{archiveStatus.ia ? '✓ IA' : '○ IA'}</span>
-                  <span style={{ marginLeft: '0.3rem' }}>{archiveStatus.storacha ? '✓ Storacha' : '○ Storacha'}</span>
-                  <span style={{ marginLeft: '0.3rem' }}>{archiveStatus.pinata ? '✓ Pinata' : '○ Pinata'}</span>
-                </div>
-              )}
-              {!archiveStatus.uploading && (archiveStatus.ia || archiveStatus.storacha || archiveStatus.pinata) && (
-                <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.7, marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 600 }}>Archives:</span>
-                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.ia ? '#1a7d3a' : '#999' }}>{archiveStatus.ia ? '✓' : '✗'} Internet Archive</span>
-                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.storacha ? '#1a7d3a' : '#999' }}>{archiveStatus.storacha ? '✓' : '✗'} Storacha</span>
-                  <span style={{ marginLeft: '0.4rem', color: archiveStatus.pinata ? '#1a7d3a' : '#999' }}>{archiveStatus.pinata ? '✓' : '✗'} Pinata IPFS</span>
-                </div>
-              )}
-              <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving}>
-                {saving ? 'Saving…' : 'Save draft'}
-              </button>
-              <button type="button" className="book-publish__button book-publish__button--primary" onClick={() => submitBook(true)} disabled={saving}>
-                {saving ? 'Publishing…' : 'Save and publish'}
-              </button>
-              {form.bookId ? (
-                <button type="button" className="book-publish__button book-publish__button--danger" onClick={() => removeBook(form.bookId)} disabled={saving}>
-                  Delete book
-                </button>
-              ) : null}
-            </div>
+            {(() => {
+              const uploadUrl = iaUploadState.url || cloudinaryUploadState.url;
+              const hasExisting = selectedBook?.manuscriptUrl;
+              const hasContent = form.manuscriptMarkdown || manuscriptFile;
+              const manuscriptReady = Boolean(uploadUrl || hasExisting);
+              return (
+                <>
+                  <div className="book-publish__formatSection">
+                    <p className="book-publish__formatSectionTitle">Upload manuscript to archive</p>
+                    <p className="book-publish__muted">
+                      Upload your manuscript to an archive service before saving. Cover images and format files (HTML, PDF, DOCX) are uploaded on save.
+                      {manuscriptSizeBytes > 0 ? <span> File size: <strong>{formatBytes(manuscriptSizeBytes)}</strong>.</span> : null}
+                    </p>
+                    {!hasContent ? <p className="book-publish__muted" style={{ color: '#b33737', fontWeight: 600 }}>Add manuscript text or select a file first.</p> : null}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.65rem' }}>
+                      {/* Internet Archive — always green, any size */}
+                      <button
+                        type="button"
+                        className="book-publish__button"
+                        style={iaUploadState.status === 'done' ? { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' } : iaUploadState.status === 'error' ? { borderColor: '#b33737', color: '#b33737' } : hasContent ? { borderColor: '#1a7d3a', color: '#1a7d3a' } : {}}
+                        onClick={handleUploadToIA}
+                        disabled={iaUploadState.status === 'uploading' || !hasContent}
+                        title={!hasContent ? 'Add manuscript content first' : 'Upload to Internet Archive — no file size limit'}
+                      >
+                        {iaUploadState.status === 'uploading' ? '⏳ Uploading to IA…' :
+                         iaUploadState.status === 'done' ? '✓ Uploaded to Internet Archive' :
+                         iaUploadState.status === 'error' ? '✗ IA upload failed — retry' :
+                         'Upload to Internet Archive'}
+                        {hasContent && iaUploadState.status === 'idle' ? <span style={{ fontSize: '0.7rem', marginLeft: '0.4rem', opacity: 0.7 }}>unlimited</span> : null}
+                      </button>
+
+                      {/* Cloudinary — green if <=20MB, red if >20MB */}
+                      {(() => {
+                        const tooBig = manuscriptSizeBytes > 20 * 1024 * 1024 || (!manuscriptFile && estimateTextBytes(form.manuscriptMarkdown) > 20 * 1024 * 1024);
+                        const isDone = cloudinaryUploadState.status === 'done';
+                        const isUploading = cloudinaryUploadState.status === 'uploading';
+                        const isError = cloudinaryUploadState.status === 'error';
+                        let btnStyle = {};
+                        let disabled = isUploading || !hasContent;
+                        let label = 'Upload to Cloudinary';
+                        if (isDone) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' }; label = '✓ Uploaded to Cloudinary'; }
+                        else if (isError) { btnStyle = { borderColor: '#b33737', color: '#b33737' }; label = '✗ Cloudinary upload failed — retry'; }
+                        else if (tooBig && hasContent) { btnStyle = { borderColor: '#b33737', color: '#b33737', backgroundColor: 'color-mix(in srgb, #b33737 8%, transparent)' }; disabled = true; label = `✗ Cloudinary (max 20MB — file is ${formatBytes(manuscriptSizeBytes)})`; }
+                        else if (hasContent) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a' }; }
+                        return (
+                          <button
+                            type="button"
+                            className="book-publish__button"
+                            style={btnStyle}
+                            onClick={handleUploadToCloudinary}
+                            disabled={disabled}
+                            title={tooBig ? `File too large (${formatBytes(manuscriptSizeBytes)}). Use Internet Archive for files over 20MB.` : !hasContent ? 'Add manuscript content first' : ''}
+                          >
+                            {isUploading ? '⏳ Uploading to Cloudinary…' : label}
+                            {hasContent && cloudinaryUploadState.status === 'idle' && !tooBig ? <span style={{ fontSize: '0.7rem', marginLeft: '0.4rem', opacity: 0.7 }}>max 20MB</span> : null}
+                          </button>
+                        );
+                      })()}
+
+                      {/* Storacha — always disabled */}
+                      <button
+                        type="button"
+                        className="book-publish__button"
+                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.6, cursor: 'not-allowed' }}
+                        disabled
+                        title="Storacha endpoint is currently unavailable"
+                      >
+                        ✗ Storacha (unavailable)
+                      </button>
+
+                      {/* Pinata — always disabled */}
+                      <button
+                        type="button"
+                        className="book-publish__button"
+                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.6, cursor: 'not-allowed' }}
+                        disabled
+                        title="Pinata IPFS endpoint is currently unavailable"
+                      >
+                        ✗ Pinata (unavailable)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="book-publish__editorActions">
+                    {!manuscriptReady && hasContent ? (
+                      <p className="book-publish__muted" style={{ width: '100%', color: '#b33737', fontWeight: 600 }}>
+                        Upload manuscript to Internet Archive or Cloudinary before saving.
+                      </p>
+                    ) : null}
+                    <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving || !manuscriptReady}>
+                      {saving ? 'Saving…' : 'Save draft'}
+                    </button>
+                    <button type="button" className={`book-publish__button${manuscriptReady ? ' book-publish__button--primary' : ''}`} onClick={() => submitBook(true)} disabled={saving || !manuscriptReady}>
+                      {saving ? 'Publishing…' : 'Save and publish'}
+                    </button>
+                    {form.bookId ? (
+                      <button type="button" className="book-publish__button book-publish__button--danger" onClick={() => removeBook(form.bookId)} disabled={saving}>
+                        Delete book
+                      </button>
+                    ) : null}
+                  </div>
+                </>
+              );
+            })()}
 
             {selectedBook ? (
               <div className="book-publish__links">
