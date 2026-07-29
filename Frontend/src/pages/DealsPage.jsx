@@ -481,7 +481,7 @@ export default function DealsPage() {
       setPvaWorkflow(null);
       return;
     }
-    refreshPvaWorkspace(selected._id).catch(() => {});
+    refreshPvaWorkspace(selected._id).catch(err => console.warn('[DealsPage] Failed:', err));
   }, [selected?._id]);
 
   useEffect(() => {
@@ -494,19 +494,19 @@ export default function DealsPage() {
       .then((res) => {
         if (res?.ok) setDisputeData(res.dispute || null);
       })
-      .catch(() => {});
+      .catch(err => console.warn('[DealsPage] Failed:', err));
 
     fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {})
       .then((res) => {
         if (res?.ok && Array.isArray(res.queue)) setOutboundQueue(res.queue);
       })
-      .catch(() => {});
+      .catch(err => console.warn('[DealsPage] Failed:', err));
   }, [selected?._id, selected?.dispute?.status, queueStatusFilter]);
 
   useEffect(() => {
     if (!selected?._id) return undefined;
     const timer = window.setInterval(() => {
-      refreshSelected().catch(() => {});
+      refreshSelected().catch(err => console.warn('[DealsPage] Failed:', err));
     }, 20000);
     return () => window.clearInterval(timer);
   }, [selected?._id, queueStatusFilter]);
@@ -557,7 +557,7 @@ export default function DealsPage() {
           });
         }
       })
-      .catch(() => {});
+      .catch(err => console.warn('[DealsPage] Failed:', err));
   }, []);
 
   useEffect(() => {
@@ -925,7 +925,7 @@ export default function DealsPage() {
         }
       }
       // Clear Mongo-backed draft after a successful create.
-      apiDelete('/deals/drafts').catch(() => {});
+      apiDelete('/deals/drafts').catch(err => console.warn('[DealsPage] Failed:', err));
       await loadDeals();
       setSelectedId(res.item._id);
       setDraft((prev) => ({ ...prev, title: '', description: '' }));

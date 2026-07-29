@@ -64,7 +64,7 @@ export default function BookReaderPage() {
           if (!book.links?.apiView) setViewMode('markdown');
         }
       })
-      .catch(() => {})
+      .catch(err => console.warn('[BookReaderPage] Failed:', err))
       .finally(() => { if (!cancelled) setManuscriptLoading(false); });
     return () => { cancelled = true; };
   }, [book, manuscriptText]);

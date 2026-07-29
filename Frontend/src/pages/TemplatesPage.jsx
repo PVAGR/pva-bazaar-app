@@ -61,8 +61,8 @@ export default function TemplatesPage() {
     loadTemplates();
   }, [filterType, filterCommodity]);
   useEffect(() => {
-    apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
-    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
+    apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(err => console.warn('[TemplatesPage] Failed:', err));
+    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(err => console.warn('[TemplatesPage] Failed:', err));
   }, []);
 
   useEffect(() => {

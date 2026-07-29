@@ -50,7 +50,7 @@ router.post('/verify/:id', async (req, res) => {
       chainOfCustody: artifact.ownershipHistory || [],
       attestations: [],
       verificationStatus: 'verified',
-    })).catch(() => {});
+    })).catch(err => console.warn('[Certificates] Operation failed:', err?.message || err));
 
     res.json({
       ok: true,

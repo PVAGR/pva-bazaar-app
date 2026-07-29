@@ -291,7 +291,7 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       autonomousKeepaliveMinutes: nextOpenclaw.autonomousKeepaliveMinutes,
       autonomousMoneyRunEnabled: nextOpenclaw.autonomousMoneyRunEnabled,
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Admin] Operation failed:', err?.message || err));
 
     return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
   } catch (error) {
@@ -350,7 +350,7 @@ router.put('/runtime-config/payout-policy', adminSession, async (req, res) => {
       maxSol,
       allowlistSize: wallets.length,
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Admin] Operation failed:', err?.message || err));
 
     return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
   } catch (error) {

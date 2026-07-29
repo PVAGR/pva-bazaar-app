@@ -110,7 +110,7 @@ router.post("/stripe", async (req, res) => {
           stripeSessionId: session.id,
           customerEmail: order.customerEmail,
           hasCertificate: !!certificateId,
-        })).catch(() => {});
+        })).catch(err => console.warn('[WebhooksStripe] Operation failed:', err?.message || err));
 
         // Physical fulfillment row (for disc burn)
         try {
@@ -170,7 +170,7 @@ router.post("/stripe", async (req, res) => {
         publicSiteUrl: PUBLIC_SITE_URL,
       }).catch((e) => console.warn("Payment failed email:", e.message));
     }
-    await logFulfillment(event.id, null, "payment_failed_or_expired", { type: event.type }).catch(() => {});
+    await logFulfillment(event.id, null, "payment_failed_or_expired", { type: event.type }).catch(err => console.warn('[WebhooksStripe] Operation failed:', err?.message || err));
   }
 
   // Refund event handlers

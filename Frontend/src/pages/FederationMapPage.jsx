@@ -444,14 +444,14 @@ export default function FederationMapPage() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      loadLiveData().catch(() => {});
+      loadLiveData().catch(err => console.warn('[FederationMapPage] Failed:', err));
       fetchFederationGameWorld()
         .then((response) => {
           if (response?.ok && response.world) {
             setWorldGameFeed(response.world);
           }
         })
-        .catch(() => {});
+        .catch(err => console.warn('[FederationMapPage] Failed:', err));
     }, 15000);
     return () => clearInterval(timer);
   }, []);

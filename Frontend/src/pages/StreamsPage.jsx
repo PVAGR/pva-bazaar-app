@@ -111,7 +111,7 @@ export default function StreamsPage() {
           });
         }
       })
-      .catch(() => {});
+      .catch(err => console.warn('[StreamsPage] Failed:', err));
   }, []);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function StreamsPage() {
       .then((res) => {
         if (res?.ok) setTwitchStatus(res);
       })
-      .catch(() => {});
+      .catch(err => console.warn('[StreamsPage] Failed:', err));
   }, []);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function StreamsPage() {
       .then((res) => {
         if (res?.ok) setYouTubeStatus(res);
       })
-      .catch(() => {});
+      .catch(err => console.warn('[StreamsPage] Failed:', err));
   }, []);
 
   async function refreshLiveStatus() {
@@ -150,7 +150,7 @@ export default function StreamsPage() {
   useEffect(() => {
     if (!tokenPresent) return;
     // Fetch once on load; user can refresh manually.
-    refreshLiveStatus().catch(() => {});
+    refreshLiveStatus().catch(err => console.warn('[StreamsPage] Failed:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenPresent]);
 
@@ -308,7 +308,7 @@ export default function StreamsPage() {
         throw new Error(res?.error || res?.message || 'Create failed');
       }
       // Clear Mongo-backed draft after a successful create.
-      apiDelete('/streams/drafts').catch(() => {});
+      apiDelete('/streams/drafts').catch(err => console.warn('[StreamsPage] Failed:', err));
       setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
       await loadStreams();
     } catch (e2) {

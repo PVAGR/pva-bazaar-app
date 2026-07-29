@@ -68,7 +68,7 @@ export default function ForumPage() {
           setDraftFromServer(res.draft)
         }
       })
-      .catch(() => {})
+      .catch(err => console.warn('[Forum] Failed:', err))
     return () => {
       mounted = false
       if (saveTimeoutRef.current) {
@@ -82,13 +82,13 @@ export default function ForumPage() {
       clearTimeout(saveTimeoutRef.current)
     }
     saveTimeoutRef.current = setTimeout(() => {
-      saveGovernanceDraft(draft).catch(() => {})
+      saveGovernanceDraft(draft).catch(err => console.warn('[Forum] Failed:', err))
     }, 450)
   }, [])
 
   const handleDraftClear = useCallback(() => {
     setDraftFromServer(null)
-    clearGovernanceDraft().catch(() => {})
+    clearGovernanceDraft().catch(err => console.warn('[Forum] Failed:', err))
   }, [])
 
   const handleProposalSubmitted = useCallback((payload) => {

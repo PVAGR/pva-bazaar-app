@@ -79,7 +79,7 @@ router.post('/', verifySecret, async (req, res) => {
         verificationStatus: status,
       },
       { certificateId: doc.certificateId, confidence_score, source }
-    )).catch(() => {});
+    )).catch(err => console.warn('[Verification] Operation failed:', err?.message || err));
   } catch (err) {
     console.error('Verification store error:', err);
     res.status(500).json({ ok: false, error: err.message });

@@ -237,7 +237,7 @@ router.post('/test-payout', adminSession, async (req, res) => {
       requestedByAdmin: req.admin?.email || 'unknown-admin',
       flow: 'solana-test-payout',
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     res.status(201).json({
       ok: true,
@@ -311,7 +311,7 @@ router.post('/confirm-test-payout', adminSession, async (req, res) => {
       confirmedByAdmin: req.admin?.email || 'unknown-admin',
       flow: 'solana-test-payout',
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     res.json({
       ok: true,
@@ -390,7 +390,7 @@ router.post('/ritual', async (req, res) => {
       network: payout.network,
       ritualId: payout.ritualId,
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     res.status(201).json({
       ok: true,
@@ -624,7 +624,7 @@ router.post('/devnet-airdrop-hot-wallet', adminSession, async (req, res) => {
       requestedByAdmin: req.admin?.email || 'unknown-admin',
       rpcUrl,
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     return res.json({
       ok: true,
@@ -807,7 +807,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
         autoAirdropOnDevnet: Boolean(autoAirdropOnDevnet),
       },
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     return res.json({
       ok: true,
@@ -941,7 +941,7 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
       confirmationStatus,
       requestedByAdmin: req.admin?.email || 'unknown-admin',
     });
-    dispatchToOpenClaw(event, console.log).catch(() => {});
+    dispatchToOpenClaw(event, console.log).catch(err => console.warn('[Solana] Operation failed:', err?.message || err));
 
     res.json({
       ok: true,

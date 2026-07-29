@@ -147,12 +147,12 @@ router.post("/create-session", async (req, res) => {
       });
     } catch (stripeError) {
       if (order.reservationId) {
-        await releaseReservation(order.reservationId).catch(() => {});
+        await releaseReservation(order.reservationId).catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
       }
       order.paymentStatus = 'cancelled';
       order.isLocked = false;
       order.adminNotes = `${order.adminNotes || ''}\nstripe_session_create_failed`.trim();
-      await order.save().catch(() => {});
+      await order.save().catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
       throw stripeError;
     }
 
@@ -250,10 +250,10 @@ router.post("/create-cart-session", async (req, res) => {
       });
     } catch (stripeError) {
       for (const order of orders) {
-        if (order.reservationId) await releaseReservation(order.reservationId).catch(() => {});
+        if (order.reservationId) await releaseReservation(order.reservationId).catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
         order.paymentStatus = 'cancelled';
         order.isLocked = false;
-        await order.save().catch(() => {});
+        await order.save().catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
       }
       throw stripeError;
     }
@@ -288,7 +288,7 @@ router.post('/cancel-session', async (req, res) => {
 
     if (!order) {
       if (reservationId) {
-        await releaseReservation(reservationId).catch(() => {});
+        await releaseReservation(reservationId).catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
       }
       return res.json({ ok: true, cancelled: true, released: Boolean(reservationId), orderId: null });
     }
@@ -298,7 +298,7 @@ router.post('/cancel-session', async (req, res) => {
     }
 
     if (order.reservationId) {
-      await releaseReservation(order.reservationId).catch(() => {});
+      await releaseReservation(order.reservationId).catch(err => console.warn('[Checkout] Operation failed:', err?.message || err));
     }
 
     order.paymentStatus = 'cancelled';

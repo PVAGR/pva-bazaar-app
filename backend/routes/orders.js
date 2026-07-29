@@ -158,7 +158,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
       trackingNumber: order.trackingNumber || null,
       carrier: order.carrier || null,
       updatedByAdmin: true,
-    })).catch(() => {});
+    })).catch(err => console.warn('[Orders] Operation failed:', err?.message || err));
 
     return res.json({ ok: true, item: order });
   } catch (err) {

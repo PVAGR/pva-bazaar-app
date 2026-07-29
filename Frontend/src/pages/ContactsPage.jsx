@@ -87,7 +87,7 @@ export default function ContactsPage() {
     loadContacts();
   }, [filterType]);
   useEffect(() => {
-    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
+    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(err => console.warn('[ContactsPage] Failed:', err));
   }, []);
 
   useEffect(() => {

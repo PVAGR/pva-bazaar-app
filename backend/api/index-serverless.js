@@ -163,7 +163,7 @@ app.get('/api/health', async (_req, res) => {
       dbDiag.mode = 'mongo';
       dbDiag.readyState = freshConn.readyState;
       dbDiag.connected = true;
-      await freshConn.close().catch(() => {});
+      await freshConn.close().catch(err => console.warn('[API] Operation failed:', err?.message || err));
     } catch (err) {
       dbDiag.mode = 'error';
       dbDiag.readyState = 0;
@@ -171,7 +171,7 @@ app.get('/api/health', async (_req, res) => {
       // Redact password from error message
       const raw = err.message || String(err);
       dbDiag.error = raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***');
-      await freshConn.close().catch(() => {});
+      await freshConn.close().catch(err => console.warn('[API] Operation failed:', err?.message || err));
     }
   } else {
     dbDiag.mode = 'mock';
@@ -338,7 +338,7 @@ app.get('/api/mongo-diag', async (_req, res) => {
     ]);
     const info = await conn.db.admin().serverStatus();
     result.steps.connect = { ok: true, version: info.version, host: info.host };
-    await conn.close().catch(() => {});
+    await conn.close().catch(err => console.warn('[API] Operation failed:', err?.message || err));
   } catch (e) {
     const raw = e.message || String(e);
     result.steps.connect = {
@@ -346,7 +346,7 @@ app.get('/api/mongo-diag', async (_req, res) => {
       code: e.code,
       error: raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***').substring(0, 500),
     };
-    await conn.close().catch(() => {});
+    await conn.close().catch(err => console.warn('[API] Operation failed:', err?.message || err));
   }
 
   res.json(result);

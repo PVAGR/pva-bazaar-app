@@ -292,12 +292,12 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     loadAll().catch(() => setLoading(false));
-    refreshLiveStatus().catch(() => {});
+    refreshLiveStatus().catch(err => console.warn('[OnboardingPage] Failed:', err));
   }, []);
 
   useEffect(() => {
     // Bump "last seen" in Mongo so onboarding feels alive across devices.
-    apiPut('/users/profile', { preferences: { onboarding: { lastSeenAt: new Date().toISOString() } } }).catch(() => {});
+    apiPut('/users/profile', { preferences: { onboarding: { lastSeenAt: new Date().toISOString() } } }).catch(err => console.warn('[OnboardingPage] Failed:', err));
   }, []);
 
   async function saveDefaults() {
