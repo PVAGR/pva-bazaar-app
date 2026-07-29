@@ -60,6 +60,15 @@ render-api-key.local
 # OpenClaw watchdog logs
 infra/openclaw/logs/
 
+# Auth data
+backend/data/auth-store.json
+backend/data/auth-store.json.localbak
+backend/data/
+
+# Legacy stuff
+Frontend/_legacy/
+Frontend/src/data/entries.js
+
 # Nested repository duplicate (do not commit)
 /pva-bazaar-app/
 .aider*
