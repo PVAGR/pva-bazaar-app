@@ -846,6 +846,7 @@ export default function BookPublishingPage() {
               const updatePayload = buildPayload({
                 bookId: saved.id,
                 slug: finalSlug,
+                manuscriptUrl: iaUrl,
                 skipMarkdown: true,
                 mirrors: { archiveOrg: iaUrl, ipfs: '', ipfsCid: '', storacha: '', pinata: '' },
               });
