@@ -2178,7 +2178,7 @@ router.post('/:bookId/versions/:versionId/restore', authenticateBookPublishing, 
     book.manuscriptHtml = version.manuscriptHtml;
     book.fileSize = version.fileSize;
     book.wordCount = version.wordCount;
-    await saveBook(book);
+    await persistBookRecord(book);
 
     return res.json({ ok: true, message: `Restored to version ${version.version}`, version });
   } catch (err) {

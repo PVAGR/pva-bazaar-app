@@ -931,13 +931,13 @@ router.post('/telegram/updates', async (req, res) => {
   const message = update.message || update.edited_message;
   const updateId = update?.update_id;
 
-  await writeHeartbeat({ phase: 'received', updateId: updateId ?? null }).catch(() => {});
+  await writeHeartbeat({ phase: 'received', updateId: updateId ?? null }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
   if (Number.isFinite(updateId)) {
-    await writeMemory('telegram:lastUpdateId', String(updateId), 'fact').catch(() => {});
+    await writeMemory('telegram:lastUpdateId', String(updateId), 'fact').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
   }
 
   if (!message || !Number.isFinite(updateId)) {
-    await recordBridgeSuccess({ phase: 'ignored', reason: 'non-message update' }).catch(() => {});
+    await recordBridgeSuccess({ phase: 'ignored', reason: 'non-message update' }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.json({ ok: true, ignored: true });
   }
 
@@ -945,18 +945,18 @@ router.post('/telegram/updates', async (req, res) => {
   const userText = sanitizeIncomingText(message?.text);
 
   if (!chatId || !userText) {
-    await recordBridgeSuccess({ phase: 'ignored', reason: 'empty text message' }).catch(() => {});
+    await recordBridgeSuccess({ phase: 'ignored', reason: 'empty text message' }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.json({ ok: true, ignored: true });
   }
 
   if (!isAllowedChat(chatId)) {
-    await sendTelegramMessage(chatId, 'Unauthorized chat for this bot.').catch(() => {});
-    await recordBridgeSuccess({ phase: 'blocked', chatId: String(chatId) }).catch(() => {});
+    await sendTelegramMessage(chatId, 'Unauthorized chat for this bot.').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
+    await recordBridgeSuccess({ phase: 'blocked', chatId: String(chatId) }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.json({ ok: true, blocked: true });
   }
 
   if (await safeHasProcessedUpdate(updateId)) {
-    await recordBridgeSuccess({ phase: 'duplicate', updateId }).catch(() => {});
+    await recordBridgeSuccess({ phase: 'duplicate', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.json({ ok: true, duplicate: true });
   }
 
@@ -964,17 +964,17 @@ router.post('/telegram/updates', async (req, res) => {
   const lower = userText.toLowerCase();
 
   try {
-    await writeLastChatId(chatId).catch(() => {});
+    await writeLastChatId(chatId).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
 
     if (lower === '/start') {
       await sendTelegramMessage(chatId, startText());
-      await recordBridgeSuccess({ phase: 'command:start', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:start', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/help') {
       await sendTelegramMessage(chatId, helpText());
-      await recordBridgeSuccess({ phase: 'command:help', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:help', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -991,7 +991,7 @@ router.post('/telegram/updates', async (req, res) => {
         `This chatId: ${String(chatId)}`,
       ];
       await sendTelegramMessage(chatId, lines.join('\n'));
-      await recordBridgeSuccess({ phase: 'command:diag', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:diag', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1002,7 +1002,7 @@ router.post('/telegram/updates', async (req, res) => {
         'Use this chatId with POST /api/openclaw/telegram/notify-ready',
       ].join('\n');
       await sendTelegramMessage(chatId, payload);
-      await recordBridgeSuccess({ phase: 'command:chatid', updateId, chatId: String(chatId) }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:chatid', updateId, chatId: String(chatId) }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1010,13 +1010,13 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'identity');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /identity <who you are, your mission, your values>');
-        await recordBridgeSuccess({ phase: 'command:identity:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:identity:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
-      await storePersonaEntry('identity', chatId, payload, 'fact').catch(() => {});
+      await storePersonaEntry('identity', chatId, payload, 'fact').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       await sendTelegramMessage(chatId, 'Identity imprint stored. I will align future responses to this core self.');
-      await recordBridgeSuccess({ phase: 'command:identity', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:identity', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1024,13 +1024,13 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'voice');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /voice <tone, cadence, style, personality cues>');
-        await recordBridgeSuccess({ phase: 'command:voice:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:voice:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
-      await storePersonaEntry('voice', chatId, payload, 'preference').catch(() => {});
+      await storePersonaEntry('voice', chatId, payload, 'preference').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       await sendTelegramMessage(chatId, 'Voice profile stored. I will speak in this style moving forward.');
-      await recordBridgeSuccess({ phase: 'command:voice', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:voice', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1041,13 +1041,13 @@ router.post('/telegram/updates', async (req, res) => {
 
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /imprint <memory to preserve as part of your AI self>');
-        await recordBridgeSuccess({ phase: 'command:imprint:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:imprint:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
-      await storePersonaEntry('imprint', chatId, payload, 'reflection').catch(() => {});
+      await storePersonaEntry('imprint', chatId, payload, 'reflection').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       await sendTelegramMessage(chatId, 'Imprint stored. This is now part of your long-form AI memory stream.');
-      await recordBridgeSuccess({ phase: 'command:imprint', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:imprint', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1055,14 +1055,14 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'profile');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /profile <name>');
-        await recordBridgeSuccess({ phase: 'command:profile:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:profile:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const profileId = normalizeLabel(payload, 'default', 120);
-      await writeMemory(chatProfileKey(chatId), profileId, 'preference').catch(() => {});
+      await writeMemory(chatProfileKey(chatId), profileId, 'preference').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       await sendTelegramMessage(chatId, `Profile switched to ${profileId}. Future replies will align with this identity stream.`);
-      await recordBridgeSuccess({ phase: 'command:profile', updateId, profileId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:profile', updateId, profileId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1070,14 +1070,14 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'mode');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /mode <name>');
-        await recordBridgeSuccess({ phase: 'command:mode:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:mode:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const mode = normalizeLabel(payload, 'default', 80);
-      await writeMemory(chatModeKey(chatId), mode, 'preference').catch(() => {});
+      await writeMemory(chatModeKey(chatId), mode, 'preference').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       await sendTelegramMessage(chatId, `Mode switched to ${mode}.`);
-      await recordBridgeSuccess({ phase: 'command:mode', updateId, mode }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:mode', updateId, mode }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1097,14 +1097,14 @@ router.post('/telegram/updates', async (req, res) => {
         : 'Self profile unavailable right now.';
 
       await sendTelegramMessage(chatId, summary);
-      await recordBridgeSuccess({ phase: 'command:self', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:self', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/workflow') {
       const state = await readLatestWorkflowState(chatId).catch(() => null);
       await sendTelegramMessage(chatId, formatWorkflowState(state));
-      await recordBridgeSuccess({ phase: 'command:workflow', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:workflow', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1112,7 +1112,7 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'plan');
       if (!payload || !payload.includes('|')) {
         await sendTelegramMessage(chatId, 'Usage: /plan <title> | <step 1>; <step 2>; <step 3>');
-        await recordBridgeSuccess({ phase: 'command:plan:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:plan:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
@@ -1121,7 +1121,7 @@ router.post('/telegram/updates', async (req, res) => {
       const workflow = await createWorkflowState(chatId, title, stepsRaw).catch(() => null);
       if (!workflow) {
         await sendTelegramMessage(chatId, 'No valid steps found. Use semicolons or new lines to separate actions.');
-        await recordBridgeSuccess({ phase: 'command:plan:invalid', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:plan:invalid', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
@@ -1130,14 +1130,14 @@ router.post('/telegram/updates', async (req, res) => {
         `First step: ${workflow.steps[0]}`,
         `Use /continue to advance after each step completes.`,
       ].join('\n'));
-      await recordBridgeSuccess({ phase: 'command:plan', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:plan', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/continue') {
       const result = await advanceWorkflowState(chatId).catch(() => ({ state: null, message: 'No active workflow found.' }));
       await sendTelegramMessage(chatId, result.message);
-      await recordBridgeSuccess({ phase: 'command:continue', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:continue', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1145,7 +1145,7 @@ router.post('/telegram/updates', async (req, res) => {
       const tasks = await fetchRecentTasks(chatId).catch(() => []);
       const output = tasks.length ? ['Recent tasks:', ...tasks.map((line) => `- ${line}`)].join('\n') : 'No tasks stored yet.';
       await sendTelegramMessage(chatId, output);
-      await recordBridgeSuccess({ phase: 'command:tasks', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:tasks', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1153,13 +1153,13 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'task');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /task <task description>');
-        await recordBridgeSuccess({ phase: 'command:task:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:task:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const stored = await storeTask(chatId, payload, 'task').catch(() => null);
       await sendTelegramMessage(chatId, stored ? 'Task stored in assistant memory.' : 'Task could not be stored right now.');
-      await recordBridgeSuccess({ phase: 'command:task', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:task', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1167,13 +1167,13 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'note');
       if (!payload) {
         await sendTelegramMessage(chatId, 'Usage: /note <text to remember>');
-        await recordBridgeSuccess({ phase: 'command:note:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:note:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const stored = await storeNote(chatId, payload, 'note').catch(() => null);
       await sendTelegramMessage(chatId, stored ? 'Note stored in assistant memory.' : 'Note could not be stored right now.');
-      await recordBridgeSuccess({ phase: 'command:note', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:note', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1181,7 +1181,7 @@ router.post('/telegram/updates', async (req, res) => {
       const notes = await fetchRecentNotes(chatId).catch(() => []);
       const output = notes.length ? ['Recent notes:', ...notes.map((line) => `- ${line}`)].join('\n') : 'No notes stored yet.';
       await sendTelegramMessage(chatId, output);
-      await recordBridgeSuccess({ phase: 'command:notes', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:notes', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1201,7 +1201,7 @@ router.post('/telegram/updates', async (req, res) => {
         ...(tasks.length ? tasks.map((line) => `- ${line}`) : []),
       ];
       await sendTelegramMessage(chatId, lines.join('\n'));
-      await recordBridgeSuccess({ phase: 'command:recall', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:recall', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1209,13 +1209,13 @@ router.post('/telegram/updates', async (req, res) => {
       const extracted = parseSetEmailCommand(userText);
       if (!extracted) {
         await sendTelegramMessage(chatId, 'Usage: /setemail you@example.com');
-        await recordBridgeSuccess({ phase: 'command:setemail:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:setemail:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const saved = await storePreferredEmail(chatId, extracted).catch(() => null);
       await sendTelegramMessage(chatId, saved ? `Saved preferred email: ${saved}` : 'Could not save that email address.');
-      await recordBridgeSuccess({ phase: 'command:setemail', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:setemail', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1225,7 +1225,7 @@ router.post('/telegram/updates', async (req, res) => {
       await sendTelegramMessage(chatId, email
         ? `Preferred email: ${email}`
         : 'No preferred email saved yet. Use /setemail you@example.com');
-      await recordBridgeSuccess({ phase: 'command:myemail', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:myemail', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1233,20 +1233,20 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = commandPayload(userText, 'flight');
       if (!payload || !payload.includes('|')) {
         await sendTelegramMessage(chatId, 'Usage: /flight <from> | <to> | <YYYY-MM-DD>');
-        await recordBridgeSuccess({ phase: 'command:flight:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:flight:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const [fromRaw, toRaw, dateRaw] = payload.split('|').map((item) => String(item || '').trim());
       if (!toRaw) {
         await sendTelegramMessage(chatId, 'Please include at least a destination: /flight <from> | <to> | <YYYY-MM-DD>');
-        await recordBridgeSuccess({ phase: 'command:flight:destination-missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:flight:destination-missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       const url = buildFlightLink({ from: fromRaw || null, to: toRaw, date: dateRaw || null });
       await sendTelegramMessage(chatId, `Cheapest-flight lookup link:\n${url}`);
-      await recordBridgeSuccess({ phase: 'command:flight', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:flight', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1255,7 +1255,7 @@ router.post('/telegram/updates', async (req, res) => {
       if (!payload || !payload.subject || !payload.body) {
         const defaultHint = DEFAULT_EMAIL_TO ? ` Default recipient is ${DEFAULT_EMAIL_TO}.` : '';
         await sendTelegramMessage(chatId, `Usage: /email to | subject | body (or /email subject | body after /setemail)${defaultHint}`);
-        await recordBridgeSuccess({ phase: 'command:email:missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:email:missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
@@ -1264,7 +1264,7 @@ router.post('/telegram/updates', async (req, res) => {
 
       if (!recipient) {
         await sendTelegramMessage(chatId, 'No recipient configured. Set OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO or include the recipient in the command.');
-        await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
@@ -1284,14 +1284,14 @@ router.post('/telegram/updates', async (req, res) => {
         });
       } catch (emailError) {
         await sendTelegramMessage(chatId, `Email failed for ${recipient}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`);
-        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: recipient }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: recipient }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
 
       await sendTelegramMessage(chatId, emailResult?.success
         ? `Email sent to ${recipient}.`
         : `Email request skipped for ${recipient}.`);
-      await recordBridgeSuccess({ phase: 'command:email', updateId, to: recipient }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:email', updateId, to: recipient }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
@@ -1301,7 +1301,7 @@ router.post('/telegram/updates', async (req, res) => {
         const saved = await storePreferredEmail(chatId, inlineEmail).catch(() => null);
         if (saved) {
           await sendTelegramMessage(chatId, `Saved your email as ${saved}. You can now use /email subject | body.`);
-          await recordBridgeSuccess({ phase: 'chat:inline-email', updateId, email: saved }).catch(() => {});
+          await recordBridgeSuccess({ phase: 'chat:inline-email', updateId, email: saved }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
           return res.json({ ok: true, handled: true });
         }
       }
@@ -1310,7 +1310,7 @@ router.post('/telegram/updates', async (req, res) => {
         const stored = await storeNote(chatId, userText, 'note').catch(() => null);
         if (stored) {
           await sendTelegramMessage(chatId, 'Saved that note to your memory.');
-          await recordBridgeSuccess({ phase: 'chat:inline-note', updateId }).catch(() => {});
+          await recordBridgeSuccess({ phase: 'chat:inline-note', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
           return res.json({ ok: true, handled: true });
         }
       }
@@ -1322,13 +1322,13 @@ router.post('/telegram/updates', async (req, res) => {
             chatId,
             'I can build a cheapest-flight link. Tell me destination (and optional origin/date), for example: cheapest flight from Kabul to Nairobi on 2026-06-15.',
           );
-          await recordBridgeSuccess({ phase: 'chat:flight:follow-up', updateId }).catch(() => {});
+          await recordBridgeSuccess({ phase: 'chat:flight:follow-up', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
           return res.json({ ok: true, handled: true });
         }
 
         const url = buildFlightLink(flightRequest);
         await sendTelegramMessage(chatId, `Cheapest-flight lookup link:\n${url}`);
-        await recordBridgeSuccess({ phase: 'chat:flight', updateId }).catch(() => {});
+        await recordBridgeSuccess({ phase: 'chat:flight', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
         return res.json({ ok: true, handled: true });
       }
     }
@@ -1336,33 +1336,33 @@ router.post('/telegram/updates', async (req, res) => {
     if (lower === '/status') {
       const summary = await openclawStatusSummary(apiBaseUrl);
       await sendTelegramMessage(chatId, summary);
-      await recordBridgeSuccess({ phase: 'command:status', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:status', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/queue') {
       const summary = await openclawQueueSummary(apiBaseUrl);
       await sendTelegramMessage(chatId, summary);
-      await recordBridgeSuccess({ phase: 'command:queue', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:queue', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/recover') {
       const summary = await openclawRecoverSummary(apiBaseUrl);
       await sendTelegramMessage(chatId, summary);
-      await recordBridgeSuccess({ phase: 'command:recover', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:recover', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/ecosystem') {
       const status = await fetchOpenClawStatus(apiBaseUrl);
       await sendTelegramMessage(chatId, ecosystemSummary(status));
-      await recordBridgeSuccess({ phase: 'command:ecosystem', updateId }).catch(() => {});
+      await recordBridgeSuccess({ phase: 'command:ecosystem', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true });
     }
 
     if (PERSONA_AUTO_LEARN && !lower.startsWith('/')) {
-      await storePersonaEntry('journal', chatId, userText, 'reflection').catch(() => {});
+      await storePersonaEntry('journal', chatId, userText, 'reflection').catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     }
 
     const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
@@ -1394,10 +1394,10 @@ router.post('/telegram/updates', async (req, res) => {
     }
 
     await sendTelegramMessage(chatId, replyText);
-    await recordBridgeSuccess({ phase: 'chat', updateId }).catch(() => {});
+    await recordBridgeSuccess({ phase: 'chat', updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.json({ ok: true, handled: true });
   } catch (err) {
-    await recordBridgeFailure(err?.message || 'telegram webhook failure', { updateId }).catch(() => {});
+    await recordBridgeFailure(err?.message || 'telegram webhook failure', { updateId }).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
       profileId: DEFAULT_PERSONA_PROFILE_ID,
       activeMode: 'default',
@@ -1405,11 +1405,11 @@ router.post('/telegram/updates', async (req, res) => {
     const personaContext = await fetchPersonaContext(chatId).catch(() => null);
     const fallback = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
     if (fallback) {
-      await sendTelegramMessage(chatId, fallback).catch(() => {});
+      await sendTelegramMessage(chatId, fallback).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
       return res.json({ ok: true, handled: true, fallback: true });
     }
 
-    await sendTelegramMessage(chatId, `Bridge error: ${String(err?.message || 'unknown error').slice(0, 400)}`).catch(() => {});
+    await sendTelegramMessage(chatId, `Bridge error: ${String(err?.message || 'unknown error').slice(0, 400)}`).catch(err => console.warn('[TelegramWebhook] Operation failed:', err?.message || err));
     return res.status(200).json({ ok: true, handled: true, error: true });
   }
 });

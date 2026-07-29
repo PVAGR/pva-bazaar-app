@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -10,8 +10,9 @@ import {
   saveBookProject,
 } from '../lib/api';
 import { uploadToInternetArchive, uploadToPinata } from '../lib/manuscriptArchives';
-import ManuscriptVersionPanel from '../components/ManuscriptVersionPanel';
 import { ENV } from '../config/env';
+
+const ManuscriptVersionPanel = lazy(() => import('../components/ManuscriptVersionPanel'));
 import {
   deleteLocalBookProject,
   listLocalBookProjects,
@@ -1671,7 +1672,11 @@ export default function BookPublishingPage() {
               );
             })()}
 
-            {form.bookId ? <ManuscriptVersionPanel bookId={form.bookId} onRestore={() => { loadBooks(); }} /> : null}
+            {form.bookId ? (
+              <Suspense fallback={<p className="book-publish__muted">Loading version history...</p>}>
+                <ManuscriptVersionPanel bookId={form.bookId} onRestore={() => { loadBooks(); }} />
+              </Suspense>
+            ) : null}
 
             {selectedBook ? (
               <div className="book-publish__links">
