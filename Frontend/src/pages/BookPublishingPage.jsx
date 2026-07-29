@@ -9,7 +9,7 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
-import { uploadToInternetArchive } from '../lib/manuscriptArchives';
+import { uploadToInternetArchive, uploadToPinata } from '../lib/manuscriptArchives';
 import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
@@ -338,6 +338,8 @@ export default function BookPublishingPage() {
   const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, storacha: false, pinata: false, uploading: false });
   const [iaUploadState, setIaUploadState] = useState({ status: 'idle', url: '' });
   const [cloudinaryUploadState, setCloudinaryUploadState] = useState({ status: 'idle', url: '' });
+  const [pinataUploadState, setPinataUploadState] = useState({ status: 'idle', url: '' });
+  const [batchUploading, setBatchUploading] = useState(false);
   const [manuscriptSizeBytes, setManuscriptSizeBytes] = useState(0);
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
@@ -388,6 +390,7 @@ export default function BookPublishingPage() {
     setDocxFileName('');
     setIaUploadState({ status: 'idle', url: '' });
     setCloudinaryUploadState({ status: 'idle', url: '' });
+    setPinataUploadState({ status: 'idle', url: '' });
     setManuscriptSizeBytes(0);
   }, [selectedBook]);
 
@@ -574,6 +577,7 @@ export default function BookPublishingPage() {
     setDocxFileName('');
     setIaUploadState({ status: 'idle', url: '' });
     setCloudinaryUploadState({ status: 'idle', url: '' });
+    setPinataUploadState({ status: 'idle', url: '' });
     setManuscriptSizeBytes(0);
   }
 
@@ -610,6 +614,7 @@ export default function BookPublishingPage() {
     setManuscriptSizeBytes(file?.size || 0);
     setIaUploadState({ status: 'idle', url: '' });
     setCloudinaryUploadState({ status: 'idle', url: '' });
+    setPinataUploadState({ status: 'idle', url: '' });
     manuscriptImportedTextRef.current = '';
     if (!file) return;
 
@@ -710,6 +715,100 @@ export default function BookPublishingPage() {
       setIaUploadState({ status: 'error', url: '' });
       setError(`Internet Archive upload failed: ${e.message}`);
     }
+  }
+
+  async function handleUploadToPinata() {
+    const fileToUpload = manuscriptFile
+      || new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+    if (!form.manuscriptMarkdown && !manuscriptFile) {
+      setError('Add manuscript text or select a file first');
+      return;
+    }
+    setPinataUploadState({ status: 'uploading', url: '' });
+    try {
+      const slug = form.slug || `manuscript-${Date.now()}`;
+      const result = await uploadToPinata(fileToUpload, slug);
+      setPinataUploadState({ status: 'done', url: result.url });
+      setError('');
+      setSuccess('Manuscript uploaded to Pinata IPFS.');
+    } catch (e) {
+      setPinataUploadState({ status: 'error', url: '' });
+      setError(`Pinata upload failed: ${e.message}`);
+    }
+  }
+
+  async function handleUploadToAll() {
+    if (!form.manuscriptMarkdown && !manuscriptFile) {
+      setError('Add manuscript text or select a file first');
+      return;
+    }
+    setBatchUploading(true);
+    setError('');
+    setSuccess('');
+
+    const fileToUpload = manuscriptFile
+      || new File([new Blob([form.manuscriptMarkdown], { type: 'text/markdown' })], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+    const slug = form.slug || `manuscript-${Date.now()}`;
+    const tooBigForCloudinary = manuscriptSizeBytes > 20 * 1024 * 1024 || (!manuscriptFile && estimateTextBytes(form.manuscriptMarkdown) > 20 * 1024 * 1024);
+
+    const tasks = [];
+
+    // IA — always eligible
+    tasks.push((async () => {
+      setIaUploadState({ status: 'uploading', url: '' });
+      try {
+        const url = await uploadToInternetArchive(fileToUpload, slug);
+        setIaUploadState({ status: 'done', url });
+        return { service: 'IA', ok: true };
+      } catch (e) {
+        setIaUploadState({ status: 'error', url: '' });
+        return { service: 'IA', ok: false, error: e.message };
+      }
+    })());
+
+    // Cloudinary — only if ≤20MB
+    if (!tooBigForCloudinary) {
+      tasks.push((async () => {
+        setCloudinaryUploadState({ status: 'uploading', url: '' });
+        try {
+          const apiBase = getApiBase();
+          const authToken = (() => {
+            try { return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || ''; }
+            catch (_e) { return ''; }
+          })();
+          const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
+          setCloudinaryUploadState({ status: 'done', url: result.secure_url });
+          return { service: 'Cloudinary', ok: true };
+        } catch (e) {
+          setCloudinaryUploadState({ status: 'error', url: '' });
+          return { service: 'Cloudinary', ok: false, error: e.message };
+        }
+      })());
+    }
+
+    // Pinata — always try (may fail for very large files via proxy)
+    tasks.push((async () => {
+      setPinataUploadState({ status: 'uploading', url: '' });
+      try {
+        const result = await uploadToPinata(fileToUpload, slug);
+        setPinataUploadState({ status: 'done', url: result.url });
+        return { service: 'Pinata', ok: true };
+      } catch (e) {
+        setPinataUploadState({ status: 'error', url: '' });
+        return { service: 'Pinata', ok: false, error: e.message };
+      }
+    })());
+
+    const results = await Promise.allSettled(tasks);
+    const succeeded = results.filter(r => r.status === 'fulfilled' && r.value?.ok);
+    const failed = results.filter(r => r.status === 'fulfilled' && !r.value?.ok);
+    const names = succeeded.map(r => r.value.service).join(', ');
+    if (succeeded.length > 0) {
+      setSuccess(`Uploaded to: ${names}.${failed.length > 0 ? ` ${failed.length} service(s) failed.` : ''}`);
+    } else {
+      setError('All uploads failed. Check each service for details.');
+    }
+    setBatchUploading(false);
   }
 
   async function submitBook(publish) {
@@ -1292,10 +1391,15 @@ export default function BookPublishingPage() {
             </div>
 
             {(() => {
-              const uploadUrl = iaUploadState.url || cloudinaryUploadState.url;
+              const _iaUrl = iaUploadState.url;
+              const _cldUrl = cloudinaryUploadState.url;
+              const _pinUrl = pinataUploadState.url;
+              const uploadUrl = _iaUrl || _cldUrl || _pinUrl;
               const hasExisting = selectedBook?.manuscriptUrl;
               const hasContent = form.manuscriptMarkdown || manuscriptFile;
               const manuscriptReady = Boolean(uploadUrl || hasExisting);
+              const anyUploading = iaUploadState.status === 'uploading' || cloudinaryUploadState.status === 'uploading' || pinataUploadState.status === 'uploading' || batchUploading;
+              const tooBigForCloudinary = manuscriptSizeBytes > 20 * 1024 * 1024 || (!manuscriptFile && estimateTextBytes(form.manuscriptMarkdown) > 20 * 1024 * 1024);
               return (
                 <>
                   <div className="book-publish__formatSection">
@@ -1306,34 +1410,47 @@ export default function BookPublishingPage() {
                     </p>
                     {!hasContent ? <p className="book-publish__muted" style={{ color: '#b33737', fontWeight: 600 }}>Add manuscript text or select a file first.</p> : null}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.65rem' }}>
+                      {/* Batch upload: Upload to all available */}
+                      {hasContent ? (
+                        <button
+                          type="button"
+                          className="book-publish__button book-publish__button--primary"
+                          style={anyUploading ? { opacity: 0.6 } : { fontWeight: 800, borderColor: '#1a7d3a', color: '#fff', background: '#1a7d3a' }}
+                          onClick={handleUploadToAll}
+                          disabled={anyUploading}
+                          title="Upload to all available services in parallel"
+                        >
+                          {batchUploading ? '⏳ Uploading to all…' : '⬆ Upload to all'}
+                        </button>
+                      ) : null}
+
                       {/* Internet Archive — always green, any size */}
                       <button
                         type="button"
                         className="book-publish__button"
                         style={iaUploadState.status === 'done' ? { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' } : iaUploadState.status === 'error' ? { borderColor: '#b33737', color: '#b33737' } : hasContent ? { borderColor: '#1a7d3a', color: '#1a7d3a' } : {}}
                         onClick={handleUploadToIA}
-                        disabled={iaUploadState.status === 'uploading' || !hasContent}
+                        disabled={anyUploading || !hasContent}
                         title={!hasContent ? 'Add manuscript content first' : 'Upload to Internet Archive — no file size limit'}
                       >
-                        {iaUploadState.status === 'uploading' ? '⏳ Uploading to IA…' :
-                         iaUploadState.status === 'done' ? '✓ Uploaded to Internet Archive' :
-                         iaUploadState.status === 'error' ? '✗ IA upload failed — retry' :
-                         'Upload to Internet Archive'}
-                        {hasContent && iaUploadState.status === 'idle' ? <span style={{ fontSize: '0.7rem', marginLeft: '0.4rem', opacity: 0.7 }}>unlimited</span> : null}
+                        {iaUploadState.status === 'uploading' ? '⏳ IA…' :
+                         iaUploadState.status === 'done' ? '✓ Internet Archive' :
+                         iaUploadState.status === 'error' ? '✗ IA — retry' :
+                         'Internet Archive'}
+                        {hasContent && iaUploadState.status === 'idle' ? <span style={{ fontSize: '0.65rem', marginLeft: '0.3rem', opacity: 0.6 }}>unlimited</span> : null}
                       </button>
 
                       {/* Cloudinary — green if <=20MB, red if >20MB */}
                       {(() => {
-                        const tooBig = manuscriptSizeBytes > 20 * 1024 * 1024 || (!manuscriptFile && estimateTextBytes(form.manuscriptMarkdown) > 20 * 1024 * 1024);
                         const isDone = cloudinaryUploadState.status === 'done';
                         const isUploading = cloudinaryUploadState.status === 'uploading';
                         const isError = cloudinaryUploadState.status === 'error';
                         let btnStyle = {};
-                        let disabled = isUploading || !hasContent;
-                        let label = 'Upload to Cloudinary';
-                        if (isDone) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' }; label = '✓ Uploaded to Cloudinary'; }
-                        else if (isError) { btnStyle = { borderColor: '#b33737', color: '#b33737' }; label = '✗ Cloudinary upload failed — retry'; }
-                        else if (tooBig && hasContent) { btnStyle = { borderColor: '#b33737', color: '#b33737', backgroundColor: 'color-mix(in srgb, #b33737 8%, transparent)' }; disabled = true; label = `✗ Cloudinary (max 20MB — file is ${formatBytes(manuscriptSizeBytes)})`; }
+                        let disabled = isUploading || !hasContent || anyUploading;
+                        let label = 'Cloudinary';
+                        if (isDone) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' }; label = '✓ Cloudinary'; }
+                        else if (isError) { btnStyle = { borderColor: '#b33737', color: '#b33737' }; label = '✗ Cloudinary — retry'; }
+                        else if (tooBigForCloudinary && hasContent) { btnStyle = { borderColor: '#b33737', color: '#b33737', backgroundColor: 'color-mix(in srgb, #b33737 8%, transparent)' }; disabled = true; label = `✗ Cloudinary ${formatBytes(manuscriptSizeBytes)}`; }
                         else if (hasContent) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a' }; }
                         return (
                           <button
@@ -1342,10 +1459,34 @@ export default function BookPublishingPage() {
                             style={btnStyle}
                             onClick={handleUploadToCloudinary}
                             disabled={disabled}
-                            title={tooBig ? `File too large (${formatBytes(manuscriptSizeBytes)}). Use Internet Archive for files over 20MB.` : !hasContent ? 'Add manuscript content first' : ''}
+                            title={tooBigForCloudinary ? `File too large (${formatBytes(manuscriptSizeBytes)}). Use Internet Archive for files over 20MB.` : !hasContent ? 'Add manuscript content first' : ''}
                           >
-                            {isUploading ? '⏳ Uploading to Cloudinary…' : label}
-                            {hasContent && cloudinaryUploadState.status === 'idle' && !tooBig ? <span style={{ fontSize: '0.7rem', marginLeft: '0.4rem', opacity: 0.7 }}>max 20MB</span> : null}
+                            {isUploading ? '⏳ Cloudinary…' : label}
+                          </button>
+                        );
+                      })()}
+
+                      {/* Pinata — green, backend works */}
+                      {(() => {
+                        const isDone = pinataUploadState.status === 'done';
+                        const isUploading = pinataUploadState.status === 'uploading';
+                        const isError = pinataUploadState.status === 'error';
+                        let btnStyle = {};
+                        let disabled = isUploading || !hasContent || anyUploading;
+                        let label = 'Pinata IPFS';
+                        if (isDone) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' }; label = '✓ Pinata IPFS'; }
+                        else if (isError) { btnStyle = { borderColor: '#b33737', color: '#b33737' }; label = '✗ Pinata — retry'; }
+                        else if (hasContent) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a' }; }
+                        return (
+                          <button
+                            type="button"
+                            className="book-publish__button"
+                            style={btnStyle}
+                            onClick={handleUploadToPinata}
+                            disabled={disabled}
+                            title={!hasContent ? 'Add manuscript content first' : 'Upload to Pinata IPFS'}
+                          >
+                            {isUploading ? '⏳ Pinata…' : label}
                           </button>
                         );
                       })()}
@@ -1354,22 +1495,11 @@ export default function BookPublishingPage() {
                       <button
                         type="button"
                         className="book-publish__button"
-                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.6, cursor: 'not-allowed' }}
+                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.5, cursor: 'not-allowed', fontSize: '0.85rem' }}
                         disabled
                         title="Storacha endpoint is currently unavailable"
                       >
-                        ✗ Storacha (unavailable)
-                      </button>
-
-                      {/* Pinata — always disabled */}
-                      <button
-                        type="button"
-                        className="book-publish__button"
-                        style={{ borderColor: '#b33737', color: '#b33737', opacity: 0.6, cursor: 'not-allowed' }}
-                        disabled
-                        title="Pinata IPFS endpoint is currently unavailable"
-                      >
-                        ✗ Pinata (unavailable)
+                        ✗ Storacha
                       </button>
                     </div>
                   </div>
@@ -1377,7 +1507,7 @@ export default function BookPublishingPage() {
                   <div className="book-publish__editorActions">
                     {!manuscriptReady && hasContent ? (
                       <p className="book-publish__muted" style={{ width: '100%', color: '#b33737', fontWeight: 600 }}>
-                        Upload manuscript to Internet Archive or Cloudinary before saving.
+                        Upload manuscript to at least one archive service before saving.
                       </p>
                     ) : null}
                     <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving || !manuscriptReady}>
