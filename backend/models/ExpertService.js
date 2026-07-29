@@ -86,7 +86,7 @@ const expertServiceSchema = new mongoose.Schema({
       clientName: String,
       comment: String,
       rating: { type: Number, min: 1, max: 5 },
-      verified: Boolean,
+      verified: { type: Boolean },
     },
   ],
 
@@ -100,10 +100,10 @@ const expertServiceSchema = new mongoose.Schema({
 
   // Communication preferences
   communicationChannels: {
-    zoom: { enabled: Boolean, autoGenerate: Boolean },
-    googleMeet: { enabled: Boolean },
-    custom: { enabled: Boolean, url: String },
-    phone: { enabled: Boolean },
+    zoom: { enabled: { type: Boolean }, autoGenerate: { type: Boolean } },
+    googleMeet: { enabled: { type: Boolean } },
+    custom: { enabled: { type: Boolean }, url: { type: String } },
+    phone: { enabled: { type: Boolean } },
     email: { enabled: { type: Boolean, default: true } },
   },
 

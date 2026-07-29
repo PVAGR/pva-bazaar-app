@@ -155,9 +155,10 @@ export default function SellerDashboard() {
                 <span className="text-gray-600">Payouts Ready</span>
                 <span className="font-semibold text-blue-600">{data.stats.pendingPayouts}</span>
               </div>
-              <a href="/seller/analytics" className="text-blue-600 hover:underline text-sm">
-                View Full Analytics →
-              </a>
+              {/* TODO: Replace with link to /seller/analytics when that page exists */}
+              <span className="text-zinc-500 cursor-not-allowed text-sm">
+                View Full Analytics — coming soon
+              </span>
             </div>
           </div>
         </div>
@@ -204,9 +205,10 @@ export default function SellerDashboard() {
             </table>
           </div>
           <div className="p-6 border-t border-gray-200">
-            <a href="/seller/orders" className="text-blue-600 hover:underline text-sm">
-              View All Orders →
-            </a>
+            {/* TODO: Replace with link to /seller/orders when that page exists */}
+            <span className="text-zinc-500 cursor-not-allowed text-sm">
+              View All Orders — coming soon
+            </span>
           </div>
         </div>
       </div>

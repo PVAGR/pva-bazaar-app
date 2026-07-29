@@ -97,12 +97,10 @@ export default function SellerSettings() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">You don&apos;t have a shop yet.</p>
-          <button
-            onClick={() => router.push('/seller/create')}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Create Shop
-          </button>
+          {/* TODO: Replace with working link to /seller/create when that page exists */}
+          <span className="inline-block bg-zinc-400 text-white px-4 py-2 rounded cursor-not-allowed">
+            Create Shop — coming soon
+          </span>
         </div>
       </div>
     );

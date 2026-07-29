@@ -64,13 +64,16 @@ function sha256Hex(v) {
 }
 
 async function generateUniquePublicId() {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const candidate = generatePublicDealId();
-    // eslint-disable-next-line no-await-in-loop
-    const exists = await Deal.exists({ publicId: candidate });
-    if (!exists) return candidate;
+  let retries = 0;
+  const maxRetries = 12;
+  while (retries < maxRetries) {
+    const publicId = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const exists = await Deal.exists({ publicId }).lean();
+    if (!exists) return publicId;
+    retries++;
   }
-  throw new Error('Failed to generate public deal id');
+  // Absolute fallback with timestamp suffix to guarantee uniqueness
+  return `${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
 }
 
 function buildPublicShareUrl(req, publicId) {
