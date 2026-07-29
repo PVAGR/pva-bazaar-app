@@ -1,1 +1,51 @@
-{"books":[],"nextId":1,"updatedAt":""}
+{
+  "books": [
+    {
+      "_id": "1",
+      "id": "1",
+      "authorId": "seed-admin",
+      "title": "The Art of African Storytelling",
+      "subtitle": "Tales from the Heart of Kenya",
+      "authorName": "Makena Njoroge",
+      "slug": "the-art-of-african-storytelling",
+      "description": "A captivating collection of traditional Kenyan folktales passed down through generations. This book weaves together stories of wisdom, courage, and community that have shaped East African culture for centuries. Each tale carries timeless lessons about human nature, the natural world, and the bonds that unite us.",
+      "genre": "fiction",
+      "audience": "general",
+      "language": "en",
+      "status": "published",
+      "wordCount": 285,
+      "publishedAt": "2026-07-29T00:00:00.000Z",
+      "createdAt": "2026-07-28T00:00:00.000Z",
+      "updatedAt": "2026-07-29T00:00:00.000Z",
+      "publishedVersion": 1,
+      "manuscriptMarkdown": "# The Art of African Storytelling\n\n## The Weaver Bird's Lesson\n\nIn a small village nestled at the foot of Mount Kenya, there lived a young girl named Nyambura who loved to weave. Every day, she would sit beneath the great acacia tree and weave baskets from the reeds she gathered by the river.\n\nOne morning, as she worked, a small weaver bird landed on a branch above her. The bird watched her hands move gracefully, pulling reeds this way and that, creating patterns that told stories of the earth and sky.\n\n\"Why do you weave?\" asked the weaver bird, tilting its head.\n\nNyambura smiled. \"I weave to remember. Each pattern holds a story. This zigzag here is the path the elephant takes to the watering hole. These circles are the ripples when the rain comes. The stars I weave at the top are the ancestors watching over us.\"\n\nThe weaver bird hopped closer. \"I too weave,\" it said proudly. \"My nest is the most intricate in all the forest. But I weave for shelter, not for memory.\"\n\n\"Perhaps,\" said Nyambura, \"you weave for both and do not know it. Your nest tells the story of the winds that shaped it, the twigs you chose, the seasons you survived.\"\n\n## The Wisdom of the Elders\n\nThat evening, Nyambura's grandmother found her sitting with the weaver bird still perched nearby. The grandmother laughed warmly, her eyes crinkling like old leather.\n\n\"You have made a friend,\" she said, settling down beside Nyambura. \"The weaver bird is a good teacher. Do you know what the elders say? 'The finest stories are not told with words alone.'\"\n\nNyambura thought about this. \"They are told with weaving?\"\n\n\"With everything,\" said her grandmother. \"With the way you cook, the way you plant, the way you greet a stranger. Every action is a story. Every object holds a memory. Your basket there — when someone sees it, they will know about the reeds by the river, the acacia tree, the young girl who sat beneath it, and the weaver bird who taught her to see.\"\n\n## The River's Song\n\nThe next day, Nyambura went to the river. She sat on a smooth stone and listened. The water sang as it tumbled over the rocks, and she began to hear words in its song.\n\nThe river sang about the rains that fed it, the fish that swam in its depths, the children who played on its banks, and the elders who came to pray for wisdom.\n\nWhen she returned home, she wove a new basket. Into its pattern, she wove the river's song — the flowing lines of water, the sparkle of sunlight, the deep blue of the pools where the fish hid.\n\nHer grandmother saw the basket and wept. \"You have learned,\" she said. \"You have learned that we do not own our stories. We are only their caretakers, passing them from hand to hand, from heart to heart.\"\n\n## Epilogue\n\nAnd so Nyambura became the village storyteller. She never forgot the weaver bird's lesson — that everything weaves a story, and every story is a thread in the great tapestry of life.\n\nWhen travelers came to the village, they would sit beneath the acacia tree and listen to her tales. And when they left, they carried not just memories, but a piece of the story with them, woven into their own lives, to pass on to others.\n\nThe weaver bird watched it all from its nest above, knowing that its own small story was now part of something much larger.\n\n---\n\n*A traditional Kenyan folktale, retold for a new generation.*",
+      "manuscriptUrl": "",
+      "manuscriptPdfUrl": "",
+      "manuscriptDocxUrl": "",
+      "manuscriptHtml": "",
+      "format": "",
+      "fileSize": 0,
+      "mirrors": {},
+      "frontCover": {
+        "provider": "local",
+        "url": "",
+        "publicId": "",
+        "localFilename": "",
+        "originalName": "",
+        "mimeType": "image/jpeg",
+        "size": 0
+      },
+      "backCover": {
+        "provider": "local",
+        "url": "",
+        "publicId": "",
+        "localFilename": "",
+        "originalName": "",
+        "mimeType": "image/jpeg",
+        "size": 0
+      }
+    }
+  ],
+  "nextId": 2,
+  "updatedAt": "2026-07-29T00:00:00.000Z"
+}

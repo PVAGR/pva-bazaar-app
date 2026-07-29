@@ -536,7 +536,7 @@ function shouldUseFileBookStore() {
   // Production fix: never fall back to the file store when MongoDB is connected.
   const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
   if (connected) return false;
-  return mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected';
+  return mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected' || mongoState.mode === 'memory';
 }
 
 function isDocxFile(file) {
