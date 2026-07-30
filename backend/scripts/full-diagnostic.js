@@ -27,27 +27,27 @@ async function testDNS() {
   let allOk = true;
 
   if (isSrv) {
-    const srvHost = '_mongodb._tcp.' + hostname;
-    process.stdout.write('   SRV ' + srvHost + ' ... ');
+    const srvHost = `_mongodb._tcp.${  hostname}`;
+    process.stdout.write(`   SRV ${  srvHost  } ... `);
     try {
       const srv = await dns.resolveSrv(srvHost);
-      console.log('OK (' + srv.length + ' records)');
-      srv.forEach(r => console.log('     ' + r.name + ':' + r.port + ' pri=' + r.priority + ' wei=' + r.weight));
+      console.log(`OK (${  srv.length  } records)`);
+      srv.forEach(r => console.log(`     ${  r.name  }:${  r.port  } pri=${  r.priority  } wei=${  r.weight}`));
     } catch (err) {
       console.error('FAILED:', err.code);
       allOk = false;
     }
 
-    process.stdout.write('   TXT ' + hostname + ' ... ');
+    process.stdout.write(`   TXT ${  hostname  } ... `);
     try {
       const txt = await dns.resolveTxt(hostname);
       console.log('OK:', txt.map(t => t.join('')).join(', '));
     } catch (err) {
-      console.log('failed (' + err.code + ') — non-critical');
+      console.log(`failed (${  err.code  }) — non-critical`);
     }
   }
 
-  process.stdout.write('   A   ' + hostname + ' ... ');
+  process.stdout.write(`   A   ${  hostname  } ... `);
   try {
     const a = await dns.resolve4(hostname);
     console.log('OK:', a.join(', '));
@@ -68,7 +68,7 @@ async function testDNS() {
   }
   if (isSrv) {
     try {
-      const srv = await dns.resolveSrv('_mongodb._tcp.' + hostname);
+      const srv = await dns.resolveSrv(`_mongodb._tcp.${  hostname}`);
       console.log('   SRV (Google):', srv.length, 'records');
     } catch (err) {
       console.error('   SRV (Google) FAILED:', err.code);
@@ -88,7 +88,7 @@ async function testMongo() {
     const portMatch = uri?.match(/:(\d+)\//);
     const port = portMatch ? parseInt(portMatch[1]) : 27017;
     const net = require('net');
-    process.stdout.write('   TCP ' + hostname + ':' + port + ' ... ');
+    process.stdout.write(`   TCP ${  hostname  }:${  port  } ... `);
     await new Promise(resolve => {
       const sock = new net.Socket();
       sock.setTimeout(8000);
@@ -121,7 +121,7 @@ async function testMongo() {
       const cols = await client.db('pvabazaar').listCollections().toArray();
       console.log('   pvabazaar collections:', cols.length ? cols.map(c => c.name).join(', ') : '(empty)');
     } catch (e) {
-      console.log('   pvabazaar db: not accessible (' + e.message + ')');
+      console.log(`   pvabazaar db: not accessible (${  e.message  })`);
     }
 
     console.log('\n=== RESULT: SUCCESS ===');
@@ -134,7 +134,7 @@ async function testMongo() {
 
     if (error.message?.includes('ENOTFOUND') || error.message?.includes('querySrv')) {
       console.error('\n   >>> ROOT CAUSE: DNS RESOLUTION FAILED');
-      console.error('   Hostname "' + hostname + '" does not exist in DNS.');
+      console.error(`   Hostname "${  hostname  }" does not exist in DNS.`);
       console.error('   Go to Atlas → Cluster0 → Connect → Drivers and copy the exact string.');
     } else if (error.message?.includes('ECONNREFUSED')) {
       console.error('\n   >>> ROOT CAUSE: CONNECTION REFUSED');
@@ -164,18 +164,18 @@ async function main() {
   let dnsOk = true;
   try {
     if (isSrv) {
-      const srv = await dns.resolveSrv('_mongodb._tcp.' + hostname);
-      console.log('   SRV: OK (' + srv.length + ' records)');
+      const srv = await dns.resolveSrv(`_mongodb._tcp.${  hostname}`);
+      console.log(`   SRV: OK (${  srv.length  } records)`);
     }
   } catch (e) {
-    console.log('   SRV: FAILED (' + e.code + ')');
+    console.log(`   SRV: FAILED (${  e.code  })`);
     dnsOk = false;
   }
   try {
     const a = await dns.resolve4(hostname);
-    console.log('   A:   OK (' + a.join(', ') + ')');
+    console.log(`   A:   OK (${  a.join(', ')  })`);
   } catch (e) {
-    console.log('   A:   FAILED (' + e.code + ')');
+    console.log(`   A:   FAILED (${  e.code  })`);
     dnsOk = false;
   }
 

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-type SnapshotSummary = {
+interface SnapshotSummary {
   id: string;
   label: string;
   payloadSizeBytes: number;
@@ -26,9 +26,9 @@ type SnapshotSummary = {
     pinnedAt?: string;
   };
   createdAt: string;
-};
+}
 
-type SnapshotPayload = {
+interface SnapshotPayload {
   version: string;
   algorithm: string;
   kdf: string;
@@ -38,19 +38,19 @@ type SnapshotPayload = {
   ciphertextB64: string;
   plaintextSha256?: string;
   ciphertextSha256?: string;
-};
+}
 
 type SnapshotDetail = SnapshotSummary & {
   payload: SnapshotPayload;
 };
 
-type SnapshotRecordResponse = {
+interface SnapshotRecordResponse {
   ok?: boolean;
   item?: SnapshotDetail;
   error?: string;
-};
+}
 
-type BrowserSnapshotPayload = {
+interface BrowserSnapshotPayload {
   formatVersion: "pva-browser-recovery-v1";
   capturedAt: string;
   origin: string;
@@ -66,7 +66,7 @@ type BrowserSnapshotPayload = {
   sessionStorage: Record<string, string>;
   cookies: string;
   notes: string;
-};
+}
 
 const STORAGE_KEY_TOKEN = "pvabazaar_recovery_token";
 const STORAGE_KEY_API = "pvabazaar_recovery_api";

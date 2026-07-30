@@ -12,7 +12,7 @@ console.log('Target hostname:', hostname);
 async function diagnose() {
   // Step 1: DNS SRV check (for mongodb+srv)
   if (uri?.startsWith('mongodb+srv://')) {
-    const srvHost = '_mongodb._tcp.' + hostname;
+    const srvHost = `_mongodb._tcp.${  hostname}`;
     console.log(`\n--- DNS SRV Lookup: ${srvHost} ---`);
     try {
       const addresses = await dns.resolveSrv(srvHost);
@@ -111,7 +111,7 @@ async function diagnose() {
 
     if (error.message.includes('ENOTFOUND') || error.message.includes('querySrv')) {
       console.error('\n>>> ROOT CAUSE: DNS RESOLUTION FAILED');
-      console.error('The hostname "' + hostname + '" does not resolve.');
+      console.error(`The hostname "${  hostname  }" does not resolve.`);
       console.error('This means the MongoDB Atlas cluster does not exist, is deleted,');
       console.error('or the cluster name in the connection string is wrong.');
       console.error('Action: Go to MongoDB Atlas → Clusters and verify the exact cluster name.');

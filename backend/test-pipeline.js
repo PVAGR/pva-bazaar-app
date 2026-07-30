@@ -28,7 +28,7 @@ async function step2_connectionTest() {
   const details = [];
 
   try {
-    const srv = await dns.resolveSrv('_mongodb._tcp.' + hostname);
+    const srv = await dns.resolveSrv(`_mongodb._tcp.${  hostname}`);
     details.push(`SRV records: ${srv.length} found`);
     srv.forEach(r => details.push(`  -> ${r.name}:${r.port}`));
   } catch (e) {

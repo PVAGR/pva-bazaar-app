@@ -11,18 +11,18 @@ function readJson(key, fallback) {
 }
 function writeJson(key, value) {
   if (!canUseStorage()) return { ok: false, message: 'localStorage is not available.' };
-  var first = trySet(key, value);
+  const first = trySet(key, value);
   if (first.ok) return { ok: true, strippedImages: false, message: '' };
   if (!isQuotaError(first.error)) throw first.error;
-  var trimmed = stripOversizedDataUrls(value);
-  var second = trySet(key, trimmed);
+  const trimmed = stripOversizedDataUrls(value);
+  const second = trySet(key, trimmed);
   if (second.ok) { syncArrayInPlace(value, trimmed); return { ok: true, strippedImages: true, message: 'Large cover images were removed.' }; }
   if (!isQuotaError(second.error)) throw second.error;
-  var bare = stripAllDataUrls(value);
-  var third = trySet(key, bare);
+  const bare = stripAllDataUrls(value);
+  const third = trySet(key, bare);
   if (third.ok) { syncArrayInPlace(value, bare); return { ok: true, strippedImages: true, message: 'Cover images were removed to fit storage limits.' }; }
   if (!isQuotaError(third.error)) throw third.error;
-  return { ok: false, message: 'Storage full (' + estimateSize(value) + ' KB). Delete local books and try again.' };
+  return { ok: false, message: `Storage full (${  estimateSize(value)  } KB). Delete local books and try again.` };
 }
 
 function trySet(key, value) {
@@ -32,7 +32,7 @@ function trySet(key, value) {
 
 function isQuotaError(err) {
   if (!err) return false;
-  var m = String(err.name || err.message || '').toLowerCase();
+  const m = String(err.name || err.message || '').toLowerCase();
   return m.indexOf('quota') !== -1 || m.indexOf('exceeded') !== -1 || err.code === 22 || err.code === 1014;
 }
 
@@ -40,7 +40,7 @@ function estimateSize(v) { try { return Math.round(JSON.stringify(v).length / 10
 
 function syncArrayInPlace(t, s) {
   if (!Array.isArray(t) || !Array.isArray(s)) return; t.length = 0;
-  for (var i = 0; i < s.length; i++) t.push(s[i]);
+  for (let i = 0; i < s.length; i++) t.push(s[i]);
 }
 
 function isOversizedDataUrl(url) {
@@ -51,7 +51,7 @@ function isOversizedDataUrl(url) {
 function stripOversizedDataUrls(books) {
   if (!Array.isArray(books)) return books;
   return books.map(function(b) {
-    var c = Object.assign({}, b);
+    const c = Object.assign({}, b);
     if (c.frontCover && isOversizedDataUrl(c.frontCover.url)) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'oversized' });
     if (c.backCover && isOversizedDataUrl(c.backCover.url)) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'oversized' });
     return c;
@@ -61,7 +61,7 @@ function stripOversizedDataUrls(books) {
 function stripAllDataUrls(books) {
   if (!Array.isArray(books)) return books;
   return books.map(function(b) {
-    var c = Object.assign({}, b);
+    const c = Object.assign({}, b);
     if (c.frontCover && typeof c.frontCover.url === 'string' && c.frontCover.url.indexOf('data:') === 0) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'quota' });
     if (c.backCover && typeof c.backCover.url === 'string' && c.backCover.url.indexOf('data:') === 0) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'quota' });
     return c;
@@ -74,9 +74,9 @@ function loadBooks() { return readJson(BOOKS_KEY, []); }
 
 function saveBooks(books) { return writeJson(BOOKS_KEY, books); }
 function buildLocalLinks(book) {
-  var slug = normalize(book.slug) || 'local-book-' + String(book.id || '').slice(-8);
+  const slug = normalize(book.slug) || `local-book-${  String(book.id || '').slice(-8)}`;
   return {
-    publicPage: '/books/read/' + encodeURIComponent(slug),
+    publicPage: `/books/read/${  encodeURIComponent(slug)}`,
     apiView: '',
     pdf: '',
     epub: '',
@@ -87,34 +87,34 @@ function buildLocalLinks(book) {
 
 export function normalizeLocalBook(raw) {
   if (!raw) raw = {};
-  var book = Object.assign({}, raw);
-  var id = String(book.id || book._id || 'local-book-' + Date.now());
-  var slug = normalize(book.slug) || ('local-book-' + id).toLowerCase();
-  var status = (String(book.status || 'draft').toLowerCase() === 'published') ? 'published' : 'draft';
-  var pendingPublish = Boolean(book.pendingPublish || book.publishQueued || book.publishRequested);
-  var title = String(book.title || 'Untitled book').trim();
-  var manuscriptMarkdown = String(book.manuscriptMarkdown || '');
-  var wc = Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0);
+  const book = Object.assign({}, raw);
+  const id = String(book.id || book._id || `local-book-${  Date.now()}`);
+  const slug = normalize(book.slug) || (`local-book-${  id}`).toLowerCase();
+  const status = (String(book.status || 'draft').toLowerCase() === 'published') ? 'published' : 'draft';
+  const pendingPublish = Boolean(book.pendingPublish || book.publishQueued || book.publishRequested);
+  const title = String(book.title || 'Untitled book').trim();
+  const manuscriptMarkdown = String(book.manuscriptMarkdown || '');
+  const wc = Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0);
   return {
-    id: id, _id: id, title: title,
+    id, _id: id, title,
     subtitle: String(book.subtitle || ''),
     authorName: String(book.authorName || ''),
-    slug: slug,
+    slug,
     description: String(book.description || ''),
     genre: String(book.genre || 'general').toLowerCase(),
     audience: String(book.audience || 'general').toLowerCase(),
     language: String(book.language || 'en').toLowerCase(),
-    status: status, wordCount: wc,
+    status, wordCount: wc,
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || new Date().toISOString(),
     createdAt: book.createdAt || new Date().toISOString(),
-    pendingPublish: pendingPublish,
-    manuscriptMarkdown: manuscriptMarkdown,
+    pendingPublish,
+    manuscriptMarkdown,
     webHtml: String(book.webHtml || ''),
     frontCover: book.frontCover || {},
     backCover: book.backCover || {},
     links: {
-      publicPage: '/books/read/' + encodeURIComponent(slug),
+      publicPage: `/books/read/${  encodeURIComponent(slug)}`,
       apiView: '', pdf: '', epub: '',
       frontCover: (book.frontCover && book.frontCover.url) || '',
       backCover: (book.backCover && book.backCover.url) || '',
@@ -136,21 +136,21 @@ export function listLocalQueuedPublishBookProjects() {
 }
 
 export function findLocalBookById(bookId) {
-  var id = String(bookId || '');
+  const id = String(bookId || '');
   return listLocalBookProjects().find(function(b) { return String(b.id || b._id || '') === id; }) || null;
 }
 
 export function findLocalPublishedBookBySlug(slug) {
-  var norm = normalize(slug);
+  const norm = normalize(slug);
   if (!norm) return null;
   return listLocalPublishedBookProjects().find(function(b) { return normalize(b.slug) === norm; }) || null;
 }
 
 export function saveLocalBookProject(payload) {
   if (!payload) payload = {};
-  var books = loadBooks();
-  var next = normalizeLocalBook(payload);
-  var idx = books.findIndex(function(b) { return String(b.id || b._id || '') === String(next.id); });
+  const books = loadBooks();
+  const next = normalizeLocalBook(payload);
+  const idx = books.findIndex(function(b) { return String(b.id || b._id || '') === String(next.id); });
   if (idx >= 0) {
     books[idx] = Object.assign({}, books[idx], next, { updatedAt: new Date().toISOString() });
   } else {
@@ -159,16 +159,16 @@ export function saveLocalBookProject(payload) {
       updatedAt: new Date().toISOString(),
     }));
   }
-  var sr = saveBooks(books);
-  var saved = normalizeLocalBook(books[idx >= 0 ? idx : books.length - 1]);
+  const sr = saveBooks(books);
+  const saved = normalizeLocalBook(books[idx >= 0 ? idx : books.length - 1]);
   if (sr && !sr.ok) { saved._storageError = sr.message; }
   else if (sr && sr.strippedImages) { saved._imagesStripped = true; saved._storageWarning = sr.message; }
   return saved;
 }
 
 export function deleteLocalBookProject(bookId) {
-  var id = String(bookId || '');
-  var books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
+  const id = String(bookId || '');
+  const books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
   saveBooks(books);
   return true;
 }

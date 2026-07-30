@@ -125,7 +125,7 @@ app.get('/api/health', async (_req, res) => {
   const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
 
   // Attempt a direct connection to get the raw error, bypassing all cached state.
-  let dbDiag = {
+  const dbDiag = {
     mode: 'unknown',
     hasEnvUri: Boolean(mongoUri),
     readyState: 0,
@@ -149,7 +149,7 @@ app.get('/api/health', async (_req, res) => {
     const hostname = hostnameMatch ? hostnameMatch[1] : '';
     if (hostname && mongoUri.startsWith('mongodb+srv://')) {
       try {
-        const srvHost = '_mongodb._tcp.' + hostname;
+        const srvHost = `_mongodb._tcp.${  hostname}`;
         const srvRecords = await dns.resolveSrv(srvHost);
         dbDiag.dns = { ok: true, srvHost, recordCount: srvRecords.length };
       } catch (dnsErr) {
@@ -322,7 +322,7 @@ app.get('/api/mongo-diag', async (_req, res) => {
   // Step 2: DNS resolution
   const hostname = uri.match(/@([^/?]+)/)?.[1] || '';
   if (uri.startsWith('mongodb+srv://') && hostname) {
-    const srvHost = '_mongodb._tcp.' + hostname;
+    const srvHost = `_mongodb._tcp.${  hostname}`;
     try {
       const srv = await dns.resolveSrv(srvHost);
       result.steps.dnsSrv = { ok: true, recordCount: srv.length, records: srv.map(r => `${r.name}:${r.port}`) };

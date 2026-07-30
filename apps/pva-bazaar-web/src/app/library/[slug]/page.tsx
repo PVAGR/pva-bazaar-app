@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BookReader } from "./BookReader";
 
-type Params = { slug: string };
+interface Params { slug: string }
 
 export async function generateMetadata({
   params,

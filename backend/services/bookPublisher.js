@@ -382,7 +382,7 @@ function buildFallbackPdfBuffer(book) {
   let currentOffset = Buffer.byteLength(header, 'utf8');
 
   objects.forEach((object, index) => {
-    offsets.push(String(currentOffset).padStart(10, '0') + ' 00000 n ');
+    offsets.push(`${String(currentOffset).padStart(10, '0')  } 00000 n `);
     const objText = `${index + 1} 0 obj\n${object}\nendobj\n`;
     chunks.push(objText);
     currentOffset += Buffer.byteLength(objText, 'utf8');

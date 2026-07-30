@@ -1398,7 +1398,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
     if (uploadStatus.status === 403) {
       console.log('[IA-PROXY] S3 returned 403, falling back to IA metadata API');
       try {
-        const iaRes = await axios.post('https://archive.org/metadata/' + identifier, {
+        const iaRes = await axios.post(`https://archive.org/metadata/${  identifier}`, {
           metadata: {
             mediatype: 'texts',
             collection: 'opensource',
@@ -1748,7 +1748,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   } catch (error) {
     // Determine status code and error details based on error type
     let statusCode = 500;
-    let errorObj = { ok: false, error: 'Internal server error', message: 'An unexpected error occurred', stage, requestId };
+    const errorObj = { ok: false, error: 'Internal server error', message: 'An unexpected error occurred', stage, requestId };
 
     // Handle specific errors
     if (error.message === 'Title is required') {

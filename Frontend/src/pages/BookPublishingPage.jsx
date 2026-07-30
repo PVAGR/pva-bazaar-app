@@ -1618,7 +1618,7 @@ export default function BookPublishingPage() {
                         const isUploading = pinataUploadState.status === 'uploading';
                         const isError = pinataUploadState.status === 'error';
                         let btnStyle = {};
-                        let disabled = isUploading || !hasContent || anyUploading;
+                        const disabled = isUploading || !hasContent || anyUploading;
                         let label = 'Pinata IPFS';
                         if (isDone) { btnStyle = { borderColor: '#1a7d3a', color: '#1a7d3a', background: 'color-mix(in srgb, #1a7d3a 12%, transparent)' }; label = '✓ Pinata IPFS'; }
                         else if (isError) { btnStyle = { borderColor: '#b33737', color: '#b33737' }; label = '✗ Pinata — retry'; }
