@@ -220,6 +220,25 @@ jobs:
         if: contains(needs.*.result, 'failure')
         with:
           script: |
+            // Close any existing open security audit issues first
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,critical',
+            });
+            for (const issue of existing.data) {
+              if (issue.title === 'Critical Security Findings - Weekly Audit') {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                  state_reason: 'not_planned',
+                });
+              }
+            }
+            // Create a single new issue for this week's findings
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
