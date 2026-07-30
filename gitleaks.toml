@@ -4,8 +4,39 @@ title = "PVA Bazaar Secret Scan"
 useDefault = true
 
 [allowlist]
-description = "Allow benign user prompt strings — no actual secrets"
+description = "Known false positives and benign placeholders"
 regexes = [
+  # Placeholder tokens in documentation examples
+  '''YOUR_JWT_TOKEN''',
+  '''YOUR_TOKEN''',
+  '''YOUR_TOKEN_HERE''',
+  '''YOUR_APP_ACCESS_TOKEN''',
+  '''ADMIN_TOKEN''',
+  '''test_token_default''',
+  '''my-secret-key-12345''',
+  '''sk-1234567890''',
+  '''YOUR_CLIENT_ID''',
+
+  # Well-known development/test private keys (Hardhat default)
+  '''0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80''',
+
+  # DID key example
+  '''z6MkhaXgBZDvotDkL5257faWxcqV6K''',
+
+  # Generated gitleaks reports (contain leaked findings by reference)
+  '''gitleaks-report\.json''',
+
+  # User-entered runtime prompts
   '''Enter your (account )?password''',
   '''User-entered runtime values; nothing hardcoded'''
+]
+paths = [
+  # Env template files with example values
+  '''server/\.env\.example''',
+  '''\.env\.example''',
+  '''\.env\.example\.blueprint''',
+  '''\.env\.example\.ci''',
+  '''\.env\.local\.example''',
+  '''\.env\.production\.template''',
+  '''pva-bazaar-app\.env''',
 ]
