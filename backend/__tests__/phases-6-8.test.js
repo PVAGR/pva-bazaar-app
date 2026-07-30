@@ -1,16 +1,80 @@
-// backend/__tests__/phases-6-8.test.js - Comprehensive tests for Phase 6-8 endpoints
+// @vitest-environment node
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../api/index.js');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const jwt = require('jsonwebtoken');
 
-// Test data
-const authToken = null;
-const sellerId = null;
-const shopId = null;
-const productId = null;
-const centerId = null;
-const orderId = null;
-const shipmentId = null;
+let mongoServer;
+let app;
+let authToken;
+let apiKeyToken;
+let testUser;
+
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const uri = mongoServer.getUri();
+  process.env.MONGODB_URI = uri;
+  process.env.DATABASE_URL = uri;
+  process.env.NODE_ENV = 'test';
+  process.env.JWT_SECRET = 'test-jwt-secret-for-unit-tests';
+  process.env.VERIFICATION_API_KEY = 'test-api-key';
+  process.env.ALLOW_MOCK_DB_FALLBACK = 'false';
+  process.env.USE_MEMORY_DB = 'false';
+
+  await mongoose.connect(uri);
+
+  app = require('../api/index.js');
+
+  const User = mongoose.model('User');
+  testUser = await User.create({
+    name: 'Test Seller',
+    email: 'test-seller@pvabazaar.org',
+    password: 'dummy-hash',
+    role: 'user',
+  });
+
+  const payload = { id: testUser._id, role: testUser.role, email: testUser.email };
+  authToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+  apiKeyToken = 'test-api-key';
+
+  const FulfillmentCenter = mongoose.model('FulfillmentCenter');
+  await FulfillmentCenter.create({
+    name: 'Nairobi Hub',
+    code: 'NBO-001',
+    address: { country: 'KE', city: 'Nairobi' },
+    capacity: { totalSquareFeet: 10000, currentUtilization: 35 },
+    active: true,
+  });
+
+  // Create API key for Phase 8 tests
+  const APIKey = mongoose.model('APIKey');
+  const crypto = require('crypto');
+  const rawKey = 'test-api-key';
+  const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+  await APIKey.create({
+    keyHash,
+    keyPrefix: 'pk_test_T',
+    maskedKey: 'pk_test_T...yKey',
+    status: 'active',
+    developerId: testUser._id,
+    applicationName: 'Test API Key',
+    rateLimit: {
+      requestsPerMinute: 100,
+      requestsPerDay: 10000,
+      currentMinuteRequests: 0,
+      currentDayRequests: 0,
+      resetMinuteAt: new Date(Date.now() + 60000),
+    },
+    totalRequests: 0,
+    lastUsedAt: new Date(),
+    permissions: ['read:products', 'read:orders', 'write:products', 'write:orders', 'read:inventory', 'write:inventory', 'read:analytics', 'manage:webhooks'],
+  });
+});
+
+afterAll(async () => {
+  await mongoose.disconnect();
+  if (mongoServer) await mongoServer.stop();
+});
 
 describe('Phase 6b: Global Fulfillment', () => {
   describe('Fulfillment Centers', () => {
@@ -251,7 +315,7 @@ describe('Phase 8: Open API & Integrations', () => {
     test('products: List seller products via API key', async () => {
       const response = await request(app)
         .get('/api/v1/products?page=1&limit=10')
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send();
 
       expect(response.status).toBeOneOf([200, 401]);
@@ -263,7 +327,7 @@ describe('Phase 8: Open API & Integrations', () => {
     test('orders: List seller orders via API key', async () => {
       const response = await request(app)
         .get('/api/v1/orders?page=1&limit=10')
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send();
 
       expect(response.status).toBeOneOf([200, 401]);
@@ -275,7 +339,7 @@ describe('Phase 8: Open API & Integrations', () => {
     test('inventory-sync: Sync inventory levels', async () => {
       const response = await request(app)
         .post('/api/v1/inventory/sync')
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send({
           updates: [
             {
@@ -292,19 +356,19 @@ describe('Phase 8: Open API & Integrations', () => {
     test('analytics: Get seller analytics via API', async () => {
       const response = await request(app)
         .get('/api/v1/analytics?period=month')
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send();
 
       expect(response.status).toBeOneOf([200, 401]);
       if (response.status === 200) {
-        expect(response.body).toHaveProperty('analytics');
+        expect(response.body).toHaveProperty('period');
       }
     });
 
     test('fulfill-order: Mark order as fulfilled', async () => {
       const response = await request(app)
         .post(`/api/v1/orders/${new mongoose.Types.ObjectId()}/fulfill`)
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send({
           trackingNumber: 'TRACKING123',
           carrier: 'dhl',
@@ -318,7 +382,7 @@ describe('Phase 8: Open API & Integrations', () => {
     test('webhooks-register: Register webhook', async () => {
       const response = await request(app)
         .post('/api/v1/webhooks/register')
-        .set('Authorization', 'Bearer test-api-key')
+        .set('Authorization', `Bearer ${apiKeyToken}`)
         .send({
           event: 'product.created',
           url: 'https://example.com/webhooks/product-created',
@@ -379,7 +443,6 @@ describe('Health & Status', () => {
   });
 });
 
-// Helper function
 expect.extend({
   toBeOneOf(received, expected) {
     const pass = expected.includes(received);

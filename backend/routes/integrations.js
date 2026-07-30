@@ -133,6 +133,201 @@ router.delete('/keys/:keyId', authenticateToken, async (req, res) => {
   }
 });
 
+// ============ Public API Endpoints (v1) ============
+
+/**
+ * List seller's products (for partners)
+ * GET /api/v1/products
+ */
+router.get('/products', authenticateAPIKey, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, type } = req.query;
+
+    const query = { sellerId: req.sellerId };
+    if (type) query.type = type;
+
+    const products = await ProductType.find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select('title description price type stockQty status');
+
+    const total = await ProductType.countDocuments(query);
+
+    res.json({
+      products,
+      pagination: { page: parseInt(page), limit: parseInt(limit), total },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get single product details
+ * GET /api/v1/products/:productId
+ */
+router.get('/products/:productId', authenticateAPIKey, async (req, res) => {
+  try {
+    const product = await ProductType.findOne({
+      _id: req.params.productId,
+      sellerId: req.sellerId,
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Sync inventory levels
+ * POST /api/v1/inventory/sync
+ */
+router.post('/inventory/sync', authenticateAPIKey, async (req, res) => {
+  try {
+    const { updates } = req.body; // [{ productId, fulfillmentCenterId, qtyOnHand }, ...]
+
+    if (!Array.isArray(updates)) {
+      return res.status(400).json({ error: 'updates must be array' });
+    }
+
+    const results = [];
+
+    for (const update of updates) {
+      const inventory = await InventoryLocation.findOneAndUpdate(
+        {
+          productId: update.productId,
+          fulfillmentCenterId: update.fulfillmentCenterId,
+        },
+        { qtyOnHand: update.qtyOnHand },
+        { new: true }
+      );
+
+      results.push({ productId: update.productId, success: !!inventory });
+    }
+
+    res.json({ synced: results.length, results });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * List seller's orders
+ * GET /api/v1/orders
+ */
+router.get('/orders', authenticateAPIKey, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status } = req.query;
+
+    const query = { sellerId: req.sellerId };
+    if (status) query.fulfillmentStatus = status;
+
+    const orders = await Order.find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Order.countDocuments(query);
+
+    res.json({
+      orders,
+      pagination: { page: parseInt(page), limit: parseInt(limit), total },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Mark order as fulfilled
+ * POST /api/v1/orders/:orderId/fulfill
+ */
+router.post('/orders/:orderId/fulfill', authenticateAPIKey, async (req, res) => {
+  try {
+    const { trackingNumber, carrier } = req.body;
+
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.orderId, sellerId: req.sellerId },
+      {
+        fulfillmentStatus: 'shipped',
+        shippedAt: new Date(),
+        trackingNumber,
+        carrier,
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Get seller analytics
+ * GET /api/v1/analytics
+ */
+router.get('/analytics', authenticateAPIKey, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+
+    // Simplified analytics response
+    const analytics = {
+      period,
+      totalRevenue: 0,
+      totalOrders: 0,
+      totalProducts: 0,
+      conversionRate: 0,
+      averageOrderValue: 0,
+      topProducts: [],
+    };
+
+    res.json(analytics);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Register webhook
+ * POST /api/v1/webhooks/register
+ */
+router.post('/webhooks/register', authenticateAPIKey, async (req, res) => {
+  try {
+    const { event, url } = req.body;
+
+    if (!['product.created', 'product.updated', 'order.created', 'order.updated', 'inventory.changed'].includes(event)) {
+      return res.status(400).json({ error: 'Invalid event type' });
+    }
+
+    if (!url) {
+      return res.status(400).json({ error: 'url required' });
+    }
+
+    // In production, store webhook registration and trigger on events
+    res.json({
+      success: true,
+      webhook: {
+        event,
+        url,
+        active: true,
+        createdAt: new Date(),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ Partner Integrations ============
 
 /**
@@ -232,201 +427,6 @@ router.post('/:partner/sync', authenticateToken, async (req, res) => {
       success: true,
       message: `Sync started for ${partner}`,
       nextSync: integration.nextSyncAt,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============ Public API Endpoints (v1) ============
-
-/**
- * List seller's products (for partners)
- * GET /api/v1/products
- */
-router.get('/v1/products', authenticateAPIKey, async (req, res) => {
-  try {
-    const { page = 1, limit = 50, type } = req.query;
-
-    const query = { sellerId: req.sellerId };
-    if (type) query.type = type;
-
-    const products = await ProductType.find(query)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .select('title description price type stockQty status');
-
-    const total = await ProductType.countDocuments(query);
-
-    res.json({
-      products,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total },
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Get single product details
- * GET /api/v1/products/:productId
- */
-router.get('/v1/products/:productId', authenticateAPIKey, async (req, res) => {
-  try {
-    const product = await ProductType.findOne({
-      _id: req.params.productId,
-      sellerId: req.sellerId,
-    });
-
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Sync inventory levels
- * POST /api/v1/inventory/sync
- */
-router.post('/v1/inventory/sync', authenticateAPIKey, async (req, res) => {
-  try {
-    const { updates } = req.body; // [{ productId, fulfillmentCenterId, qtyOnHand }, ...]
-
-    if (!Array.isArray(updates)) {
-      return res.status(400).json({ error: 'updates must be array' });
-    }
-
-    const results = [];
-
-    for (const update of updates) {
-      const inventory = await InventoryLocation.findOneAndUpdate(
-        {
-          productId: update.productId,
-          fulfillmentCenterId: update.fulfillmentCenterId,
-        },
-        { qtyOnHand: update.qtyOnHand },
-        { new: true }
-      );
-
-      results.push({ productId: update.productId, success: !!inventory });
-    }
-
-    res.json({ synced: results.length, results });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * List seller's orders
- * GET /api/v1/orders
- */
-router.get('/v1/orders', authenticateAPIKey, async (req, res) => {
-  try {
-    const { page = 1, limit = 50, status } = req.query;
-
-    const query = { sellerId: req.sellerId };
-    if (status) query.fulfillmentStatus = status;
-
-    const orders = await Order.find(query)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 });
-
-    const total = await Order.countDocuments(query);
-
-    res.json({
-      orders,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total },
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Mark order as fulfilled
- * POST /api/v1/orders/:orderId/fulfill
- */
-router.post('/v1/orders/:orderId/fulfill', authenticateAPIKey, async (req, res) => {
-  try {
-    const { trackingNumber, carrier } = req.body;
-
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.orderId, sellerId: req.sellerId },
-      {
-        fulfillmentStatus: 'shipped',
-        shippedAt: new Date(),
-        trackingNumber,
-        carrier,
-      },
-      { new: true }
-    );
-
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Get seller analytics
- * GET /api/v1/analytics
- */
-router.get('/v1/analytics', authenticateAPIKey, async (req, res) => {
-  try {
-    const { period = 'month' } = req.query;
-
-    // Simplified analytics response
-    const analytics = {
-      period,
-      totalRevenue: 0,
-      totalOrders: 0,
-      totalProducts: 0,
-      conversionRate: 0,
-      averageOrderValue: 0,
-      topProducts: [],
-    };
-
-    res.json(analytics);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * Register webhook
- * POST /api/v1/webhooks/register
- */
-router.post('/v1/webhooks/register', authenticateAPIKey, async (req, res) => {
-  try {
-    const { event, url } = req.body;
-
-    if (!['product.created', 'product.updated', 'order.created', 'order.updated', 'inventory.changed'].includes(event)) {
-      return res.status(400).json({ error: 'Invalid event type' });
-    }
-
-    if (!url) {
-      return res.status(400).json({ error: 'url required' });
-    }
-
-    // In production, store webhook registration and trigger on events
-    res.json({
-      success: true,
-      webhook: {
-        event,
-        url,
-        active: true,
-        createdAt: new Date(),
-      },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
