@@ -60,6 +60,17 @@ render-api-key.local
 # OpenClaw watchdog logs
 infra/openclaw/logs/
 
+# Secret env files tracked by accident — remove from git
+backend/.env.production
+backend/.env.prod-backup
+
+# Gitleaks local scan output
+gitleaks-report.json
+gitleaks-report*.json
+
+# Production diagnostic artifacts
+tmp-production-admin-auth-diagnosis/
+
 # Auth data
 backend/data/auth-store.json
 backend/data/auth-store.json.localbak
