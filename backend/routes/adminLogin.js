@@ -12,7 +12,7 @@ function isObjectIdHex(v) {
 }
 
 function issueAdminToken(userId, jwtSecret) {
-  return jwt.sign({ id: String(userId), role: 'admin' }, jwtSecret, { expiresIn: '12h' });
+  return jwt.sign({ id: String(userId), role: 'admin' }, jwtSecret, { algorithm: 'HS256', expiresIn: '12h' });
 }
 
 function setAdminCookie(res, token) {

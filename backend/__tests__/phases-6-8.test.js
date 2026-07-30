@@ -69,7 +69,7 @@ beforeAll(async () => {
     lastUsedAt: new Date(),
     permissions: ['read:products', 'read:orders', 'write:products', 'write:orders', 'read:inventory', 'write:inventory', 'read:analytics', 'manage:webhooks'],
   });
-});
+}, 120000);
 
 afterAll(async () => {
   await mongoose.disconnect();

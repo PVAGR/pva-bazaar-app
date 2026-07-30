@@ -154,6 +154,9 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Cookie parser for admin sessions
+app.use(require('cookie-parser')());
+
 // Rate limiting
 const { generalLimiter, authLimiter, checkoutLimiter, webhookLimiter } = require('../middleware/rateLimit');
 app.use('/', generalLimiter);
@@ -753,7 +756,7 @@ app.post('/api/dev/token', (req, res) => {
   if (req.body?.secret !== process.env.ADMIN_SECRET_CODE)
     return res.status(401).json({ ok: false, message: 'Unauthorized' });
   const id = req.body.userId || 'dev-user-id';
-  const token = jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET, { algorithm: 'HS256', expiresIn: '1h' });
   res.json({ ok: true, token });
 });
 
