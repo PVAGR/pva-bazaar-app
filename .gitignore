@@ -83,3 +83,6 @@ Frontend/src/data/entries.js
 # Nested repository duplicate (do not commit)
 /pva-bazaar-app/
 .aider*
+
+# Turbo repo daemon logs (ephemeral build artifacts)
+.turbo/

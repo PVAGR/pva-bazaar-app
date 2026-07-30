@@ -110,7 +110,22 @@ app.set('trust proxy', 1);
 
 // Security headers (Helmet)
 app.use(helmet({
-  contentSecurityPolicy: false, // Will tighten in Phase 3.13.2
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https://pva-backend-api.vercel.app", "https://pvabazaar.org"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
 }));
 
 // --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
