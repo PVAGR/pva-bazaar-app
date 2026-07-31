@@ -51,6 +51,8 @@ function isIgnorableConsoleError(text) {
   const msg = String(text || '').toLowerCase();
   return (
     msg.includes('favicon') ||
+    msg.includes('failed to load resource: the server responded with a status of 401') ||
+    msg.includes('failed to load resource: the server responded with a status of 403') ||
     msg.includes('failed to load resource: the server responded with a status of 404') ||
     msg.includes('net::err_blocked_by_client')
   );
