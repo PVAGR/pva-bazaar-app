@@ -50,14 +50,8 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
 
-      - name: Build for Production
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
-
       - name: Deploy to Production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
