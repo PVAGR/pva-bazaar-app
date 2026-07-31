@@ -13,6 +13,10 @@ jobs:
     name: Deploy Next.js sanctuary to Vercel (Production)
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: apps/pva-bazaar-web
+
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +43,24 @@ jobs:
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
+
+      - name: Ensure project rootDirectory is unset
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_SANCTUARY_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          RESP=$(curl -s -X PATCH "https://api.vercel.com/v9/projects/${VERCEL_SANCTUARY_PROJECT_ID}?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory": null}')
+          echo "$RESP" | node -e "
+            let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+              try{const j=JSON.parse(d);console.log('rootDirectory:', j.rootDirectory)}
+              catch(e){console.log('parse error', e.message); console.log(d.slice(0,300))}
+            })
+          "
 
       - name: Pull Vercel env (Production)
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
