@@ -369,9 +369,14 @@ function validateQuestions(questions) {
 }
 
 async function getActiveQuizDefinition() {
-  const active = await CareerQuizDefinition.findOne({ isActive: true })
-    .sort({ updatedAt: -1, _id: -1 })
-    .lean();
+  let active = null;
+  try {
+    active = await CareerQuizDefinition.findOne({ isActive: true })
+      .sort({ updatedAt: -1, _id: -1 })
+      .lean();
+  } catch (err) {
+    console.warn('[careerQuiz] definition query failed, using defaults:', err?.message || err);
+  }
 
   if (active) {
     return {

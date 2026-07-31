@@ -94,6 +94,14 @@ async function ensureDatabaseState() {
   return getMongoState();
 }
 
+// Kick off the DB connection as early as possible so route handlers
+// (careerQuiz, commodities, contacts, templates) don't buffer on a closed
+// default mongoose connection. Safe to fire-and-forget: connectMongo caches
+// its promise, and the middleware below awaits it for DB-backed routes.
+ensureDatabaseState().catch((err) => {
+  console.warn('[serverless] background DB bootstrap failed:', err?.message || err);
+});
+
 app.use(async (req, res, next) => {
   res.setHeader('Vary', 'Origin');
   const origin = req.headers.origin || '';
@@ -122,6 +130,30 @@ app.use(async (req, res, next) => {
 app.use((req, _res, next) => {
   req.requestId = crypto.randomUUID();
   next();
+});
+
+// Ensure the default mongoose connection is open before DB-backed route handlers
+// run. Health/diagnostics endpoints are skipped so they stay fast and independent.
+app.use(async (req, res, next) => {
+  const skipPaths = [
+    '/api/health',
+    '/api/health-check',
+    '/api/mongo-diag',
+    '/api/ping',
+    '/api/version',
+    '/api/openapi.json',
+    '/api/docs',
+    '/api/decentralized',
+  ];
+  if (skipPaths.some((p) => req.path === p || req.path.startsWith(p))) {
+    return next();
+  }
+  try {
+    await ensureDatabaseState();
+  } catch (err) {
+    console.warn('[serverless] DB ensure failed:', err?.message || err);
+  }
+  return next();
 });
 
 app.get('/api/health', async (_req, res) => {
