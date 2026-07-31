@@ -40,7 +40,6 @@ jobs:
               rootDirectory: 'apps/pva-bazaar-web',
               buildCommand: 'npm run build',
               installCommand: 'npm install --legacy-peer-deps',
-              projectSettings: { framework: 'nextjs', rootDirectory: 'apps/pva-bazaar-web' },
             };
             console.log(JSON.stringify(spec));
           ")
