@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      secrets: write
     steps:
       - uses: actions/checkout@v4
 
@@ -79,11 +78,6 @@ jobs:
               || echo "Env set returned non-zero (may already exist)"
           done
 
-      - name: Set VERCEL_SANCTUARY_PROJECT_ID secret
-        env:
-          PROJECT_ID: ${{ steps.create.outputs.project_id }}
-          GH_TOKEN: ${{ github.token }}
+      - name: Print project id for secret setup
         run: |
-          set -euo pipefail
-          echo "$PROJECT_ID" | gh secret set VERCEL_SANCTUARY_PROJECT_ID --repo "${{ github.repository }}"
-          echo "Secret VERCEL_SANCTUARY_PROJECT_ID set to $PROJECT_ID"
+          echo "Sanctuary project id: ${{ steps.create.outputs.project_id }}"
