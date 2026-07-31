@@ -276,7 +276,7 @@ const SettingsTab = React.memo(function SettingsTab() {
               id="apiUrl"
               value={apiUrl}
               onChange={(e) => setApiUrl(e.target.value)}
-              placeholder="https://api.pvabazaar.org"
+              placeholder="https://pva-backend-api.vercel.app"
               className="url-input"
             />
             <div className="button-group">

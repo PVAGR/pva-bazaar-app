@@ -18,10 +18,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
-  title: {
-    default: "PVA Bazaar – AI-Verified Preservation",
-    template: "%s | PVA Bazaar",
-  },
+  title: "PVA Bazaar – AI-Verified Preservation",
   description:
     "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
   keywords: [

@@ -15,7 +15,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
   const [copiedEndpoint, setCopiedEndpoint] = useState(null);
   const [expandedCategory, setExpandedCategory] = useState('artifacts');
 
-  const apiBase = (ENV.API_URL || 'https://pvabazaar.org/api').replace(/\/api\/?$/, '');
+  const apiBase = (ENV.API_URL || 'https://pva-backend-api.vercel.app/api').replace(/\/api\/?$/, '');
   const docsAtlasLinks = [
     { to: '/', label: 'Home' },
     { to: '/archive', label: 'Archive' },

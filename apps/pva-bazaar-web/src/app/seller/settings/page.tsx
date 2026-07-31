@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ShopData {
   shop: {
@@ -27,254 +27,334 @@ interface ShopData {
 
 export default function SellerSettings() {
   const router = useRouter();
-  const [shop, setShop] = useState<ShopData['shop'] | null>(null);
+  const [shop, setShop] = useState<ShopData["shop"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
+  const getToken = () => localStorage.getItem("authToken");
+
   useEffect(() => {
     const fetchShop = async () => {
+      const token = getToken();
+      if (!token) {
+        setError("Sign in required to manage shop settings.");
+        setLoading(false);
+        return;
+      }
       try {
         const response = await fetch(`${API_BASE}/api/shops/me`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) throw new Error('Failed to load shop');
+        if (!response.ok) throw new Error("Failed to load shop");
 
         const data = await response.json();
         setShop(data.shop);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load shop');
+        setError(err instanceof Error ? err.message : "Failed to load shop");
       } finally {
         setLoading(false);
       }
     };
 
     fetchShop();
-  }, []);
+  }, [API_BASE]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!shop) return;
+  const handleSave = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!shop) return;
 
-    setSaving(true);
-    setError(null);
+      const token = getToken();
+      if (!token) {
+        setError("Sign in required to save shop settings.");
+        return;
+      }
 
-    try {
-      const response = await fetch(`${API_BASE}/api/shops/${shop.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-        body: JSON.stringify(shop),
-      });
+      setSaving(true);
+      setError(null);
+      setNotice(null);
 
-      if (!response.ok) throw new Error('Failed to save shop');
+      try {
+        const response = await fetch(`${API_BASE}/api/shops/${shop.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(shop),
+        });
 
-      alert('Shop settings saved successfully!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload?.error || "Failed to save shop");
+
+        setNotice(payload?.message || "Shop settings saved.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [API_BASE, shop]
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex w-full items-center justify-center py-24">
+        <div
+          role="status"
+          aria-label="Loading shop settings"
+          className="h-12 w-12 animate-spin rounded-full border-b-2 border-amber-300"
+        />
       </div>
     );
   }
 
   if (!shop) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">You don&apos;t have a shop yet.</p>
-          {/* TODO: Replace with working link to /seller/create when that page exists */}
-          <span className="inline-block bg-zinc-400 text-white px-4 py-2 rounded cursor-not-allowed">
-            Create Shop — coming soon
-          </span>
-        </div>
+      <div className="flex w-full flex-col items-center justify-center gap-3 py-24 text-center">
+        {error ? (
+          <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+            {error}
+          </div>
+        ) : (
+          <p className="text-zinc-400">
+            You don&apos;t have a shop yet. Create one from the main application
+            once you&apos;ve completed your trader profile.
+          </p>
+        )}
+        <a
+          href="/get-started"
+          className="text-xs text-amber-300 hover:text-amber-200"
+        >
+          Return to Get Started
+        </a>
       </div>
     );
   }
 
+  const inputClass =
+    "w-full rounded-lg border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-amber-300/60";
+  const labelClass =
+    "mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500";
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Shop Settings</h1>
+    <section className="flex w-full flex-col gap-8">
+      <header className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
+          Seller Settings
+        </p>
+        <h1 className="text-2xl font-semibold text-zinc-100 md:text-3xl">
+          Shop Settings
+        </h1>
+      </header>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+      {error ? (
+        <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
+      {notice ? (
+        <p role="status" className="text-sm text-emerald-300">
+          {notice}
+        </p>
+      ) : null}
+
+      <form
+        onSubmit={handleSave}
+        className="rounded-lg border border-zinc-800/80 bg-zinc-950/60"
+      >
+        <div className="space-y-8 p-6">
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-100">
+              Basic Information
+            </h2>
+            <div>
+              <label htmlFor="shop-name" className={labelClass}>
+                Shop Name
+              </label>
+              <input
+                id="shop-name"
+                type="text"
+                value={shop.shopName}
+                onChange={(e) =>
+                  setShop({ ...shop, shopName: e.target.value })
+                }
+                className={inputClass}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="shop-description" className={labelClass}>
+                Description
+              </label>
+              <textarea
+                id="shop-description"
+                value={shop.description}
+                onChange={(e) =>
+                  setShop({ ...shop, description: e.target.value })
+                }
+                className={`${inputClass} h-24`}
+                placeholder="Tell customers what you sell..."
+              />
+            </div>
+            <div>
+              <label htmlFor="shop-story" className={labelClass}>
+                Your Story
+              </label>
+              <textarea
+                id="shop-story"
+                value={shop.story}
+                onChange={(e) => setShop({ ...shop, story: e.target.value })}
+                className={`${inputClass} h-24`}
+                placeholder="Share your artisan story, tradition, or mission..."
+              />
+            </div>
           </div>
-        )}
 
-        <form onSubmit={handleSave} className="bg-white rounded-lg shadow">
-          <div className="p-6 space-y-6">
-            {/* Basic Info */}
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-100">
+              Categories &amp; Tags
+            </h2>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Shop Name
-                </label>
-                <input
-                  type="text"
-                  value={shop.shopName}
-                  onChange={(e) => setShop({ ...shop, shopName: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={shop.description}
-                  onChange={(e) => setShop({ ...shop, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-24"
-                  placeholder="Tell customers what you sell..."
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Your Story
-                </label>
-                <textarea
-                  value={shop.story}
-                  onChange={(e) => setShop({ ...shop, story: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-24"
-                  placeholder="Share your artisan story, tradition, or mission..."
-                />
-              </div>
-            </div>
-
-            {/* Categories & Tags */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Categories & Tags</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={shop.tags.join(', ')}
-                  onChange={(e) => setShop({ ...shop, tags: e.target.value.split(',').map(t => t.trim()) })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="e.g., handmade, organic, fair-trade"
-                />
-              </div>
-            </div>
-
-            {/* Contact & Policies */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Contact & Policies</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Contact Message
-                </label>
-                <textarea
-                  value={shop.contactMessage}
-                  onChange={(e) => setShop({ ...shop, contactMessage: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-16"
-                  placeholder="How should customers contact you?"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Shipping Policy
-                </label>
-                <textarea
-                  value={shop.shippingPolicy}
-                  onChange={(e) => setShop({ ...shop, shippingPolicy: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-16"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Returns Policy
-                </label>
-                <textarea
-                  value={shop.returnsPolicy}
-                  onChange={(e) => setShop({ ...shop, returnsPolicy: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-16"
-                />
-              </div>
-            </div>
-
-            {/* Social Links */}
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Social Links</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Instagram
-                </label>
-                <input
-                  type="url"
-                  value={shop.socialLinks?.instagram || ''}
-                  onChange={(e) => setShop({
+              <label htmlFor="shop-tags" className={labelClass}>
+                Tags (comma-separated)
+              </label>
+              <input
+                id="shop-tags"
+                type="text"
+                value={shop.tags.join(", ")}
+                onChange={(e) =>
+                  setShop({
                     ...shop,
-                    socialLinks: { ...shop.socialLinks, instagram: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="https://instagram.com/..."
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Website
-                </label>
-                <input
-                  type="url"
-                  value={shop.socialLinks?.website || ''}
-                  onChange={(e) => setShop({
-                    ...shop,
-                    socialLinks: { ...shop.socialLinks, website: e.target.value }
-                  })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="https://..."
-                />
-              </div>
+                    tags: e.target.value
+                      .split(",")
+                      .map((t) => t.trim())
+                      .filter(Boolean),
+                  })
+                }
+                className={inputClass}
+                placeholder="e.g., handmade, organic, fair-trade"
+              />
             </div>
           </div>
 
-          {/* Buttons */}
-          <div className="p-6 border-t border-gray-200 flex gap-4">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="bg-gray-200 text-gray-800 px-6 py-2 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-100">
+              Contact &amp; Policies
+            </h2>
+            <div>
+              <label htmlFor="shop-contact" className={labelClass}>
+                Contact Message
+              </label>
+              <textarea
+                id="shop-contact"
+                value={shop.contactMessage}
+                onChange={(e) =>
+                  setShop({ ...shop, contactMessage: e.target.value })
+                }
+                className={`${inputClass} h-16`}
+                placeholder="How should customers contact you?"
+              />
+            </div>
+            <div>
+              <label htmlFor="shop-shipping" className={labelClass}>
+                Shipping Policy
+              </label>
+              <textarea
+                id="shop-shipping"
+                value={shop.shippingPolicy}
+                onChange={(e) =>
+                  setShop({ ...shop, shippingPolicy: e.target.value })
+                }
+                className={`${inputClass} h-16`}
+              />
+            </div>
+            <div>
+              <label htmlFor="shop-returns" className={labelClass}>
+                Returns Policy
+              </label>
+              <textarea
+                id="shop-returns"
+                value={shop.returnsPolicy}
+                onChange={(e) =>
+                  setShop({ ...shop, returnsPolicy: e.target.value })
+                }
+                className={`${inputClass} h-16`}
+              />
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-100">
+              Social Links
+            </h2>
+            <div>
+              <label htmlFor="shop-instagram" className={labelClass}>
+                Instagram
+              </label>
+              <input
+                id="shop-instagram"
+                type="url"
+                value={shop.socialLinks?.instagram || ""}
+                onChange={(e) =>
+                  setShop({
+                    ...shop,
+                    socialLinks: {
+                      ...shop.socialLinks,
+                      instagram: e.target.value,
+                    },
+                  })
+                }
+                className={inputClass}
+                placeholder="https://instagram.com/..."
+              />
+            </div>
+            <div>
+              <label htmlFor="shop-website" className={labelClass}>
+                Website
+              </label>
+              <input
+                id="shop-website"
+                type="url"
+                value={shop.socialLinks?.website || ""}
+                onChange={(e) =>
+                  setShop({
+                    ...shop,
+                    socialLinks: {
+                      ...shop.socialLinks,
+                      website: e.target.value,
+                    },
+                  })
+                }
+                className={inputClass}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-4 border-t border-zinc-800/80 p-6">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-6 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-300/20 disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-lg border border-zinc-700 bg-zinc-900/60 px-6 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }

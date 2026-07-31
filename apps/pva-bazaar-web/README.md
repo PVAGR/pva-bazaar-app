@@ -1,6 +1,6 @@
 # PVA Bazaar Web (Alchemical layer)
 
-Next.js 14 app that serves the **sanctuary** / alchemical layer for PVA Bazaar: archive, verification, manifesto, and cart. It sits alongside the main Vite frontend and backend; it can be deployed as a separate Vercel project or served under a subpath.
+Next.js app (App Router) that serves the **sanctuary** / alchemical layer for PVA Bazaar: archive, verification, manifesto, and cart. It sits alongside the main Vite frontend and backend; it can be deployed as a separate Vercel project or served under a subpath.
 
 ## Run locally
 
@@ -24,7 +24,7 @@ Copy `.env.example` to `.env.local` and set:
 
 | Path | Purpose |
 |------|--------|
-| `/` | Home – preserve/verify/acquire, Phase One Kenyan + Anti-Druj |
+| `/` | Redirects to `/get-started` (onboarding entry point) |
 | `/archive` | Kenyan crafts as living artifacts; beadwork + soapstone; Pasha VII teaser |
 | `/verification` | How we verify; artifact lookup by ID/slug (uses API when URL set) |
 | `/manifesto` | Home Station Protocol (Pasha VII – Moon 3) |

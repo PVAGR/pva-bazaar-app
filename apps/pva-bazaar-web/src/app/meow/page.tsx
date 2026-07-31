@@ -118,8 +118,9 @@ export default function MeowPage() {
       </div>
 
       <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
-        <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Account ID Override</label>
+        <label htmlFor="meow-account-id" className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Account ID Override</label>
         <input
+          id="meow-account-id"
           value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
           placeholder="Optional account ID for balances/transactions"
@@ -140,15 +141,17 @@ export default function MeowPage() {
 
       <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
         <h2 className="mb-3 text-lg font-semibold text-zinc-200">USDC Transfer Test</h2>
-        <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Transfer Account ID</label>
+        <label htmlFor="meow-transfer-account" className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Transfer Account ID</label>
         <input
+          id="meow-transfer-account"
           value={transferAccountId}
           onChange={(e) => setTransferAccountId(e.target.value)}
           placeholder="Optional; uses MEOW_ACCOUNT_ID if empty"
           className="mb-3 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500/60"
         />
-        <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Transfer Payload JSON</label>
+        <label htmlFor="meow-transfer-payload" className="mb-2 block text-xs uppercase tracking-[0.2em] text-zinc-500">Transfer Payload JSON</label>
         <textarea
+          id="meow-transfer-payload"
           value={transferPayload}
           onChange={(e) => setTransferPayload(e.target.value)}
           rows={10}

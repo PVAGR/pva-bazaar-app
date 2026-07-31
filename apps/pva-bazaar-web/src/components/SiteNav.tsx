@@ -65,7 +65,7 @@ export function SiteNav() {
 
   return (
     <header className="border-b border-zinc-800/80 bg-black/70 backdrop-blur">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+      <nav aria-label="Primary" className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-baseline gap-2">
           <span className="text-xs tracking-[0.3em] text-zinc-500 uppercase">PVA</span>
           <span className="text-sm font-semibold text-zinc-200">Bazaar</span>
@@ -108,6 +108,8 @@ export function SiteNav() {
             <button
               type="button"
               onClick={() => setShowAuth(!showAuth)}
+              aria-expanded={showAuth}
+              aria-controls="site-auth-panel"
               className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-1.5 text-amber-200 transition-colors hover:bg-amber-300/20"
             >
               Sign in
@@ -127,7 +129,10 @@ export function SiteNav() {
       </div>
 
       {showAuth && !auth && (
-        <div className="border-t border-zinc-800/80 bg-zinc-950/90">
+        <div
+          id="site-auth-panel"
+          className="border-t border-zinc-800/80 bg-zinc-950/90"
+        >
           <form onSubmit={handleAuth} className="mx-auto flex max-w-5xl flex-wrap items-end gap-3 px-4 py-3">
             {mode === "register" && (
               <input
@@ -135,14 +140,18 @@ export function SiteNav() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
+                aria-label="Name"
+                autoComplete="name"
                 className="rounded-lg border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500"
               />
             )}
             <input
-              type="text"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email or username"
+              aria-label="Email or username"
+              autoComplete="email"
               className="rounded-lg border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500"
             />
             <input
@@ -150,6 +159,8 @@ export function SiteNav() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
+              aria-label="Password"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
               className="rounded-lg border border-zinc-700 bg-zinc-900/80 px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500"
             />
             <button
