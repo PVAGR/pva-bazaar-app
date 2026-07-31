@@ -13,10 +13,6 @@ jobs:
     name: Deploy Next.js sanctuary to Vercel (Production)
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: apps/pva-bazaar-web
-
     steps:
       - uses: actions/checkout@v4
 
