@@ -4,6 +4,8 @@ import { getLiveTargets } from "./live-map.mjs";
 const { backend } = getLiveTargets();
 const BASE = (globalThis.process?.env?.BACKEND_URL || backend).replace(/\/+$/, "");
 
+// These checks validate the ACTUAL serverless bridge contract served by
+// https://pva-backend-api.vercel.app (backend/api/index-serverless.js).
 const checks = [
   {
     name: "api health",
@@ -17,18 +19,12 @@ const checks = [
     expectStatus: 200,
     validate: (json) =>
       json?.ok === true &&
-      typeof json?.cloudOnlyMode === "boolean" &&
-      typeof json?.decentralized?.rpcConfigured === "boolean" &&
-      typeof json?.decentralized?.rpcReachable === "boolean",
-  },
-  {
-    name: "blockchain health",
-    path: "/api/blockchain/health",
-    expectStatus: 200,
-    validate: (json) =>
-      json?.ok === true &&
-      typeof json?.rpc === "boolean" &&
-      typeof json?.rpcReachable === "boolean",
+      json?.status === "ready" &&
+      json?.passed === true &&
+      typeof json?.database?.mode === "string" &&
+      typeof json?.database?.connected === "boolean" &&
+      typeof json?.routes === "object" &&
+      json?.routes !== null,
   },
   {
     name: "decentralized ready",
@@ -36,10 +32,10 @@ const checks = [
     expectStatus: 200,
     validate: (json) =>
       json?.ok === true &&
-      typeof json?.passed === "boolean" &&
-      json?.checks &&
-      typeof json?.checks?.rpcConfigured === "boolean" &&
-      typeof json?.checks?.rpcReachable === "boolean",
+      json?.passed === true &&
+      Array.isArray(json?.checks) &&
+      json.checks.length > 0 &&
+      json.checks.every((c) => typeof c?.name === "string" && typeof c?.ok === "boolean"),
   },
   {
     name: "decentralized report",
@@ -47,11 +43,8 @@ const checks = [
     expectStatus: 200,
     validate: (json) =>
       json?.ok === true &&
-      typeof json?.passed === "boolean" &&
       typeof json?.build?.shortSha === "string" &&
-      typeof json?.checks?.rpcConfigured === "boolean" &&
-      typeof json?.checks?.rpcReachable === "boolean" &&
-      typeof json?.quickLinks?.health === "string",
+      Array.isArray(json?.notes),
   },
   {
     name: "admin panel report",
@@ -76,10 +69,14 @@ const checks = [
       typeof json?.bootstrapCodeRequired === "boolean",
   },
   {
-    name: "dpp route mounted",
-    path: "/api/dpp/non-existent-passport",
-    expectStatus: 404,
-    validate: (json) => json?.ok === false && /passport not found/i.test(String(json?.error || "")),
+    name: "career quiz definition",
+    path: "/api/career-quiz/definition",
+    expectStatus: 200,
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.quiz?.version !== "undefined" &&
+      Array.isArray(json?.quiz?.questions) &&
+      json.quiz.questions.length > 0,
   },
 ];
 
