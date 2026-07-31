@@ -305,6 +305,12 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Install dependencies for route sweep
+        run: npm ci --legacy-peer-deps --no-audit --no-fund 2>&1 || npm install --no-audit --no-fund --legacy-peer-deps 2>&1
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
       - name: Run strict live readiness gate
         env:
           FRONTEND_URL: https://pvabazaar.org
