@@ -72,7 +72,7 @@ if (fs.existsSync(distIndex)) {
   console.error('ERROR: index.html not found at', indexSrc);
 }
 
-['main.css', 'i'].forEach((name) => {
+['main.css'].forEach((name) => {
   const s = path.join(projectRoot, name);
   const d = path.join(projectRoot, 'dist', name);
   if (fs.existsSync(s)) {

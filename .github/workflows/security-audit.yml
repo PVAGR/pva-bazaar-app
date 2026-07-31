@@ -65,7 +65,7 @@ jobs:
       - name: Run ZAP full scan against production
         run: |
           docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly \
-            zap-full-scan.py -t https://pvabazaar.com -J zap-full-report.json -I
+            zap-full-scan.py -t https://pva-backend-api.vercel.app -J zap-full-report.json -I
         continue-on-error: true
 
       - name: Run ZAP scan against org site

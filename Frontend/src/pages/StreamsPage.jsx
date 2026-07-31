@@ -416,7 +416,7 @@ export default function StreamsPage() {
                 <HelpTip
                   title="Twitch setup"
                   body="To enable Twitch connect, set TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, and a matching TWITCH_REDIRECT_URI in Vercel. This status check never shows secret values."
-                  example="TWITCH_REDIRECT_URI=https://api.pvabazaar.org/api/oauth/twitch/callback"
+                  example="TWITCH_REDIRECT_URI=https://pva-backend-api.vercel.app/api/oauth/twitch/callback"
                 />
               </div>
             ) : null}
@@ -436,7 +436,7 @@ export default function StreamsPage() {
                 <HelpTip
                   title="YouTube setup"
                   body="To enable YouTube connect, set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and a matching YOUTUBE_REDIRECT_URI in Vercel. This status check never shows secret values."
-                  example="YOUTUBE_REDIRECT_URI=https://api.pvabazaar.org/api/oauth/youtube/callback"
+                  example="YOUTUBE_REDIRECT_URI=https://pva-backend-api.vercel.app/api/oauth/youtube/callback"
                 />
               </div>
             ) : null}

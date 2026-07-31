@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
 interface DashboardData {
   shop: {
@@ -32,50 +32,89 @@ interface DashboardData {
 export default function SellerDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/seller/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
+  const getToken = () => localStorage.getItem("authToken");
 
-        if (!response.ok) {
-          throw new Error('Failed to load dashboard');
-        }
-
-        const data = await response.json();
-        setData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
+  const fetchDashboard = useCallback(async () => {
+    const token = getToken();
+    if (!token) {
+      setError("Sign in required to view the seller dashboard.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/seller/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        throw new Error(response.status === 401 ? "Session expired. Sign in again." : "Failed to load dashboard");
       }
-    };
+      const payload = await response.json();
+      setData(payload);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, [API_BASE]);
 
+  useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [fetchDashboard]);
+
+  async function handlePublish() {
+    const token = getToken();
+    if (!token || !data?.shop?.id) return;
+    setPublishing(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/shops/${data.shop.id}/publish`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || "Failed to publish shop");
+      setNotice(payload?.message || "Shop published.");
+      await fetchDashboard();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to publish shop");
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex w-full items-center justify-center py-24">
+        <div
+          role="status"
+          aria-label="Loading seller dashboard"
+          className="h-12 w-12 animate-spin rounded-full border-b-2 border-amber-300"
+        />
       </div>
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600 text-center">
-          <p className="text-xl font-bold mb-2">Error</p>
-          <p>{error}</p>
+      <div className="flex w-full flex-col items-center justify-center gap-3 py-24 text-center">
+        <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {error}
         </div>
+        <a
+          href="/get-started"
+          className="text-xs text-amber-300 hover:text-amber-200"
+        >
+          Return to Get Started
+        </a>
       </div>
     );
   }
@@ -84,134 +123,184 @@ export default function SellerDashboard() {
     return null;
   }
 
-  const revenueFormatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  const revenueFormatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   });
 
+  const statusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      delivered: "bg-emerald-500/15 text-emerald-300",
+      shipped: "bg-amber-500/15 text-amber-300",
+    };
+    return `rounded px-2 py-1 text-xs font-semibold ${styles[status] || "bg-zinc-700/40 text-zinc-300"}`;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{data.shop.name}</h1>
-          <p className="text-gray-600 mt-1">Shop Status: <span className="font-semibold capitalize">{data.shop.status}</span></p>
-          {data.shop.status === 'draft' && (
-            <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Publish Shop
-            </button>
-          )}
+    <section className="flex w-full flex-col gap-8">
+      <header className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
+          Seller Dashboard
+        </p>
+        <h1 className="text-2xl font-semibold text-zinc-100 md:text-3xl">
+          {data.shop.name}
+        </h1>
+        <p className="text-sm text-zinc-400">
+          Shop status:{" "}
+          <span className="font-semibold capitalize text-amber-300">
+            {data.shop.status}
+          </span>
+        </p>
+        {data.shop.status === "draft" && (
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={publishing}
+            className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-300/20 disabled:opacity-50"
+          >
+            {publishing ? "Publishing..." : "Publish Shop"}
+          </button>
+        )}
+        {notice ? (
+          <p role="status" className="text-sm text-emerald-300">
+            {notice}
+          </p>
+        ) : null}
+      </header>
+
+      {error ? (
+        <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          {error}
         </div>
+      ) : null}
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500 text-sm font-semibold">Total Revenue</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">
-              {revenueFormatter.format(data.stats.totalRevenue / 100)}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500 text-sm font-semibold">Total Orders</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{data.stats.totalOrders}</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500 text-sm font-semibold">Products</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{data.stats.totalProducts}</p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-gray-500 text-sm font-semibold">Followers</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{data.shop.followers}</p>
-          </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Total Revenue
+          </p>
+          <p className="mt-2 text-2xl font-bold text-zinc-100">
+            {revenueFormatter.format(data.stats.totalRevenue / 100)}
+          </p>
         </div>
-
-        {/* Shop Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Shop Performance</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shop Views</span>
-                <span className="font-semibold">{data.shop.views}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Average Rating</span>
-                <span className="font-semibold">{data.stats.avgRating.toFixed(1)}⭐</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Reviews</span>
-                <span className="font-semibold">{data.stats.reviewCount}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Pending</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Payouts Ready</span>
-                <span className="font-semibold text-blue-600">{data.stats.pendingPayouts}</span>
-              </div>
-              {/* TODO: Replace with link to /seller/analytics when that page exists */}
-              <span className="text-zinc-500 cursor-not-allowed text-sm">
-                View Full Analytics — coming soon
-              </span>
-            </div>
-          </div>
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Total Orders
+          </p>
+          <p className="mt-2 text-2xl font-bold text-zinc-100">
+            {data.stats.totalOrders}
+          </p>
         </div>
-
-        {/* Recent Orders */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Buyer</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {data.recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-sm text-gray-900">
-                      {new Date(order.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-3 text-sm text-gray-900">{order.buyer}</td>
-                    <td className="px-6 py-3 text-sm text-gray-900">{order.item}</td>
-                    <td className="px-6 py-3 text-sm font-semibold text-gray-900">
-                      {revenueFormatter.format(order.amount / 100)}
-                    </td>
-                    <td className="px-6 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="p-6 border-t border-gray-200">
-            {/* TODO: Replace with link to /seller/orders when that page exists */}
-            <span className="text-zinc-500 cursor-not-allowed text-sm">
-              View All Orders — coming soon
-            </span>
-          </div>
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Products
+          </p>
+          <p className="mt-2 text-2xl font-bold text-zinc-100">
+            {data.stats.totalProducts}
+          </p>
+        </div>
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Followers
+          </p>
+          <p className="mt-2 text-2xl font-bold text-zinc-100">
+            {data.shop.followers}
+          </p>
         </div>
       </div>
-    </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <h2 className="mb-4 text-sm font-semibold text-zinc-100">
+            Shop Performance
+          </h2>
+          <dl className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-zinc-400">Shop Views</dt>
+              <dd className="font-semibold text-zinc-100">{data.shop.views}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-zinc-400">Average Rating</dt>
+              <dd className="font-semibold text-zinc-100">
+                {data.stats.avgRating.toFixed(1)}★
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-zinc-400">Reviews</dt>
+              <dd className="font-semibold text-zinc-100">
+                {data.stats.reviewCount}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <h2 className="mb-4 text-sm font-semibold text-zinc-100">Pending</h2>
+          <dl className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-zinc-400">Payouts Ready</dt>
+              <dd className="font-semibold text-amber-300">
+                {data.stats.pendingPayouts}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-zinc-400">Full Analytics</dt>
+              <dd className="text-zinc-500">Coming soon</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-zinc-800/80 bg-zinc-950/60">
+        <div className="border-b border-zinc-800/80 p-5">
+          <h2 className="text-sm font-semibold text-zinc-100">Recent Orders</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-zinc-800/80 bg-zinc-900/40">
+              <tr>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-400">
+                  Date
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-400">
+                  Buyer
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-400">
+                  Item
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-400">
+                  Amount
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-400">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/60">
+              {data.recentOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-zinc-900/30">
+                  <td className="px-5 py-3 text-zinc-300">
+                    {new Date(order.date).toLocaleDateString()}
+                  </td>
+                  <td className="px-5 py-3 text-zinc-300">{order.buyer}</td>
+                  <td className="px-5 py-3 text-zinc-300">{order.item}</td>
+                  <td className="px-5 py-3 font-semibold text-zinc-100">
+                    {revenueFormatter.format(order.amount / 100)}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className={statusBadge(order.status)}>
+                      {order.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="border-t border-zinc-800/80 p-5 text-sm text-zinc-500">
+          View all orders — coming soon
+        </div>
+      </div>
+    </section>
   );
 }

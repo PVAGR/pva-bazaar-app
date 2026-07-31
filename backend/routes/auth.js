@@ -43,7 +43,7 @@ async function issueFallbackToken(identifier, password, res) {
   const token = jwt.sign(
     { id: user._id, role: user.role, authStore: 'file' },
     getJwtSecret(),
-    { expiresIn: '7d' },
+    { algorithm: 'HS256', expiresIn: '7d' },
   );
   return res.json({
     ok: true,
@@ -158,7 +158,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, authStore: useMongoStore ? 'mongo' : 'file' },
       getJwtSecret(),
-      { expiresIn: '7d' },
+      { algorithm: 'HS256', expiresIn: '7d' },
     );
     
     // Send welcome email in non-blocking mode.
@@ -294,7 +294,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role, authStore: useMongoStore ? 'mongo' : 'file' },
       getJwtSecret(),
-      { expiresIn: '7d' },
+      { algorithm: 'HS256', expiresIn: '7d' },
     );
     
     res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });

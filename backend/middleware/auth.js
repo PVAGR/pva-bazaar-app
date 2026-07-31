@@ -11,7 +11,7 @@ const JWT_EXPIRY = '7d';
  * Generate JWT token
  */
 function generateToken(userId, expiresIn = JWT_EXPIRY) {
-  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn });
+  return jwt.sign({ id: userId }, JWT_SECRET, { algorithm: 'HS256', expiresIn });
 }
 
 /**
@@ -19,7 +19,7 @@ function generateToken(userId, expiresIn = JWT_EXPIRY) {
  */
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
   } catch (err) {
     throw new Error('Invalid or expired token');
   }

@@ -38,6 +38,7 @@
     "chromadb": "^3.0.14",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
+    "cookie-parser": "^1.4.7",
     "depd": "^2.0.0",
     "dotenv": "^16.3.1",
     "ethers": "^6.16.0",

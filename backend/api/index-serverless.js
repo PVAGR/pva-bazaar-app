@@ -26,6 +26,10 @@ const oauthTwitchRoutes = require('../routes/oauthTwitch');
 const oauthYouTubeRoutes = require('../routes/oauthYouTube');
 const cloudStorageRoutes = require('../routes/cloudStorage');
 const homeFeedRoutes = require('../routes/homeFeed');
+const careerQuizRoutes = require('../routes/careerQuiz');
+const commoditiesRoutes = require('../routes/commodities');
+const contactsRoutes = require('../routes/contacts');
+const templatesRoutes = require('../routes/templates');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -220,6 +224,24 @@ app.use('/api/oauth', oauthTwitchRoutes);
 app.use('/api/oauth', oauthYouTubeRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
 app.use('/api/home-feed', homeFeedRoutes);
+app.use('/api/career-quiz', careerQuizRoutes);
+app.use('/api/commodities', commoditiesRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/templates', templatesRoutes);
+
+app.get('/api/openapi.json', (req, res) => {
+  try {
+    const { getOpenApiSpec } = require('../utils/openapi');
+    const spec = getOpenApiSpec();
+    const body = JSON.stringify(spec);
+    res.status(200).type('application/json').send(body);
+  } catch (err) {
+    console.error('OpenAPI spec error:', err?.message || err);
+    res.status(500).json({ ok: false, error: 'OpenAPI spec unavailable', detail: String(err?.message || err) });
+  }
+});
+
+app.use('/api/docs', require('../routes/api-docs'));
 
 app.get('/api/decentralized/status', async (_req, res) => {
   const build = getBuildInfo();
@@ -241,6 +263,12 @@ app.get('/api/decentralized/status', async (_req, res) => {
       users: true,
       streams: true,
       oauth: true,
+      careerQuiz: true,
+      commodities: true,
+      contacts: true,
+      templates: true,
+      openapi: true,
+      docs: true,
     },
     timestamp: new Date().toISOString(),
   });
@@ -265,6 +293,12 @@ app.get('/api/decentralized/ready', async (_req, res) => {
       { name: 'users', ok: true },
       { name: 'streams', ok: true },
       { name: 'oauth', ok: true },
+      { name: 'career-quiz', ok: true },
+      { name: 'commodities', ok: true },
+      { name: 'contacts', ok: true },
+      { name: 'templates', ok: true },
+      { name: 'openapi', ok: true },
+      { name: 'docs', ok: true },
     ],
     timestamp: new Date().toISOString(),
   });

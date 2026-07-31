@@ -115,11 +115,11 @@ router.post('/token', (req, res) => {
   
   // Generate JWT with 12-hour expiration
   const token = jwt.sign(
-    { id: getAdminSubjectId(), role: 'admin' }, 
+    { id: getAdminSubjectId(), role: 'admin' },
     getJwtSecret(),
-    { expiresIn: '12h' }
+    { algorithm: 'HS256', expiresIn: '12h' }
   );
-  
+
   res.json({ ok: true, token });
 });
 
@@ -129,7 +129,7 @@ router.post('/token-refresh', (req, res, next) => {
     const token = jwt.sign(
       { id: getAdminSubjectId(), role: 'admin' },
       getJwtSecret(),
-      { expiresIn: '12h' }
+      { algorithm: 'HS256', expiresIn: '12h' }
     );
 
     return res.json({ ok: true, token, refreshed: true, mode: 'development' });
@@ -141,7 +141,7 @@ router.post('/token-refresh', (req, res, next) => {
       const token = jwt.sign(
         { id: req.user?.id || getAdminSubjectId(), role: 'admin' },
         getJwtSecret(),
-        { expiresIn: '12h' }
+        { algorithm: 'HS256', expiresIn: '12h' }
       );
 
       return res.json({ ok: true, token, refreshed: true });

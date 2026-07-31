@@ -150,12 +150,14 @@ export default function DealsPage() {
       </header>
 
       <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
-        <label className="block text-xs font-medium text-zinc-300">JWT token (required for all actions)</label>
+        <label htmlFor="deals-jwt" className="block text-xs font-medium text-zinc-300">JWT token (required for all actions)</label>
         <input
+          id="deals-jwt"
           className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-100"
           value={token}
           onChange={(e) => setToken(e.target.value)}
           placeholder="Paste Bearer token"
+          autoComplete="off"
         />
         <div className="flex flex-wrap gap-2">
           <button className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-2 text-xs text-amber-200" onClick={loadDeals} disabled={loading || !hasApiBase}>
@@ -170,10 +172,17 @@ export default function DealsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
           <h2 className="text-sm font-semibold text-zinc-200">Create secure deal</h2>
-          <input className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} />
+          <label htmlFor="deal-title" className="block text-xs text-zinc-500">Title</label>
+          <input id="deal-title" className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createTitle} onChange={(e) => setCreateTitle(e.target.value)} />
           <div className="grid grid-cols-2 gap-2">
-            <input className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createAmount} onChange={(e) => setCreateAmount(e.target.value)} />
-            <input className="rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createCurrency} onChange={(e) => setCreateCurrency(e.target.value)} />
+            <div>
+              <label htmlFor="deal-amount" className="block text-xs text-zinc-500">Amount</label>
+              <input id="deal-amount" className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createAmount} onChange={(e) => setCreateAmount(e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor="deal-currency" className="block text-xs text-zinc-500">Currency</label>
+              <input id="deal-currency" className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100" value={createCurrency} onChange={(e) => setCreateCurrency(e.target.value)} />
+            </div>
           </div>
           <p className="text-xs text-zinc-500">Created deals are ready for invite links and escrow controls below.</p>
         </div>
@@ -240,7 +249,9 @@ export default function DealsPage() {
               Generate fraud packet
             </button>
           </div>
+          <label htmlFor="deal-dispute-reason" className="block text-xs text-zinc-500">Dispute reason</label>
           <input
+            id="deal-dispute-reason"
             className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-zinc-100"
             value={disputeReason}
             onChange={(e) => setDisputeReason(e.target.value)}

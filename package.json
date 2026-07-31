@@ -105,6 +105,7 @@
     "body-parser": "^1.20.3",
     "chromadb": "^3.0.14",
     "cloudinary": "^2.9.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "depd": "^2.0.0",
     "dotenv": "^17.2.2",

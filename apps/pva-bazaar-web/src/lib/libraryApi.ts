@@ -8,7 +8,8 @@ export function getApiBase(): string {
     process.env.NEXT_PUBLIC_API_URL ??
     process.env.NEXT_PUBLIC_VERIFICATION_API_URL ??
     "";
-  return String(raw || "").replace(/\/+$/, "");
+  const clean = String(raw || "").replace(/\/+$/, "");
+  return clean.endsWith("/api") ? clean.slice(0, -4) : clean;
 }
 
 export interface LibraryBook {

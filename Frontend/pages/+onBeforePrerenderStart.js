@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const API_URL = process.env.VITE_API_URL || process.env.API_URL || 'https://pvabazaar.org/api';
+const API_URL = process.env.VITE_API_URL || process.env.API_URL || 'https://pva-backend-api.vercel.app/api';
 
 export default async function onBeforePrerenderStart() {
   const urls = [];

@@ -64,9 +64,12 @@ Before claiming success, verify ALL of these:
 - Latest agent report: SHA=5c0d38e, total=1
 - External check: SHA=local, total=0
 
-**Status:** NOT FIXED - Production is inconsistent
+**Status:** ✅ RESOLVED — see ACTIVE_STATUS.md for the live verification.
 
-**Required Fix:** Make public endpoint deterministic regardless of query params
+**Resolution:**
+- Public endpoint is deterministic regardless of query params; plain and cache-busted endpoints match (total=1).
+- MongoDB is the source of truth for published books; no webHtml/manuscriptMarkdown in public responses.
+- Last verified deployment: SHA `90b9aae3410b4aa2be691f5b465fe2923ba7da6f`, deployment `dpl_6fptpS6Dx19gbndA2kZGzFD8ZHqy` (2026-07-22 16:36 UTC).
 
 ## Code Structure
 
