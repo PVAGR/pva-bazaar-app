@@ -30,6 +30,8 @@ const careerQuizRoutes = require('../routes/careerQuiz');
 const commoditiesRoutes = require('../routes/commodities');
 const contactsRoutes = require('../routes/contacts');
 const templatesRoutes = require('../routes/templates');
+const itemsRoutes = require('../routes/items');
+const bookPublishingRoutes = require('../routes/bookPublishing');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -244,6 +246,7 @@ app.use('/api/auth', require('../routes/auth'));
 app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
+app.use('/api/items', itemsRoutes);
 app.use('/api/archive', archiveRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/openclaw', openClawRoutes);
