@@ -2,32 +2,70 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { fetchPublishedBookProjects, getApiBase } from '../lib/api';
-import { getToken, setToken } from '../lib/auth';
 import { listLocalPublishedBookProjects } from '../lib/localBookVault';
 import './BookShelfPage.css';
-
-function parseJwtPayload(token) {
-  if (!token || typeof token !== 'string') return null;
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-  try {
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(globalThis.atob(base64));
-  } catch (_err) {
-    return null;
-  }
-}
-
-function isAdminToken(token) {
-  const payload = parseJwtPayload(token);
-  return String(payload?.role || '').toLowerCase() === 'admin';
-}
 
 function toApiUrl(path) {
   if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
   const base = getApiBase().replace(/\/+$/, '');
   const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
   return `${base}${normalized}`;
+}
+
+function formatDate(value) {
+  if (!value) return 'Recently published';
+  try {
+    return new Date(value).toLocaleDateString();
+  } catch (_err) {
+    return 'Recently published';
+  }
+}
+
+function normalizeBookKey(book) {
+  return String(book?.slug || book?.id || book?._id || '')
+    .trim()
+    .toLowerCase();
+}
+
+function mergeBooksByKey(primary = [], secondary = []) {
+  const merged = [];
+  const seen = new Set();
+  for (const book of [...primary, ...secondary]) {
+    const key = normalizeBookKey(book);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(book);
+  }
+  return merged;
+}
+
+function isAdminUser() {
+  try {
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
+    if (!token) return false;
+    // Simple check - in production, verify with backend
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.role === 'admin' || payload.isAdmin === true;
+  } catch (_err) {
+    return false;
+  }
+}
+
+async function deleteBookAsAdmin(bookId) {
+  const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
+  if (!token) throw new Error('Not authenticated');
+  
+  const response = await fetch(`${getApiBase()}/book-publishing/admin/delete/${encodeURIComponent(bookId)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  const data = await response.json();
+  if (!data.ok) throw new Error(data.error || 'Failed to delete book');
+  return data;
 }
 
 export default function BookShelfPage() {
@@ -38,24 +76,19 @@ export default function BookShelfPage() {
   const [error, setError] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteEmail, setDeleteEmail] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
   const activeQuery = useMemo(() => query.trim(), [query]);
 
   useEffect(() => {
-    setIsAdmin(isAdminToken(getToken()));
+    setIsAdmin(isAdminUser());
   }, []);
 
   async function handleAdminDelete(book) {
     const bookId = book?.id || book?._id;
-    const bookSlug = book?.slug || bookId;
     if (!bookId) return;
-    setDeleteTarget({ id: bookId, slug: bookSlug, title: book.title || 'Untitled' });
-    setDeleteEmail('');
-    setDeletePassword('');
+    setDeleteTarget({ id: bookId, title: book.title || 'Untitled' });
     setDeleteError('');
   }
 
@@ -65,32 +98,7 @@ export default function BookShelfPage() {
     setDeleteBusy(true);
     setDeleteError('');
     try {
-      const base = getApiBase();
-      if (!base) throw new Error('API not configured');
-
-      let token = getToken();
-      if (!isAdminToken(token)) {
-        const res = await fetch(`${base}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: deleteEmail, password: deletePassword }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.token) throw new Error(data?.message || data?.error || 'Login failed');
-        token = data.token;
-        setToken(token);
-        if (!isAdminToken(token)) throw new Error('This account does not have admin access');
-      }
-
-      const delRes = await fetch(`${base}/book-publishing/${encodeURIComponent(deleteTarget.id)}`, {
-        method: 'DELETE',
-        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
-      });
-      const delData = await delRes.json().catch(() => ({}));
-      if (!delRes.ok || delData?.ok === false) {
-        throw new Error(delData?.error || delData?.message || `Delete failed (${delRes.status})`);
-      }
-
+      await deleteBookAsAdmin(deleteTarget.id);
       setBooks((prev) => (prev || []).filter((b) => (b.id || b._id) !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) {
@@ -106,28 +114,36 @@ export default function BookShelfPage() {
       setLoading(true);
       setError('');
       try {
-        const response = await fetchPublishedBookProjects();
-        if (cancelled) return;
-        const remote = Array.isArray(response?.items) ? response.items : Array.isArray(response) ? response : [];
-        const local = listLocalPublishedBookProjects();
-        const merged = [...remote];
-        for (const localBook of local) {
-          if (!merged.some((b) => (b.id || b._id) === (localBook.id || localBook._id))) {
-            merged.push(localBook);
+        const data = await fetchPublishedBookProjects(activeQuery ? { q: activeQuery, limit: 48 } : { limit: 48 });
+        if (!data?.ok) {
+          throw new Error(data?.error || 'Failed to load published books');
+        }
+        const localItems = listLocalPublishedBookProjects();
+        const items = Array.isArray(data.items) ? data.items : [];
+        const merged = mergeBooksByKey(items, localItems);
+        if (!cancelled) {
+          setBooks(merged);
+        }
+      } catch (err) {
+        const localItems = listLocalPublishedBookProjects();
+        if (!cancelled) {
+          setBooks(localItems);
+          if (!localItems.length) {
+            setError(err.message || 'Failed to load published books');
           }
         }
-        setBooks(merged);
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load books');
-        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
+
     load();
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeQuery]);
 
   const filteredBooks = useMemo(() => {
     const list = books || [];
@@ -225,37 +241,13 @@ export default function BookShelfPage() {
         <div className="book-shelf__modalOverlay" role="dialog" aria-modal="true" aria-label="Admin delete confirmation">
           <form className="book-shelf__modal" onSubmit={confirmAdminDelete}>
             <h3>Delete &ldquo;{deleteTarget.title}&rdquo;?</h3>
-            <p className="book-shelf__modalWarning">This cannot be undone. {isAdmin ? 'Click Confirm to delete.' : 'Sign in as an admin to proceed.'}</p>
-            {!isAdmin ? (
-              <>
-                <label className="book-shelf__field">
-                  <span>Admin email or username</span>
-                  <input
-                    type="text"
-                    value={deleteEmail}
-                    onChange={(e) => setDeleteEmail(e.target.value)}
-                    placeholder="Email or username"
-                    required
-                  />
-                </label>
-                <label className="book-shelf__field">
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    placeholder="Password"
-                    required
-                  />
-                </label>
-              </>
-            ) : null}
+            <p className="book-shelf__modalWarning">This cannot be undone. Click Confirm to delete.</p>
             {deleteError ? <p className="book-shelf__error" role="alert">{deleteError}</p> : null}
             <div className="book-shelf__actions">
               <button
                 type="submit"
                 className="book-shelf__button book-shelf__button--danger"
-                disabled={deleteBusy || (!isAdmin && (!deleteEmail || !deletePassword))}
+                disabled={deleteBusy}
               >
                 {deleteBusy ? 'Deleting…' : 'Confirm delete'}
               </button>

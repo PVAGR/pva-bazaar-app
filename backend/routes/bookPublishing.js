@@ -8,6 +8,8 @@ const { authenticateToken } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const BookProject = require('../models/BookProject');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
+const { getBuildInfo } = require('../lib/buildInfo');
+const mongoose = require('mongoose');
 const {
   deleteBook: deleteFileBook,
   findBookById: findFileBookById,
@@ -2323,6 +2325,29 @@ router.get('/:bookId/view/docx', authenticateBookPublishing, async (req, res) =>
   }
 });
 
+router.delete('/admin/delete/:bookId', authenticateToken, adminOnly, async (req, res) => {
+  try {
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+
+    // Admin can delete any book regardless of ownership
+    if (book.frontCover?.provider === 'local' && book.frontCover?.localFilename) {
+      const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.frontCover.localFilename));
+      await fsp.rm(filePath, { force: true }).catch(() => {});
+    }
+    if (book.backCover?.provider === 'local' && book.backCover?.localFilename) {
+      const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.backCover.localFilename));
+      await fsp.rm(filePath, { force: true }).catch(() => {});
+    }
+
+    await removeBookRecord(book._id);
+    return res.json({ ok: true, message: `Deleted book: ${book.title}` });
+  } catch (error) {
+    console.error('[book-publishing] admin delete error:', error);
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to delete book' });
+  }
+});
+
 router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
@@ -2333,38 +2358,11 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
 
     if (book.frontCover?.provider === 'local' && book.frontCover?.localFilename) {
       const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.frontCover.localFilename));
-      await fsp.rm(filePath, { force: true }).catch(err => console.warn('[book-publishing] failed to delete front cover file:', err?.message || err));
+      await fsp.rm(filePath, { force: true }).catch(() => {});
     }
     if (book.backCover?.provider === 'local' && book.backCover?.localFilename) {
       const filePath = path.join(BOOK_UPLOAD_DIR, path.basename(book.backCover.localFilename));
-      await fsp.rm(filePath, { force: true }).catch(err => console.warn('[book-publishing] failed to delete back cover file:', err?.message || err));
-    }
-
-    if (isCloudinaryConfigured()) {
-      const slug = String(book.slug || '').trim();
-      const cloudinary = getCloudinaryClient();
-      const idsToDelete = [];
-
-      if (slug) {
-        idsToDelete.push(
-          `${CLOUDINARY_BOOK_MANIFEST_FOLDER}/${cloudinaryBookSlugId(slug)}`,
-          `${CLOUDINARY_BOOK_MANUSCRIPT_FOLDER}/${cloudinaryBookSlugId(slug)}`,
-          `${CLOUDINARY_BOOK_PDF_FOLDER}/${cloudinaryBookSlugId(slug)}`,
-          `${CLOUDINARY_BOOK_DOCX_FOLDER}/${cloudinaryBookSlugId(slug)}`,
-          `${CLOUDINARY_BOOK_HTML_FOLDER}/${cloudinaryBookSlugId(slug)}`,
-        );
-      }
-
-      if (book.frontCover?.publicId) {
-        idsToDelete.push(book.frontCover.publicId);
-      }
-      if (book.backCover?.publicId) {
-        idsToDelete.push(book.backCover.publicId);
-      }
-
-      if (idsToDelete.length) {
-        await cloudinary.api.delete_resources(idsToDelete, { resource_type: 'raw' }).catch(err => console.warn('[book-publishing] failed to delete cloudinary resources:', err?.message || err));
-      }
+      await fsp.rm(filePath, { force: true }).catch(() => {});
     }
 
     await removeBookRecord(book._id);
