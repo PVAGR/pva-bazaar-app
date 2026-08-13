@@ -86,3 +86,7 @@ Frontend/src/data/entries.js
 
 # Turbo repo daemon logs (ephemeral build artifacts)
 .turbo/
+
+# Local tool settings and generated QA reports
+.letta/
+backend/qa/reports/

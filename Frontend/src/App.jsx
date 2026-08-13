@@ -73,6 +73,8 @@ const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
 const TemplatesPage = lazy(() => import('./pages/TemplatesPage.jsx'));
 const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
 const FederationMapPage = lazy(() => import('./pages/FederationMapPage.jsx'));
+const ReferralPage = lazy(() => import('./pages/ReferralPage.jsx'));
+const PartnersPage = lazy(() => import('./pages/PartnersPage.jsx'));
 
 function RequireUserAuth({ children }) {
   const location = useLocation();
@@ -157,6 +159,8 @@ export default function App() {
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/partnerships" element={<Layout><PartnershipsPage /></Layout>} />
+        <Route path="/referral" element={<Layout><ReferralPage /></Layout>} />
+        <Route path="/partners" element={<Layout><PartnersPage /></Layout>} />
         <Route path="/provenance" element={<Layout><ProvenancePage /></Layout>} />
         <Route path="/portfolio" element={<Layout><PortfolioPage /></Layout>} />
         <Route path="/agent" element={<Layout><AgentPage /></Layout>} />

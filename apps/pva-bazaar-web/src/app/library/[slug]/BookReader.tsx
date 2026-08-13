@@ -155,7 +155,6 @@ export function BookReader({ slug }: { slug: string }) {
         <div className="flex flex-col items-center gap-3">
           <div className="h-64 w-48 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-900/80 shadow-lg">
             {cover ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={cover}
                 alt={`Cover for ${book.title}`}
@@ -170,7 +169,6 @@ export function BookReader({ slug }: { slug: string }) {
           </div>
           {back && (
             <div className="h-40 w-32 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-900/80">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={back}
                 alt={`Back cover of ${book.title}`}

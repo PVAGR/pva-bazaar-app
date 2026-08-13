@@ -21,6 +21,7 @@ const InquiriesTab = lazy(() => import('../components/InquiriesTab.jsx'));
 const UsersTab = lazy(() => import('../components/UsersTab.jsx'));
 const AttributionTab = lazy(() => import('../components/AttributionTab.jsx'));
 const PayoutTab = lazy(() => import('../components/PayoutTab.jsx'));
+const ReferralTab = lazy(() => import('../components/ReferralTab.jsx'));
 const SettlementContractsTab = lazy(() => import('../components/SettlementContractsTab.jsx'));
 const CloudStorageTab = lazy(() => import('../components/CloudStorageTab.jsx'));
 const LibraryTab = lazy(() => import('../components/LibraryTab.jsx'));
@@ -48,7 +49,7 @@ export default function AdminPage() {
   const location = useLocation();
   const availableTabs = new Set([
     'dashboard', 'orders', 'transactions', 'archive', 'marketplace', 'inquiries',
-    'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api',
+    'users', 'attribution', 'referrals', 'payouts', 'settlements', 'cloud', 'library', 'api',
     'health', 'settings', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'overview',
   ]);
   const staleThresholdMs = ENV.STATUS_STALE_MS || 120000;
@@ -1097,6 +1098,11 @@ export default function AdminPage() {
           {/* Attribution Tab */}
           {activeTab === 'attribution' && (
             renderTab(<AttributionTab />)
+          )}
+
+          {/* Referrals Tab */}
+          {activeTab === 'referrals' && (
+            renderTab(<ReferralTab />)
           )}
 
           {/* Payouts Tab */}

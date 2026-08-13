@@ -8,6 +8,7 @@ const stripe = require("../lib/stripeClient");
 const { requireAdmin } = require("../middleware/adminOnly");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { authenticateToken } = require('../middleware/auth');
+const { reverseReferralForOrder } = require('../services/referralService');
 
 // GET /api/orders/mine (authenticated user - user's own orders)
 router.get('/mine', authenticateToken, async (req, res) => {
@@ -106,6 +107,15 @@ router.post("/:id/refund", requireAdmin, async (req, res) => {
     order.refundedAt = refund.status === "succeeded" ? new Date() : undefined;
     order.refundStatus = refund.status === "succeeded" ? "refunded" : refund.status === "pending" ? "pending" : "failed";
     await order.save();
+
+    // Reverse the automatic referral kickback when the refund already settled.
+    // Idempotent + non-blocking: the Stripe webhook still reverses it if a
+    // refund succeeds asynchronously after this response.
+    if (refund.status === "succeeded") {
+      await reverseReferralForOrder(order).catch((err) =>
+        console.warn('[Orders] Referral kickback reversal failed:', err?.message || err)
+      );
+    }
 
     return res.json({ ok: true, refundId: refund.id, status: refund.status });
   } catch (err) {

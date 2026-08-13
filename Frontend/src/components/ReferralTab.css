@@ -1,0 +1,168 @@
+.referral-tab {
+  padding: 16px;
+  font-size: 14px;
+}
+
+.referral-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+}
+
+.referral-header p {
+  margin: 0 0 16px 0;
+  color: #8a8f9a;
+  max-width: 720px;
+}
+
+.referral-message {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(26, 125, 58, 0.12);
+  color: #1a7d3a;
+}
+
+.referral-error {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+
+.referral-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.referral-filterbar select,
+.referral-filterbar input[type='search'] {
+  padding: 6px 10px;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  background: #1b1e27;
+  color: #e6e8ef;
+  font-size: 13px;
+}
+
+.referral-filterbar input[type='search'] {
+  min-width: 240px;
+}
+
+.referral-count {
+  margin-left: auto;
+  color: #8a8f9a;
+  font-size: 13px;
+}
+
+.referral-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #3a3f4b;
+  background: transparent;
+  color: #e6e8ef;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.referral-btn:hover {
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+.referral-btn.primary {
+  background: rgba(26, 125, 58, 0.2);
+  border-color: #1a7d3a;
+  color: #7ee08b;
+}
+
+.referral-btn.warn {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: #b91c1c;
+  color: #f59e9e;
+}
+
+.referral-loading,
+.referral-empty {
+  padding: 20px;
+  color: #8a8f9a;
+  text-align: center;
+}
+
+.referral-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.referral-table thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.referral-table th {
+  text-align: left;
+  padding: 8px 10px;
+  color: #8a8f9a;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.referral-table td {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.referral-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.referral-code-cell strong {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+
+.referral-sub {
+  color: #8a8f9a;
+  font-size: 12px;
+}
+
+.referral-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.referral-status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.referral-status.active {
+  background: rgba(26, 125, 58, 0.18);
+  color: #7ee08b;
+}
+
+.referral-status.suspended {
+  background: rgba(220, 38, 38, 0.15);
+  color: #f59e9e;
+}
+
+.referral-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.referral-actions input[type='number'] {
+  width: 64px;
+  padding: 4px 6px;
+  border: 1px solid #3a3f4b;
+  border-radius: 6px;
+  background: #1b1e27;
+  color: #e6e8ef;
+  font-size: 13px;
+}

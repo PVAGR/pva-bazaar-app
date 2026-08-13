@@ -82,6 +82,8 @@ export function SiteNav() {
           <Link href="/conference" className="hover:text-amber-300">Conference</Link>
           <Link href="/cart" className="hover:text-amber-300">Cart</Link>
           <Link href="/library" className="hover:text-amber-300">Library</Link>
+          <Link href="/referrals" className="hover:text-amber-300">Referrals</Link>
+          <Link href="/partners" className="hover:text-amber-300">Partners</Link>
           {auth ? (
             <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/60 px-3 py-1.5">
               {auth.role?.toLowerCase() === "admin" && (

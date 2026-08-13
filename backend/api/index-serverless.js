@@ -270,6 +270,8 @@ app.use('/api/templates', templatesRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/referrals', require('../routes/referrals'));
+app.use('/api/partners', require('../routes/partners'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {

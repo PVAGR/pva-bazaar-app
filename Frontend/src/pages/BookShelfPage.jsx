@@ -54,17 +54,19 @@ function isAdminUser() {
 async function deleteBookAsAdmin(bookId) {
   const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
   if (!token) throw new Error('Not authenticated');
-  
-  const response = await fetch(`${getApiBase()}/book-publishing/admin/delete/${encodeURIComponent(bookId)}`, {
+
+  const base = getApiBase().replace(/\/+$/, '');
+  const response = await fetch(`${base}/book-publishing/${encodeURIComponent(bookId)}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
-  
-  const data = await response.json();
-  if (!data.ok) throw new Error(data.error || 'Failed to delete book');
+
+  let data = {};
+  try { data = await response.json(); } catch (_e) { /* empty */ }
+  if (!response.ok || !data.ok) throw new Error(data.error || data.message || `Delete failed (${response.status})`);
   return data;
 }
 

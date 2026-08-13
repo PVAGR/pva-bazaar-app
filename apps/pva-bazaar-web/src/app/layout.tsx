@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
 import { getBaseUrl } from "@/lib/siteUrl";
 import { SiteNav } from "@/components/SiteNav";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -118,6 +120,9 @@ export default function RootLayout({
         </a>
         <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black flex flex-col">
           <SiteNav />
+          <Suspense>
+            <ReferralCapture />
+          </Suspense>
 
           <main id="main-content" className="mx-auto flex w-full max-w-5xl flex-1 px-4 py-10">
             {children}

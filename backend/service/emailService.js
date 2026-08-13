@@ -599,6 +599,203 @@ async function sendMockConfirmationEmail({ to, recipientName, dealId, amount, cu
   }
 }
 
+/**
+ * Send a referral code to its owner (email is the delivery mechanism so the
+ * program can scale to any number of people without in-memory storage).
+ */
+async function sendReferralCodeEmail({ to, name, code, referralUrl, siteUrl }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter || !to) return { success: false, skipped: true };
+
+  const subject = 'Your PVA Bazaar referral code';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #0c0d0f; color: #d4af37; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 22px;">PVA Bazaar</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Referral program</p>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <h2 style="color: #0c0d0f; margin-top: 0;">Hi ${name},</h2>
+        <p>Your personal referral code is:</p>
+        <div style="background: #fff; padding: 16px; border: 1px dashed #d4af37; border-radius: 6px; margin: 16px 0; text-align: center;">
+          <span style="font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #0c0d0f;">${code}</span>
+        </div>
+        <p>Share your link anywhere — email, social, WhatsApp — and you earn <strong>10%</strong> of any sale made through it, tracked automatically.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${referralUrl}" style="background: #d4af37; color: #0c0d0f; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">
+            Your referral link
+          </a>
+        </div>
+        <p style="font-size: 13px; color: #666;">Your link embeds this code automatically. Every purchase made through it counts toward your commission — no account needed, no cost to you. Runs forever on the free tier.</p>
+        <p style="font-size: 12px; color: #999; margin-bottom: 0;">Reference: ${code} · <a href="${siteUrl}" style="color: #d4af37;">${siteUrl}</a></p>
+      </div>
+    </body>
+    </html>
+  `;
+  const text = `Hi ${name},\n\nYour personal PVA Bazaar referral code is: ${code}\n\nShare this link: ${referralUrl}\n\nYou earn 10% of any sale made through your link, tracked automatically.\n\n${siteUrl}`;
+
+  try {
+    const info = await emailTransporter.sendMail({
+      from: `"PVA Bazaar" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Referral code email failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Notify a referrer that a sale happened through their link and show the
+ * automatic kickback amount. Inclusive of commission math, never debt-trapping.
+ */
+async function sendReferralCommissionEmail({ to, name, itemName, amountCents, commissionCents, currency, referralUrl }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter || !to) return { success: false, skipped: true };
+
+  const amount = (Number(amountCents) / 100).toFixed(2);
+  const commission = (Number(commissionCents) / 100).toFixed(2);
+  const currencyUpper = String(currency || 'usd').toUpperCase();
+  const subject = `You earned ${currencyUpper} ${commission} — a purchase through your referral`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #0c0d0f; color: #d4af37; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 22px;">PVA Bazaar</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Referral earnings</p>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <h2 style="color: #0f5132; margin-top: 0;">A sale happened through your link</h2>
+        <p>Hi ${name},</p>
+        <div style="background: #fff; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #228b22;">
+          <p style="margin: 0 0 6px 0;"><strong>${itemName}</strong></p>
+          <p style="margin: 0 0 6px 0;">Sale total: <strong>${currencyUpper} ${amount}</strong></p>
+          <p style="margin: 0; font-size: 20px; color: #0f5132;"><strong>Your kickback: ${currencyUpper} ${commission}</strong></p>
+        </div>
+        <p style="font-size: 13px; color: #666;">Your earnings are tracked on your records automatically and queued for payout. You can check them any time on the <a href="${referralUrl}" style="color: #0f5132;">referral page</a>.</p>
+        <p style="font-size: 12px; color: #999; margin-bottom: 0;">This is an automated message. No subscription, no fees — it runs for free.</p>
+      </div>
+    </body>
+    </html>
+  `;
+  const text = `A sale happened through your referral link.\n\n${itemName} — ${currencyUpper} ${amount}\nYour kickback: ${currencyUpper} ${commission}\n\nCheck records: ${referralUrl}`;
+
+  try {
+    const info = await emailTransporter.sendMail({
+      from: `"PVA Bazaar" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Referral commission email failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Tell the admin a new business applied to the partners directory.
+ */
+async function sendPartnerSubmissionEmail({ to, businessName, ownerName, company, website }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter || !to) return { success: false, skipped: true };
+
+  const subject = `New partner application: ${businessName || company || 'New business'}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #0c0d0f; color: #d4af37; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 22px;">PVA Bazaar</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Partner applications</p>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <h2 style="margin-top: 0;">New partner application</h2>
+        <p>Business: <strong>${businessName || company || 'N/A'}</strong></p>
+        <p>Contact: ${ownerName} · ${company}</p>
+        ${website ? `<p>Website: <a href="${website}">${website}</a></p>` : ''}
+        <p style="font-size: 12px; color: #999;">Review in the admin partners panel and approve to email them their page edit link.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const info = await emailTransporter.sendMail({
+      from: `"PVA Bazaar Partners" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: `New partner application: ${businessName || company}. Contact: ${ownerName} <${company}>.`,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Partner submission email failed:', error);
+    return { success: false };
+  }
+}
+
+/**
+ * Notify an approved partner of their page and the capability edit link.
+ */
+async function sendPartnerApprovedEmail({ to, name, businessName, pageUrl, editUrl }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter || !to) return { success: false, skipped: true };
+
+  const subject = `Welcome to the PVA Bazaar partners directory — ${businessName}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #0c0d0f; color: #d4af37; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 22px;">PVA Bazaar</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Partners directory</p>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <h2 style="margin-top: 0;">Your business page is live</h2>
+        <p>Hi ${name},</p>
+        <p><strong>${businessName}</strong> has been accepted into the partners directory. You now have your own page on ${pageUrl.replace(/\/[a-z0-9-]+$/i, '')}.</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${pageUrl}" style="background: #0c0d0f; color: #d4af37; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; margin-bottom: 10px;">View your page</a>
+          <br/>
+          <a href="${editUrl}" style="color: #0f5132; font-size: 14px;">Edit your page (private link)</a>
+        </div>
+        <p style="font-size: 13px; color: #666;">Keep the edit link in mind — anyone with it can edit your page. Do not share it publicly. You can shape your page however fits your story: story, commodities, services, images, socials, FAQ and colors.</p>
+        <p style="font-size: 12px; color: #999;">No subscription. This runs on the free tier forever.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const info = await emailTransporter.sendMail({
+      from: `"PVA Bazaar Partners" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: `Your business page is live: ${pageUrl}\n\nEdit it anytime with your private link: ${editUrl}\n\nThis is a MySpace-style page for ${businessName}. No subscription needed.`,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Partner approval email failed:', error);
+    return { success: false };
+  }
+}
+
 module.exports = {
   sendCustomEmail,
   sendConsignmentEmail,
@@ -608,4 +805,8 @@ module.exports = {
   sendDealInitiationEmail,
   sendDealAcceptanceEmail,
   sendMockConfirmationEmail,
+  sendReferralCodeEmail,
+  sendReferralCommissionEmail,
+  sendPartnerSubmissionEmail,
+  sendPartnerApprovedEmail,
 };

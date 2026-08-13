@@ -12,6 +12,7 @@ const Artifact = require('../models/Artifact');
 const { sendFulfillmentConfirmationEmail, sendPaymentFailedEmail } = require("../service/emailService");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
+const { settleReferralForOrder, reverseReferralForOrder } = require('../services/referralService');
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
@@ -45,12 +46,22 @@ router.post("/stripe", async (req, res) => {
   // Handle event types
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const orderId = session.client_reference_id || session.metadata?.orderId;
     const reservationId = session.metadata?.reservationId;
     const itemId = session.metadata?.itemId;
-    if (orderId) {
-      const order = await Order.findOne({ _id: orderId });
-      if (order) {
+    const rawIds = session.client_reference_id || session.metadata?.orderIds || session.metadata?.orderId || "";
+    const orderIds = String(rawIds)
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean)
+      .slice(0, 50);
+
+    if (orderIds.length) {
+      const orders = await Order.find({ _id: { $in: orderIds } });
+      for (const order of orders) {
+        const orderId = String(order._id);
+        // Per-order sale amount (for cart sessions the session total is the sum
+        // of all items; each order's kickback must use its own line amount).
+        const orderAmountCents = Number(order.itemSnapshot?.priceCents) || Number(order.amountTotal) || session.amount_total || 0;
         order.paymentStatus = "paid";
         order.amountTotal = session.amount_total;
         order.currency = session.currency;
@@ -60,6 +71,22 @@ router.post("/stripe", async (req, res) => {
         order.stripePaymentIntentId = session.payment_intent || null;
         if (reservationId) await finalizeSale(reservationId);
         await order.save();
+
+        // Automatic referral kickback settlement (idempotent, never blocks payment).
+        try {
+          const settlement = await settleReferralForOrder(order, {
+            itemName: order.itemSnapshot?.name,
+            amountCents: orderAmountCents,
+            currency: order.currency,
+          });
+          if (settlement?.settled) {
+            await logFulfillment(event.id, orderId, "referral_settlement", {
+              commissionCents: settlement.commissionAmountCents,
+            });
+          }
+        } catch (settleErr) {
+          console.warn("[WebhooksStripe] Referral settlement error:", settleErr?.message || settleErr);
+        }
 
         // Grant digital download access (resilient: failures logged, do not fail webhook)
         const downloadToken = crypto.randomBytes(24).toString("hex");
@@ -151,14 +178,17 @@ router.post("/stripe", async (req, res) => {
     const reservationId = session.metadata?.reservationId;
     if (reservationId) await releaseReservation(reservationId);
 
-    const orderId = session.client_reference_id || session.metadata?.orderId;
-    if (orderId) {
-      const order = await Order.findOne({ _id: orderId });
-      if (order && order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
-        order.paymentStatus = 'cancelled';
-        order.isLocked = false;
-        order.adminNotes = `${order.adminNotes || ''}\nstripe_${event.type}`.trim();
-        await order.save();
+    const rawIds = session.client_reference_id || session.metadata?.orderIds || session.metadata?.orderId || "";
+    const orderIds = String(rawIds).split(",").map(id => id.trim()).filter(Boolean);
+    if (orderIds.length) {
+      const orders = await Order.find({ _id: { $in: orderIds } });
+      for (const order of orders) {
+        if (order && order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
+          order.paymentStatus = 'cancelled';
+          order.isLocked = false;
+          order.adminNotes = `${order.adminNotes || ''}\nstripe_${event.type}`.trim();
+          await order.save();
+        }
       }
     }
 
@@ -190,6 +220,13 @@ router.post("/stripe", async (req, res) => {
       order.refundedAt = refund.status === "succeeded" ? new Date() : undefined;
       if (refund.status === "succeeded") order.paymentStatus = "refunded";
       await order.save();
+
+      // Reverse any automatic referral kickback so refunds never remain credited.
+      if (refund.status === "succeeded" && order.attribution?.referralCode) {
+        await reverseReferralForOrder(order).catch((err) =>
+          console.warn("[WebhooksStripe] Referral reversal error:", err?.message || err)
+        );
+      }
     }
   }
   // Optionally handle session.expired, etc.

@@ -6,6 +6,7 @@ import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken, clearToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import useConnectionMode from '../hooks/useConnectionMode.js';
+import { getPreferredApiBase } from '../lib/apiBase';
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') return null;
@@ -95,6 +96,30 @@ export default function Layout({ children }) {
     }
   }, [routeIdentity]);
 
+  // Global ?ref= capture — works on every route (query lives inside the hash
+  // with HashRouter). Stored under the same keys the Next app + checkout use so
+  // any subsequent purchase is attributed to the referrer, and the referrer's
+  // click is reported to the backend so it is visible online (not just in a browser).
+  useEffect(() => {
+    try {
+      const hashRef = (globalThis.location.hash || '').match(/[?&]ref=([^&#]*)/);
+      let ref = hashRef ? hashRef[1] : new URLSearchParams(globalThis.location.search || '').get('ref') || '';
+      ref = decodeURIComponent(ref);
+      if (ref) {
+        const normalized = ref.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (normalized.length >= 4) {
+          window.localStorage.setItem('pva:referral-code', normalized);
+          window.localStorage.setItem('pva:inbound-ref', normalized);
+          const base = getPreferredApiBase();
+          if (base) {
+            fetch(`${base}/api/referrals/${encodeURIComponent(normalized)}/click`, { method: 'POST' })
+              .catch(() => { /* non-blocking */ });
+          }
+        }
+      }
+    } catch (_err) { /* non-blocking */ }
+  }, []);
+
   const primaryNavRoutes = useMemo(() => (
     PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
@@ -166,6 +191,15 @@ export default function Layout({ children }) {
                 Sign in
               </NavLink>
             )}
+            <button
+              type="button"
+              className="layout__themeToggle"
+              onClick={toggleTheme}
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={darkMode ? 'Light mode' : 'Dark mode'}
+            >
+              {darkMode ? '\u2600' : '\u263D'}
+            </button>
             {connectionMode.status !== 'live' ? (
               <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
                 {connectionMode.label}
