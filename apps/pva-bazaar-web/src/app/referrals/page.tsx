@@ -23,16 +23,28 @@ interface ReferralData {
   }[];
 };
 
+interface PayoutEntry {
+  status: string;
+  totalCommissionsCents: number;
+  netPayoutCents: number;
+  orderCount: number;
+  batchId: string;
+  createdAt: string;
+}
+
 interface EarningsResult {
   code: string;
   name: string;
   commissionRate: number;
   sales: number;
+  clicks: number;
+  lastClickedAt: string;
   totalCommissionsCents: number;
   pendingCents: number;
   joinedAt: string;
   status: string;
   recent: ReferralData["recent"];
+  payouts: PayoutEntry[];
 }
 
 export default function ReferralsPage() {
@@ -133,6 +145,10 @@ export default function ReferralsPage() {
   }
 
   const cents = (value: number) => (Number(value || 0) / 100).toFixed(2);
+  const conversion =
+    stats && Number(stats.clicks) > 0
+      ? `${((Number(stats.sales) / Number(stats.clicks)) * 100).toFixed(1)}%`
+      : "—";
 
   return (
     <section className="flex w-full flex-col gap-8">
@@ -244,7 +260,8 @@ export default function ReferralsPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Step 2 · Your records</p>
           <h2 className="mt-1 text-lg font-semibold text-zinc-100">Check your earnings</h2>
           <p className="mt-1 text-sm text-zinc-400">
-            Enter the email attached to your code to see sales, pending kickbacks and lifetime totals.
+            Enter the email attached to your code to see link clicks, sales, conversion, pending
+            kickbacks, lifetime totals and payout history.
           </p>
           <form onSubmit={handleEarnings} className="mt-4 space-y-3">
             <label className="block text-sm text-zinc-300">
@@ -271,7 +288,7 @@ export default function ReferralsPage() {
 
           {stats ? (
             <div className="mt-5 space-y-3">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="rounded-lg border border-zinc-800 bg-black/40 p-3">
                   <p className="text-[10px] uppercase tracking-widest text-zinc-500">Code</p>
                   <p className="truncate text-sm font-semibold text-zinc-100">{stats.code}</p>
@@ -279,6 +296,14 @@ export default function ReferralsPage() {
                 <div className="rounded-lg border border-zinc-800 bg-black/40 p-3">
                   <p className="text-[10px] uppercase tracking-widest text-zinc-500">Sales</p>
                   <p className="text-sm font-semibold text-zinc-100">{stats.sales}</p>
+                </div>
+                <div className="rounded-lg border border-zinc-800 bg-black/40 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-500">Clicks</p>
+                  <p className="text-sm font-semibold text-zinc-100">{stats.clicks ?? 0}</p>
+                </div>
+                <div className="rounded-lg border border-zinc-800 bg-black/40 p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-500">Conversion</p>
+                  <p className="text-sm font-semibold text-zinc-100">{conversion}</p>
                 </div>
                 <div className="rounded-lg border border-amber-300/40 bg-amber-300/5 p-3">
                   <p className="text-[10px] uppercase tracking-widest text-amber-300">Pending</p>
@@ -298,6 +323,21 @@ export default function ReferralsPage() {
                     </li>
                   ))}
                 </ul>
+              ) : null}
+              {stats.payouts && stats.payouts.length > 0 ? (
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-500">Payout history</p>
+                  <ul className="mt-1 space-y-1 text-xs text-zinc-400">
+                    {stats.payouts.map((p) => (
+                      <li key={`payout-${p.batchId}-${p.createdAt}`} className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2">
+                        {p.status === "completed" ? "Paid out" : `Status: ${p.status}`} ·{" "}
+                        <strong className="text-amber-200">${cents(p.netPayoutCents)}</strong> ·{" "}
+                        {p.orderCount ?? 0} order(s) ·{" "}
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
           ) : null}

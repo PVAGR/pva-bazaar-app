@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ReferralCode = require('../models/ReferralCode');
+const Payout = require('../models/Payout');
 const adminSession = require('../middleware/adminSession');
 const {
   registerReferral,
@@ -91,6 +92,13 @@ router.post('/earnings', async (req, res) => {
     }
     const pendingOrders = record.pendingOrders || [];
     const recent = pendingOrders.slice(-10).reverse();
+
+    // Settlement history for this code (public but owner-gated by email lookup).
+    const payouts = await Payout.find({ creatorHandle: record.code })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+
     return res.json({
       ok: true,
       data: {
@@ -98,11 +106,21 @@ router.post('/earnings', async (req, res) => {
         name: record.name,
         commissionRate: record.commissionRate,
         sales: record.sales,
+        clicks: record.clicks,
+        lastClickedAt: record.lastClickedAt,
         totalCommissionsCents: record.totalCommissionsCents,
         pendingCents: record.pendingCents,
         joinedAt: record.joinedAt,
         status: record.status,
         recent,
+        payouts: payouts.map((p) => ({
+          status: p.status,
+          totalCommissionsCents: p.totalCommissionsCents,
+          netPayoutCents: p.netPayoutCents,
+          orderCount: p.orderCount,
+          batchId: p.batchId,
+          createdAt: p.createdAt,
+        })),
       },
     });
   } catch (err) {

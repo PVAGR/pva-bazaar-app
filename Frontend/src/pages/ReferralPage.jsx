@@ -46,6 +46,14 @@ function getInboundReferral() {
   } catch (_e) { return ''; }
 }
 
+function formatConversion(clicks, sales) {
+  const safeClicks = Number(clicks) || 0;
+  const safeSales = Number(sales) || 0;
+  if (safeClicks <= 0) return '—';
+  const rate = (safeSales / safeClicks) * 100;
+  return rate < 0.05 && safeSales === 0 ? '0%' : `${rate.toFixed(1)}%`;
+}
+
 // ── commission tiers ─────────────────────────────────────────────────────────
 
 const TIERS = [
@@ -371,6 +379,10 @@ export default function ReferralPage() {
                   <strong>{live?.sales ?? data.sales ?? 0}</strong>
                 </div>
                 <div className="referral-page__stat">
+                  <span>Conversion</span>
+                  <strong>{formatConversion(live?.clicks ?? data.clicks ?? 0, live?.sales ?? data.sales ?? 0)}</strong>
+                </div>
+                <div className="referral-page__stat">
                   <span>Earnings</span>
                   <strong>${((live?.totalCommissionsCents ?? data.totalCommissionsCents ?? 0) / 100).toFixed(2)}</strong>
                 </div>
@@ -383,6 +395,8 @@ export default function ReferralPage() {
                 Reset and create new code
               </button>
             </section>
+
+            <ActivityList payouts={live?.payouts ?? []} recent={live?.recent ?? []} />
 
             <section className="referral-page__send section-card">
               <p className="pill">Send your code by email</p>
@@ -452,5 +466,60 @@ export default function ReferralPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function ActivityList({ payouts = [], recent = [] }) {
+  if (payouts.length === 0 && recent.length === 0) {
+    return (
+      <section className="referral-page__send section-card">
+        <p className="pill">Activity</p>
+        <h2>Your recent activity</h2>
+        <p>
+          No activity yet. Share your link — every click and purchase through it will show up here,
+          along with any payouts.
+        </p>
+      </section>
+    );
+  }
+
+  const rows = [
+    ...payouts.map((p) => ({
+      key: `payout-${p.batchId || p.createdAt}`,
+      kind: 'Payout',
+      detail: p.status === 'completed' ? 'Paid out' : `Status: ${p.status}`,
+      amountCents: p.netPayoutCents ?? 0,
+      sub: `${p.orderCount ?? 0} order(s) · batch ${String(p.batchId || '').slice(0, 8)}`,
+      date: p.createdAt,
+    })),
+    ...recent.map((entry) => ({
+      key: `sale-${entry.orderId || entry._id || entry.createdAt}`,
+      kind: 'Sale',
+      detail: entry.itemName ? String(entry.itemName).slice(0, 60) : 'Purchase via your link',
+      amountCents: entry.commissionCents ?? 0,
+      sub: entry.orderId ? `Order ${String(entry.orderId).slice(0, 12)}` : 'Commission recorded',
+      date: entry.createdAt || entry.settledAt,
+    })),
+  ];
+
+  return (
+    <section className="referral-page__send section-card">
+      <p className="pill">Activity</p>
+      <h2>Your recent activity</h2>
+      <ul className="referral-page__activity">
+        {rows.slice(0, 12).map((row) => (
+          <li key={row.key} className="referral-page__activityRow">
+            <span className="referral-page__activityKind">{row.kind}</span>
+            <span className="referral-page__activityDetail">
+              <strong>{row.detail}</strong>
+              <small>{row.sub} · {new Date(row.date).toLocaleDateString()}</small>
+            </span>
+            <span className="referral-page__activityAmount">
+              {row.amountCents >= 0 ? '+' : ''}${(Math.abs(row.amountCents) / 100).toFixed(2)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
