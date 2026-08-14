@@ -73,7 +73,11 @@ export default function ReferralsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Failed to issue referral code");
       setIssued({ code: data?.data?.code, referralUrl: data?.referralUrl });
-      setMsg(data.message || "Referral code issued and emailed to you.");
+      setMsg(
+        data.emailDelivered
+          ? data.message || "Referral code issued and emailed to you."
+          : `Your referral code is ${data?.data?.code}. We could not email it this time — save it now and share your link below to start earning.`,
+      );
     } catch (caught) {
       setErr(caught instanceof Error ? caught.message : "Failed");
     } finally {

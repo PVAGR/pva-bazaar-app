@@ -85,6 +85,7 @@ async function registerReferral({ email, name, siteUrl = 'https://pvabazaar.org'
   // Email the code so the owner always has it (works with unlimited people;
   // their record lives in the database, not app memory).
   const referralUrl = `${siteUrl.replace(/\/$/, '')}/?ref=${encodeURIComponent(record.code)}`;
+  let emailDelivered = false;
   try {
     const result = await sendReferralCodeEmail({
       to: normalizedEmail,
@@ -94,6 +95,7 @@ async function registerReferral({ email, name, siteUrl = 'https://pvabazaar.org'
       siteUrl: siteUrl.replace(/\/$/, ''),
     });
     if (result && result.success) {
+      emailDelivered = true;
       record.emailsSent = (record.emailsSent || 0) + 1;
       record.lastEmailedAt = new Date();
       await record.save();
@@ -102,7 +104,7 @@ async function registerReferral({ email, name, siteUrl = 'https://pvabazaar.org'
     console.warn('[referralService] Failed to email referral code:', err?.message || err);
   }
 
-  return { record: record.toPublicJSON(), referralUrl };
+  return { record: record.toPublicJSON(), referralUrl, emailDelivered };
 }
 
 /** Resolve an active referral code to its record (or null). */

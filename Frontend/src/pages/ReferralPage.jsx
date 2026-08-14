@@ -183,7 +183,11 @@ export default function ReferralPage() {
           saveData(record);
           setData(record);
           setErr('');
-          setMsg(`Your referral code is ${record.code} and it was emailed to you. Share your link below to start earning.`);
+          setMsg(
+            data.emailDelivered
+              ? `Your referral code is ${record.code} and it was emailed to you. Share your link below to start earning.`
+              : `Your referral code is ${record.code}. We could not email it this time — save it now and share your link below to start earning.`,
+          );
           fetchLiveStats(record);
           return;
         }

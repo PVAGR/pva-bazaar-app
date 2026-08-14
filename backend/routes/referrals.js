@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
       message: 'Referral code issued and emailed to you. Check your inbox.',
       data: result.record,
       referralUrl: result.referralUrl,
+      emailDelivered: Boolean(result.emailDelivered),
     });
   } catch (err) {
     const status = err.status || 500;

@@ -22,6 +22,7 @@ const UsersTab = lazy(() => import('../components/UsersTab.jsx'));
 const AttributionTab = lazy(() => import('../components/AttributionTab.jsx'));
 const PayoutTab = lazy(() => import('../components/PayoutTab.jsx'));
 const ReferralTab = lazy(() => import('../components/ReferralTab.jsx'));
+const PartnersAdminTab = lazy(() => import('../components/PartnersAdminTab.jsx'));
 const SettlementContractsTab = lazy(() => import('../components/SettlementContractsTab.jsx'));
 const CloudStorageTab = lazy(() => import('../components/CloudStorageTab.jsx'));
 const LibraryTab = lazy(() => import('../components/LibraryTab.jsx'));
@@ -1103,6 +1104,9 @@ export default function AdminPage() {
           {/* Referrals Tab */}
           {activeTab === 'referrals' && (
             renderTab(<ReferralTab />)
+          )}
+          {activeTab === 'partners' && (
+            renderTab(<PartnersAdminTab />)
           )}
 
           {/* Payouts Tab */}
