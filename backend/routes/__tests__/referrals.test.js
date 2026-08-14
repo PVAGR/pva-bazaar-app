@@ -204,5 +204,32 @@ describe('Referral Module', () => {
       expect(res.body.data.recent).toHaveLength(1);
       expect(res.body.data.recent[0].itemName).toBe('Ceramic vase');
     });
+
+    it('includes clicks and payout history in the summary', async () => {
+      const reg = await referralService.registerReferral({ email: 'eli@example.com', name: 'Eli' });
+      await request(app).post(`/api/referrals/${reg.record.code}/click`).expect(200);
+      await request(app).post(`/api/referrals/${reg.record.code}/click`).expect(200);
+
+      await Payout.create({
+        batchId: `test_batch_${Date.now()}`,
+        status: 'ready',
+        payoutPeriod: { startDate: new Date(Date.now() - 86400000), endDate: new Date() },
+        creatorHandle: reg.record.code,
+        totalCommissionsCents: 500,
+        netPayoutCents: 475,
+        orderCount: 1,
+      });
+
+      const res = await request(app)
+        .post('/api/referrals/earnings')
+        .send({ email: 'eli@example.com' })
+        .expect(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.data.clicks).toBe(2);
+      expect(typeof res.body.data.lastClickedAt).toBe('string');
+      expect(Array.isArray(res.body.data.payouts)).toBe(true);
+      expect(res.body.data.payouts.length).toBeGreaterThan(0);
+      expect(res.body.data.payouts[0].netPayoutCents).toBe(475);
+    });
   });
 });

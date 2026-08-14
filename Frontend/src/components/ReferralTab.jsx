@@ -113,6 +113,7 @@ export default function ReferralTab() {
               <th>Email / Name</th>
               <th>Rate</th>
               <th>Sales</th>
+              <th>Clicks</th>
               <th>Pending</th>
               <th>Lifetime</th>
               <th>Status</th>
@@ -145,6 +146,7 @@ export default function ReferralTab() {
                   )}
                 </td>
                 <td>{r.sales || 0}</td>
+                <td>{r.clicks || 0}</td>
                 <td className="referral-amount">{formatCents(r.pendingCents)}</td>
                 <td className="referral-amount">{formatCents(r.totalCommissionsCents)}</td>
                 <td>

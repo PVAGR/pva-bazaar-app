@@ -209,6 +209,62 @@
   font-size: 1.1rem;
 }
 
+.referral-page__activity {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.referral-page__activityRow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel);
+  padding: 0.75rem 0.9rem;
+}
+
+.referral-page__activityKind {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--site-accent);
+  color: var(--site-accent-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+}
+
+.referral-page__activityDetail {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.referral-page__activityDetail strong {
+  color: var(--site-text);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.referral-page__activityDetail small {
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+.referral-page__activityAmount {
+  flex: 0 0 auto;
+  color: var(--site-accent-strong);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
 .referral-page__faqList {
   display: grid;
   gap: 0.75rem;
