@@ -12,6 +12,7 @@ const VerificationResult = require('../models/VerificationResult');
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../utils/blockchain');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
+const { resolveActiveReferral, settleReferralForOrder } = require('../services/referralService');
 
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
 
@@ -56,6 +57,25 @@ function isMarkedSold(artifact) {
   return Boolean(artifact?.omnichannel?.soldState?.isSold);
 }
 
+// Resolve an optional referral code from checkout input into an attribution
+// subdocument (only when the code is valid and active).
+async function buildReferralAttribution(referralCode) {
+  if (!referralCode) return null;
+  const record = await resolveActiveReferral(referralCode);
+  if (!record) return null;
+  return {
+    utm_source: record.code,
+    utm_medium: 'referral',
+    attributionSource: 'referral_code',
+    referralCode: record.code,
+    creatorHandle: record.code,
+    creatorEmail: record.email,
+    commissionRate: record.commissionRate,
+    commissionAmountCents: 0,
+    attributedAt: new Date(),
+  };
+}
+
 // GET /api/checkout/crypto/config
 // Read-only checkout settings so UI can display destination wallet before any reservation.
 router.get('/crypto/config', async (_req, res) => {
@@ -82,7 +102,7 @@ router.get('/crypto/config', async (_req, res) => {
 router.post("/create-session", async (req, res) => {
   try {
     const buyerId = extractUserIdFromAuth(req);
-    const { itemId } = req.body;
+    const { itemId, referralCode } = req.body;
     if (!itemId) return res.status(400).json({ ok: false, error: "Missing itemId" });
     const artifact = await Artifact.findOne({ $or: [{ _id: itemId }, { slug: itemId }] });
     if (!artifact) return res.status(404).json({ ok: false, error: "Item not found" });
@@ -95,6 +115,9 @@ router.post("/create-session", async (req, res) => {
     const reservationId = uuidv4();
     const reserve = await reserveOne(item.id, reservationId);
     if (!reserve.ok) return res.status(409).json({ ok: false, error: "sold_out" });
+
+    // Optional referral attribution (validated server-side, never trusted from client blindly)
+    const attribution = await buildReferralAttribution(referralCode);
 
     // Create Order (pending)
     const order = await Order.create({
@@ -113,6 +136,7 @@ router.post("/create-session", async (req, res) => {
       amountTotal: item.priceCents,
       currency: item.currency,
       reservationId,
+      ...(attribution ? { attribution } : {}),
     });
 
     let session;
@@ -188,12 +212,15 @@ router.post("/create-cart-session", async (req, res) => {
   try {
     const buyerId = extractUserIdFromAuth(req);
     let { itemIds } = req.body;
+    const { referralCode } = req.body || {};
     if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
       return res.status(400).json({ ok: false, error: "Missing itemIds array" });
     }
     // Deduplicate
     itemIds = [...new Set(itemIds.map(id => String(id)))];
     if (itemIds.length > 50) return res.status(400).json({ ok: false, error: "Too many items (max 50)" });
+
+    const attribution = await buildReferralAttribution(referralCode);
 
     const artifacts = await Artifact.find({ $or: [{ _id: { $in: itemIds } }, { slug: { $in: itemIds } }] });
     if (artifacts.length === 0) return res.status(404).json({ ok: false, error: "No items found" });
@@ -222,6 +249,7 @@ router.post("/create-cart-session", async (req, res) => {
         amountTotal: item.priceCents,
         currency: item.currency,
         reservationId,
+        ...(attribution ? { attribution } : {}),
       });
       orders.push(order);
       lineItems.push({
@@ -409,6 +437,13 @@ router.post('/finalize-session', async (req, res) => {
 
     await order.save();
 
+    // Automatic referral kickback settlement (idempotent, non-blocking).
+    await settleReferralForOrder(order, {
+      itemName: order.itemSnapshot?.name,
+      amountCents: order.amountTotal,
+      currency: order.currency,
+    }).catch((err) => console.warn('[Checkout] Referral settlement skipped:', err?.message || err));
+
     let syncResult = null;
     const itemDoc = await Artifact.findById(order.itemId);
     if (itemDoc) {
@@ -447,7 +482,7 @@ router.post('/finalize-session', async (req, res) => {
 // Reserves inventory and returns chain payment parameters for wallet submission.
 router.post('/crypto/prepare', async (req, res) => {
   try {
-    const { itemId, buyerWallet, buyerEmail } = req.body || {};
+    const { itemId, buyerWallet, buyerEmail, referralCode } = req.body || {};
     if (!itemId) return res.status(400).json({ ok: false, error: 'Missing itemId' });
 
     const artifact = await Artifact.findOne({ $or: [{ _id: itemId }, { slug: itemId }] });
@@ -463,6 +498,8 @@ router.post('/crypto/prepare', async (req, res) => {
     if (!item.priceCents || !item.currency) {
       return res.status(400).json({ ok: false, error: 'Item missing price/currency' });
     }
+
+    const attribution = await buildReferralAttribution(referralCode);
 
     const treasuryWallet = trimAddress(process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET);
     if (!treasuryWallet) {
@@ -493,6 +530,7 @@ router.post('/crypto/prepare', async (req, res) => {
       currency: item.currency,
       customerEmail: buyerEmail || '',
       reservationId,
+      ...(attribution ? { attribution } : {}),
       crypto: {
         network,
         chainId,
@@ -596,6 +634,13 @@ router.post('/crypto/confirm', async (req, res) => {
     };
     order.adminNotes = `${order.adminNotes || ''}\ncrypto_confirmed tx=${txHash} from=${tx.fromAddress} to=${tx.toAddress}`.trim();
     await order.save();
+
+    // Automatic referral kickback settlement (idempotent, non-blocking).
+    await settleReferralForOrder(order, {
+      itemName: order.itemSnapshot?.name,
+      amountCents: order.amountTotal,
+      currency: order.currency,
+    }).catch((err) => console.warn('[Checkout] Referral settlement skipped:', err?.message || err));
 
     const itemDoc = await Artifact.findById(order.itemId);
     let syncResult = null;

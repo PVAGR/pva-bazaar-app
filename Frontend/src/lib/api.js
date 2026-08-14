@@ -16,6 +16,22 @@ export const apiPut = (path, body, config) => api.put(path, body, config).then(r
 export const apiPatch = (path, body, config) => api.patch(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 
+// Referral code captured from ?ref= (stored by ReferralPage + the site nav).
+// Sent with every checkout so the sale is attributed server-side automatically.
+export function getStoredReferralCode() {
+  try {
+    const code =
+      window.localStorage.getItem("pva:referral-code") ||
+      window.localStorage.getItem("pva:inbound-ref") ||
+      "";
+    if (!code) return "";
+    const normalized = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return normalized.length >= 6 ? normalized : "";
+  } catch (_e) {
+    return "";
+  }
+}
+
 export const submitLibraryArticle = (payload) => apiPost('/library/submit', payload);
 export const fetchPendingLibraryArticles = (params = {}) => apiGet('/library/pending', { params });
 export const approveLibraryArticle = (articleId, payload = {}) =>
@@ -609,7 +625,10 @@ export async function refundOrder(id, { amountCents, reason } = {}) {
 // Create Stripe Checkout Session for multiple items (cart)
 export async function createCartSession(itemIds) {
   try {
-    const response = await apiPost("/checkout/create-cart-session", { itemIds });
+    const response = await apiPost("/checkout/create-cart-session", {
+      itemIds,
+      referralCode: getStoredReferralCode(),
+    });
     if (response && response.ok && response.url) {
       return { ok: true, url: response.url };
     }
@@ -622,7 +641,10 @@ export async function createCartSession(itemIds) {
 // Create Stripe Checkout Session
 export async function createCheckoutSession(itemId) {
   try {
-    const response = await apiPost("/checkout/create-session", { itemId });
+    const response = await apiPost("/checkout/create-session", {
+      itemId,
+      referralCode: getStoredReferralCode(),
+    });
     if (response && response.ok && response.url) {
       return { ok: true, url: response.url };
     }
@@ -639,6 +661,7 @@ export async function prepareCryptoCheckout({ itemId, buyerWallet = '', buyerEma
       itemId,
       buyerWallet,
       buyerEmail,
+      referralCode: getStoredReferralCode(),
     });
     if (response && response.ok) {
       return {

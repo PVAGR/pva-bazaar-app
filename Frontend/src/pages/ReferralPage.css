@@ -1,0 +1,310 @@
+.referral-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.referral-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.referral-page__hero h1 {
+  margin: 0.35rem 0 0.65rem;
+  color: var(--site-accent-strong);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  line-height: 1.08;
+}
+
+.referral-page__lead {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.75;
+}
+
+.referral-page__panel {
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background: var(--site-panel-soft);
+  padding: 1.25rem;
+}
+
+.referral-page__panel h2 {
+  margin: 0 0 0.75rem;
+  color: var(--site-accent-strong);
+  font-size: 1.1rem;
+}
+
+.referral-page__steps {
+  margin: 0;
+  padding-left: 1.3rem;
+  display: grid;
+  gap: 0.55rem;
+  color: var(--site-text-muted);
+  line-height: 1.6;
+}
+
+.referral-page__inbound {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--site-accent-soft) 30%, transparent);
+  color: var(--site-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.referral-page__tiers h2 {
+  margin: 0.35rem 0 1rem;
+  color: var(--site-accent-strong);
+}
+
+.referral-page__tiersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.referral-page__tier {
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel);
+  padding: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.referral-page__tierPct {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--site-accent);
+  line-height: 1;
+}
+
+.referral-page__tier strong {
+  color: var(--site-text);
+  font-size: 0.95rem;
+}
+
+.referral-page__tier p {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.referral-page__create h2,
+.referral-page__dashboard h2,
+.referral-page__send h2,
+.referral-page__faq h2 {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--site-accent-strong);
+}
+
+.referral-page__form {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 480px;
+}
+
+.referral-page__form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--site-text-muted);
+  font-size: 0.92rem;
+}
+
+.referral-page__form input {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.referral-page__form input:focus {
+  outline: 2px solid color-mix(in srgb, var(--site-accent) 70%, white);
+  outline-offset: 2px;
+}
+
+.referral-page__optional {
+  font-size: 0.8rem;
+  color: var(--site-text-muted);
+  font-weight: 400;
+}
+
+.referral-page__req {
+  color: #c85050;
+  font-weight: 700;
+}
+
+.referral-page__hint {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.referral-page__hint a {
+  color: var(--site-accent);
+  text-decoration: underline;
+}
+
+.referral-page__dashboard h2 {
+  font-size: 1.8rem;
+  font-family: monospace;
+  letter-spacing: 0.08em;
+  color: var(--site-accent);
+}
+
+.referral-page__linkRow {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.referral-page__linkInput {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.referral-page__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.referral-page__stat {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.referral-page__stat span {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.referral-page__stat strong {
+  color: var(--site-accent-strong);
+  font-size: 1.1rem;
+}
+
+.referral-page__faqList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.referral-page__faqList dt {
+  color: var(--site-text);
+  font-weight: 700;
+  font-size: 0.97rem;
+}
+
+.referral-page__faqList dd {
+  margin: 0 0 0.25rem;
+  color: var(--site-text-muted);
+  line-height: 1.65;
+  font-size: 0.92rem;
+}
+
+.referral-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.referral-page__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.62rem 1.1rem;
+  background: var(--site-panel);
+  color: var(--site-text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.referral-page__btn:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+}
+
+.referral-page__btn--primary {
+  background: color-mix(in srgb, var(--site-accent-soft) 80%, transparent);
+  color: var(--site-accent-strong);
+  border-color: color-mix(in srgb, var(--site-accent) 50%, transparent);
+}
+
+.referral-page__btn--ghost {
+  background: transparent;
+  color: var(--site-text-muted);
+}
+
+.referral-page__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.referral-page__success {
+  border: 1px solid color-mix(in srgb, var(--site-accent) 50%, transparent);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: color-mix(in srgb, var(--site-accent-soft) 40%, transparent);
+  color: var(--site-accent-strong);
+  font-size: 0.95rem;
+}
+
+.referral-page__error {
+  border: 1px solid #c85050;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: rgba(200, 80, 80, 0.1);
+  color: #c85050;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 800px) {
+  .referral-page__hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .referral-page__tiersGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .referral-page__actions {
+    flex-direction: column;
+  }
+
+  .referral-page__btn {
+    width: 100%;
+  }
+}

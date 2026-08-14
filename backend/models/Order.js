@@ -69,6 +69,7 @@ const OrderSchema = new mongoose.Schema(
       // Creator attribution
       creatorHandle: { type: String, default: null, index: true },
       creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      creatorEmail: { type: String, default: null },
       referralCode: { type: String, default: null, index: true },
       // Commission variables
       commissionRate: { type: Number, default: 0 },     // e.g., 0.10 for 10%

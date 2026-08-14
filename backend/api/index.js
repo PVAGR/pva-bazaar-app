@@ -344,6 +344,7 @@ const bookPublishingRoutes = require('../routes/bookPublishing');
 // Attribution & creator analytics routes
 const attributionRoutes = require('../routes/attribution');
 const payoutsRoutes = require('../routes/payouts');
+const referralsRoutes = require('../routes/referrals');
 // Decentralized platform routes
 const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
@@ -464,6 +465,7 @@ app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
+app.use('/api/referrals', referralsRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/commodities', commoditiesRoutes);
 app.use('/api/contacts', contactsRoutes);

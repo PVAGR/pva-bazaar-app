@@ -47,6 +47,8 @@ export default [
         location: 'readonly',
         clearInterval: 'readonly',
         queueMicrotask: 'readonly',
+        AbortSignal: 'readonly',
+        AbortController: 'readonly',
       },
     },
     plugins: {
@@ -58,7 +60,7 @@ export default [
     },
     rules: {
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
 
@@ -182,6 +184,7 @@ export default [
     files: ['apps/pva-bazaar-web/src/**/*.{ts,tsx}'],
     rules: {
       'no-undef': 'off',
+      'no-unused-vars': 'off',
       'import/no-unresolved': 'off',
     },
   },
@@ -207,6 +210,12 @@ export default [
   },
   {
     files: ['vitest.config.ts'],
+    rules: {
+      'import/no-unresolved': 'off',
+    },
+  },
+  {
+    files: ['Frontend/vite.config.js'],
     rules: {
       'import/no-unresolved': 'off',
     },

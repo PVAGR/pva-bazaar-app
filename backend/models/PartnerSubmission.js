@@ -5,6 +5,7 @@ const partnerSubmissionSchema = new mongoose.Schema({
   email: { type: String, required: true, trim: true, lowercase: true, index: true },
   company: { type: String, trim: true, default: '' },
   website: { type: String, trim: true, default: '' },
+  businessType: { type: String, trim: true, default: '' },
   message: { type: String, trim: true, default: '' },
   status: {
     type: String,

@@ -207,7 +207,6 @@ export function LibraryGrid() {
                 <div className="flex gap-4">
                   <div className="h-32 w-24 shrink-0 overflow-hidden rounded-md border border-zinc-800/80 bg-zinc-900/80">
                     {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={cover}
                         alt={`Cover for ${book.title}`}

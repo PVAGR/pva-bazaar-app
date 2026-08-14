@@ -30,6 +30,12 @@ const careerQuizRoutes = require('../routes/careerQuiz');
 const commoditiesRoutes = require('../routes/commodities');
 const contactsRoutes = require('../routes/contacts');
 const templatesRoutes = require('../routes/templates');
+const itemsRoutes = require('../routes/items');
+const bookPublishingRoutes = require('../routes/bookPublishing');
+const authRoutes = require('../routes/auth');
+const governanceRoutes = require('../routes/governance');
+const blockchainRoutes = require('../routes/blockchain');
+const dashboardRoutes = require('../routes/dashboard');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -240,10 +246,11 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.use('/api/health-check', require('../routes/health-check'));
-app.use('/api/auth', require('../routes/auth'));
-app.use('/api/book-publishing', require('../routes/bookPublishing'));
+app.use('/api/auth', authRoutes);
+app.use('/api/book-publishing', bookPublishingRoutes);
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
+app.use('/api/items', itemsRoutes);
 app.use('/api/archive', archiveRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/openclaw', openClawRoutes);
@@ -260,6 +267,11 @@ app.use('/api/career-quiz', careerQuizRoutes);
 app.use('/api/commodities', commoditiesRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/templates', templatesRoutes);
+app.use('/api/governance', governanceRoutes);
+app.use('/api/blockchain', blockchainRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/referrals', require('../routes/referrals'));
+app.use('/api/partners', require('../routes/partners'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {
