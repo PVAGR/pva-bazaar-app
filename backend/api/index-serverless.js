@@ -15,7 +15,17 @@ const app = express();
 app.set('trust proxy', 1);
 
 const archiveRoutes = require('../routes/archive');
+const blogsRoutes = require('../routes/blogs');
+const itemInquiriesRoutes = require('../routes/itemInquiries');
+const libraryRoutes = require('../routes/library');
+const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
+const forumsRoutes = require('../routes/forums');
+const aiHelpRoutes = require('../routes/ai-help');
 const searchRoutes = require('../routes/search');
+const journalRoutes = require('../routes/journal');
+const messagesRoutes = require('../routes/messages');
+const agentRoutes = require('../routes/agent');
+const ordersRoutes = require('../routes/orders');
 const openClawRoutes = require('../routes/openclaw');
 const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 const dealsRoutes = require('../routes/deals');
@@ -36,6 +46,14 @@ const authRoutes = require('../routes/auth');
 const governanceRoutes = require('../routes/governance');
 const blockchainRoutes = require('../routes/blockchain');
 const dashboardRoutes = require('../routes/dashboard');
+
+function legacyGate(_req, res) {
+  res.status(410).json({
+    ok: false,
+    message: 'This endpoint is part of legacy marketplace features and has been retired.',
+    migration: 'For current journal/archive APIs, see /api/blogs, /api/pages, /api/archive',
+  });
+}
 
 // Security headers with Helmet
 app.use(helmet({
@@ -250,17 +268,27 @@ app.use('/api/auth', authRoutes);
 app.use('/api/book-publishing', bookPublishingRoutes);
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
+app.use('/api/blogs', blogsRoutes);
 app.use('/api/items', itemsRoutes);
+app.use('/api/item-inquiries', itemInquiriesRoutes);
 app.use('/api/archive', archiveRoutes);
+app.use('/api/library', libraryRoutes);
+app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/forums', forumsRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes);
+app.use('/api/ai-help', aiHelpRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/bounties', bountiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/oauth', oauthTwitchRoutes);
 app.use('/api/oauth', oauthYouTubeRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/orders', ordersRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
 app.use('/api/home-feed', homeFeedRoutes);
 app.use('/api/career-quiz', careerQuizRoutes);
@@ -272,6 +300,16 @@ app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/referrals', require('../routes/referrals'));
 app.use('/api/partners', require('../routes/partners'));
+app.use('/api/artifacts', legacyGate, require('../routes/artifacts'));
+app.use('/api/market', legacyGate, require('../routes/market'));
+app.use('/api/marketplace', legacyGate, require('../routes/market'));
+app.use('/api/categories', legacyGate, require('../routes/market'));
+app.use('/api/transactions', legacyGate, require('../routes/transactions'));
+app.use('/portfolio', legacyGate, require('../routes/portfolio'));
+app.use('/blockchain', legacyGate, blockchainRoutes);
+app.use('/api/certificates', legacyGate, require('../routes/certificates'));
+app.use('/api/dashboard', legacyGate, dashboardRoutes);
+app.use('/api/activity', legacyGate, require('../routes/activity'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {
@@ -311,8 +349,19 @@ app.get('/api/decentralized/status', async (_req, res) => {
       commodities: true,
       contacts: true,
       templates: true,
+      blogs: true,
+      itemInquiries: true,
+      library: true,
+      libraryTaxonomy: true,
+      forums: true,
+      aiHelp: true,
+      journal: true,
+      messages: true,
+      agent: true,
+      orders: true,
       openapi: true,
       docs: true,
+      legacyMarketplace: true,
     },
     timestamp: new Date().toISOString(),
   });
@@ -341,6 +390,16 @@ app.get('/api/decentralized/ready', async (_req, res) => {
       { name: 'commodities', ok: true },
       { name: 'contacts', ok: true },
       { name: 'templates', ok: true },
+      { name: 'blogs', ok: true },
+      { name: 'item-inquiries', ok: true },
+      { name: 'library', ok: true },
+      { name: 'library-taxonomy', ok: true },
+      { name: 'forums', ok: true },
+      { name: 'ai-help', ok: true },
+      { name: 'journal', ok: true },
+      { name: 'messages', ok: true },
+      { name: 'agent', ok: true },
+      { name: 'orders', ok: true },
       { name: 'openapi', ok: true },
       { name: 'docs', ok: true },
     ],

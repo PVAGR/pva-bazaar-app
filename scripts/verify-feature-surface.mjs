@@ -3,9 +3,11 @@
  * Run after verify:network / verify:live. No secrets.
  *
  *   node scripts/verify-feature-surface.mjs
- *   BACKEND_URL=https://pva-bazaar-app-1.onrender.com node scripts/verify-feature-surface.mjs
+ *   BACKEND_URL=https://pva-backend-api.vercel.app node scripts/verify-feature-surface.mjs
  */
-const DEFAULT_BACKEND = "https://pva-bazaar-app-1.onrender.com";
+import { getLiveTargets } from "./live-map.mjs";
+
+const DEFAULT_BACKEND = getLiveTargets().backend;
 const TIMEOUT_MS = 45_000;
 
 const base = String(process.env.BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");

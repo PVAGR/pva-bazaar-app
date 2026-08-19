@@ -1,8 +1,8 @@
 # PVA Bazaar - Library Module Deployment Verification (PowerShell)
-# Usage: .\scripts\verify-library-deployment.ps1 -ApiBase "https://pva-bazaar-app-1.onrender.com"
+# Usage: .\scripts\verify-library-deployment.ps1 -ApiBase "https://pva-backend-api.vercel.app"
 
 param(
-    [string]$ApiBase = "https://pva-bazaar-app-1.onrender.com",
+    [string]$ApiBase = "https://pva-backend-api.vercel.app",
     [int]$TimeoutSeconds = 30
 )
 

@@ -5,7 +5,7 @@
 
 set -e
 
-API_BASE="${1:-https://pva-bazaar-app-1.onrender.com}"
+API_BASE="${1:-https://pva-backend-api.vercel.app}"
 EXPECTED_SHA_PREFIX="fa2378a5"
 TIMEOUT=30
 
