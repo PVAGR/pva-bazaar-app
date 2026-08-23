@@ -287,7 +287,8 @@ app.use('/api/agent', agentRoutes);
 app.use('/api/passport', passportRoutes);
 app.use('/api/verification', verificationRoutes);
 // Public proposal board feed used by the home front door and civic surfaces.
-app.use('/api/proposals', require('../routes/proposals'));
+// Router paths already begin with /proposals, so mount at /api like the full server.
+app.use('/api', require('../routes/proposals'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {
