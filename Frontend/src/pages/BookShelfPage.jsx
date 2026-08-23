@@ -190,7 +190,16 @@ export default function BookShelfPage() {
               <li key={book.id || book._id} className="book-shelf__card">
                 <div className="book-shelf__cover">
                   {book.frontCover?.url ? (
-                    <img src={toApiUrl(book.frontCover.url)} alt={`${book.title} cover`} />
+                    <img
+                      src={toApiUrl(book.frontCover.url)}
+                      alt={`${book.title} cover`}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (img.dataset.fallbackApplied) return;
+                        img.dataset.fallbackApplied = 'true';
+                        img.src = '/placeholder.png';
+                      }}
+                    />
                   ) : (
                     <div className="book-shelf__coverPlaceholder">{book.title?.charAt(0) || '?'}</div>
                   )}
