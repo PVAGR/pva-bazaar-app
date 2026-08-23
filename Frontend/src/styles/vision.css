@@ -1,0 +1,30 @@
+/*
+ * vision.css - canonical PVA Bazaar design tokens (docs/UI-VISION.md).
+ * Loaded after base.css so these override the legacy navy/cyan defaults.
+ * Only brand-approved hex values are used here (qa:brand:check).
+ */
+:root {
+  --pva-bg: #0f3b2d;
+  --pva-bg-raised: #1c5a45;
+  --pva-line: #1c5a45;
+  --pva-gold: #d4af37;
+  --pva-mint: #4ef8a3;
+  --pva-ink: #e8f4f0;
+  --pva-ink-muted: #a8b0b9;
+
+  /* Legacy token bridge: point the site at the canonical identity.
+     Remove once all pages consume --pva-* directly. */
+  --site-bg-primary: #0f3b2d;
+  --site-bg-secondary: #1c5a45;
+  --site-bg-tertiary: #2d7d5a;
+  --site-panel: rgba(15, 59, 45, 0.92);
+  --site-panel-soft: rgba(28, 90, 69, 0.82);
+  --site-border: #1c5a45;
+  --site-border-strong: #d4af37;
+  --site-text: #e8f4f0;
+  --site-text-muted: #a8b0b9;
+  --site-accent: #d4af37;
+  --site-accent-strong: #d4af37;
+  --site-accent-soft: rgba(212, 175, 55, 0.16);
+  --focus-ring: 0 0 0 3px rgba(212, 175, 55, 0.4);
+}

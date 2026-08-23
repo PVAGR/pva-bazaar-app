@@ -8,6 +8,7 @@ import { Telemetry } from './lib/telemetry';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './base.css';
+import './styles/vision.css';
 
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
 const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage.jsx'));
