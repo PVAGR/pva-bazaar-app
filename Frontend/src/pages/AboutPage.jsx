@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FederationManifesto from '../components/FederationManifesto.jsx';
+import SectionIntro from '../components/SectionIntro.jsx';
 import './AboutPage.css';
 
 export default function AboutPage() {
@@ -15,10 +16,11 @@ export default function AboutPage() {
 
   return (
       <section className="about-page section-card">
-        <header className="about-header">
-        <h1>About PVA Bazaar</h1>
-        <p className="about-tagline">Pure life knowledge in a bazaar format: reading, trade, recovery, memory, and public life for real people</p>
-        </header>
+        <SectionIntro
+          badge="About"
+          title="Pure life knowledge, in bazaar format."
+          promise="One site for reading, trade, recovery, memory, and public life - built to keep writings, provenance, and commerce together so nothing important gets lost."
+        />
 
       <FederationManifesto title="Why this work lasts" compact />
 
