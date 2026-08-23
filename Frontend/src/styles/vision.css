@@ -323,3 +323,26 @@
 .archive-library .markdown-content h3 {
   font-family: 'Merriweather', serif;
 }
+
+/* ---------- Books: the shelf (rollout step 4) ---------- */
+
+.books-page h1,
+.books-page h2,
+.books-page__card h2 {
+  font-family: 'Merriweather', serif;
+}
+
+.books-page .pva-section-intro--tight {
+  padding-bottom: 22px;
+}
+
+.books-page__order {
+  color: #d4af37;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.books-page__themes span {
+  border-color: #1c5a45;
+  color: #d4af37;
+}
