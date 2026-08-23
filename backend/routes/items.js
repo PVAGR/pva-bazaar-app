@@ -12,6 +12,7 @@ const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const slugify = require('slugify');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { verifyOnChain } = require('../utils/blockchain');
 const {
@@ -1097,6 +1098,13 @@ router.post('/register', authenticateToken, async (req, res) => {
       status: 'draft', // Start as draft, admin approves before publishing
       tags: condition ? [condition] : [],
     };
+
+    // physicalSerial carries a unique (non-sparse) index; leaving it unset
+    // makes every user listing collide on the shared null slot. Same for the
+    // unique slug that drives public item URLs.
+    artifactData.physicalSerial = `PVA-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const baseSlug = slugify(artifactData.name, { lower: true, strict: true }) || 'item';
+    artifactData.slug = `${baseSlug}-${crypto.randomBytes(3).toString('hex')}`;
 
     artifactData.provenance = buildProvenanceRecord({
       title: artifactData.title,
