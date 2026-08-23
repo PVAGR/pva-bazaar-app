@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import SectionIntro from '../components/SectionIntro.jsx';
 import './PublicLandingPage.css';
 
 const CONTACTS = [
@@ -38,19 +39,18 @@ export default function ContactPage() {
         <link rel="canonical" href="https://pvabazaar.org/contact" />
       </Helmet>
 
-      <header className="static-page__hero">
-        <p className="static-page__kicker">Contact</p>
-        <h1>Talk to PVA Bazaar.</h1>
-        <p>
-          Use this page for general inquiries, supplier onboarding, institutional partnerships, archive questions, and
-          public collaboration.
-        </p>
-        <div className="static-page__actions">
-          <a className="button" href="mailto:contact@pvabazaar.org?subject=PVA%20Bazaar%20Inquiry">Email us</a>
-          <Link className="button ghost" to="/partnerships">Partnerships</Link>
-          <Link className="button ghost" to="/provenance">Provenance</Link>
-        </div>
-      </header>
+      <SectionIntro
+        badge="Contact"
+        title="Talk to PVA Bazaar."
+        promise="General inquiries, supplier onboarding, institutional partnerships, archive questions, and public collaboration - pick the lane and write directly."
+        actions={(
+          <>
+            <a className="pva-btn pva-btn--primary" href="mailto:contact@pvabazaar.org?subject=PVA%20Bazaar%20Inquiry">Email us</a>
+            <Link className="pva-btn pva-btn--ghost" to="/partnerships">Partnerships</Link>
+            <Link className="pva-btn pva-btn--ghost" to="/verification">Verification</Link>
+          </>
+        )}
+      />
 
       <div className="static-page__grid">
         {CONTACTS.map((item) => (

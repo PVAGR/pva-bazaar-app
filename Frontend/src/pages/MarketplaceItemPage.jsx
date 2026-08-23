@@ -533,6 +533,13 @@ export default function MarketplaceItemPage() {
           >
             {addedToCart ? 'Added!' : 'Add to Cart'}
           </button>
+          <Link
+            className="buy-btn item-verify-link"
+            style={{ background: 'transparent', border: '2px solid #d4af37', color: '#d4af37' }}
+            to={`/verification?q=${encodeURIComponent(item.slug || item.id)}`}
+          >
+            Verify this item
+          </Link>
 
           <section className="item-crypto-panel" aria-label="Crypto checkout">
             <h2>Buy With Crypto</h2>
