@@ -67,7 +67,7 @@ async function fetchApprovedPartners() {
   const base = getPreferredApiBase();
   if (!base) return null;
   try {
-    const res = await fetch(`${base}/api/partners/public`);
+    const res = await fetch(`${base}/partners/public`);
     if (!res.ok) return null;
     const data = await res.json();
     const list = Array.isArray(data?.partners) ? data.partners.map(mapApiPartner) : [];

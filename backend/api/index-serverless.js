@@ -36,6 +36,12 @@ const authRoutes = require('../routes/auth');
 const governanceRoutes = require('../routes/governance');
 const blockchainRoutes = require('../routes/blockchain');
 const dashboardRoutes = require('../routes/dashboard');
+const federationRoutes = require('../routes/federation');
+const libraryRoutes = require('../routes/library');
+const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
+const agentRoutes = require('../routes/agent');
+const passportRoutes = require('../routes/passport');
+const verificationRoutes = require('../routes/verification');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -272,6 +278,14 @@ app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/referrals', require('../routes/referrals'));
 app.use('/api/partners', require('../routes/partners'));
+// Route groups used by live public surfaces (federation map, civilization
+// library, career quiz taxonomy, agent chat, citizens directory, verification).
+app.use('/api/federation', federationRoutes);
+app.use('/api/library', libraryRoutes);
+app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/passport', passportRoutes);
+app.use('/api/verification', verificationRoutes);
 
 app.get('/api/openapi.json', (req, res) => {
   try {

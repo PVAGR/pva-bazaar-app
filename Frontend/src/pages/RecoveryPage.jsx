@@ -7,6 +7,7 @@ import {
   fetchRecoverySnapshots,
   getApiBase,
 } from '../lib/api';
+import { getToken } from '../lib/auth';
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed';
 import {
   applyContinuitySnapshot,
@@ -161,6 +162,11 @@ export default function RecoveryPage() {
   };
 
   const loadSnapshots = async () => {
+    if (!getToken()) {
+      setSnapshots([]);
+      setSnapshotsLoading(false);
+      return;
+    }
     setSnapshotsLoading(true);
     setSnapshotsError('');
     try {

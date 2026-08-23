@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
+import { getToken } from '../lib/auth';
 import './OpenClawFloatingAssistant.css';
 
 const SESSION_STORAGE_KEY = 'openclaw-website-session-id';
@@ -54,6 +55,9 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
   }, []);
 
   const sendPresencePulse = useCallback(async () => {
+    // Presence capture is admin-scoped server-side; skip the call for guests
+    // so anonymous browsing does not generate 401 noise on every page.
+    if (!getToken()) return;
     try {
       await apiPost('/openclaw/public/pulse', {
         sessionId,
