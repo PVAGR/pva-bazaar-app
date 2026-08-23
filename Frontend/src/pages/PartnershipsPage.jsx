@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import SectionIntro from '../components/SectionIntro.jsx';
 import './PublicLandingPage.css';
 
 const PARTNERS = [
@@ -28,19 +29,18 @@ export default function PartnershipsPage() {
         <link rel="canonical" href="https://pvabazaar.org/partnerships" />
       </Helmet>
 
-      <header className="static-page__hero">
-        <p className="static-page__kicker">Partnerships</p>
-        <h1>Work with PVA Bazaar.</h1>
-        <p>
-          We support sourcing, education, archive publishing, institutional procurement, and public knowledge work.
-          If you are building something real, this is the public bridge.
-        </p>
-        <div className="static-page__actions">
-          <Link className="button" to="/contact">Start a conversation</Link>
-          <Link className="button ghost" to="/institutions">Institution hub</Link>
-          <Link className="button ghost" to="/marketplace">Marketplace</Link>
-        </div>
-      </header>
+      <SectionIntro
+        badge="Partner with us"
+        title="Work with PVA Bazaar."
+        promise="We support sourcing, education, archive publishing, institutional procurement, and public knowledge work. If you are building something real, this is the public bridge."
+        actions={(
+          <>
+            <Link className="pva-btn pva-btn--primary" to="/contact">Start a conversation</Link>
+            <Link className="pva-btn pva-btn--ghost" to="/institutions">Institution hub</Link>
+            <Link className="pva-btn pva-btn--ghost" to="/marketplace">Marketplace</Link>
+          </>
+        )}
+      />
 
       <section className="static-page__card">
         <h2>Who we work with</h2>

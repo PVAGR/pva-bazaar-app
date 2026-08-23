@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
+import SectionIntro from '../components/SectionIntro.jsx';
 import './GetStartedPage.css';
 
 const ROLE_OPTIONS = [
@@ -59,21 +60,17 @@ export default function GetStartedPage() {
     <section className="section-card get-started" aria-label="Federation onboarding entry">
       <header className="get-started__hero">
         <div className="get-started__heroIntro">
-          <p className="pill">Start here</p>
-          <h1>Create your place in the network</h1>
-          <p>
-            PVA Bazaar is a working bridge between suppliers, artisans, and goods gathered through real relationships
-            on the ground and buyers in America who want trustworthy products with clear context.
-          </p>
-          <p>
-            Use this page to choose the right lane. Buyers can begin by browsing and creating an account for serious
-            sourcing. Suppliers can create an account, prepare their materials, and move into guided submission.
-          </p>
-          <div className="get-started__actions">
-            <Link className="btn btn-secondary" to="/marketplace">Browse Marketplace</Link>
-            <Link className="btn btn-ghost" to="/books">Read the Books</Link>
-            <Link className="btn btn-ghost" to="/about">Read About</Link>
-          </div>
+          <SectionIntro
+            badge="Join"
+            title="Create your place in the network"
+            promise="A working bridge between suppliers, artisans, and goods gathered through real relationships on the ground, and buyers who want trustworthy products with clear context. Choose your lane below."
+            actions={(
+              <>
+                <Link className="pva-btn pva-btn--primary" to="/marketplace">Browse Marketplace</Link>
+                <Link className="pva-btn pva-btn--ghost" to="/books">Read the Books</Link>
+              </>
+            )}
+          />
         </div>
 
         <aside className="get-started__signup" aria-label="Quick signup">
