@@ -172,6 +172,7 @@ export default function HomePage({ entries = [] }) {
           </Link>
         ))}
         <Link to="/recovery" className="home-support-band__link">Recovery</Link>
+        <Link to="/verification" className="home-support-band__link home-support-band__link--accent">Verify an artifact</Link>
         <Link to="/heelkawn" className="home-support-band__link">HeelKawn</Link>
       </nav>
 
