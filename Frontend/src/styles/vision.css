@@ -28,3 +28,224 @@
   --site-accent-soft: rgba(212, 175, 55, 0.16);
   --focus-ring: 0 0 0 3px rgba(212, 175, 55, 0.4);
 }
+
+/* ---------- Home front door (docs/UI-VISION.md rollout step 2) ---------- */
+
+.pva-section-intro--tight {
+  padding: 8px 0 18px;
+}
+
+.home-hero {
+  max-width: var(--container-max, 1240px);
+  margin: 0 auto;
+  padding: clamp(40px, 7vw, 84px) 20px 34px;
+}
+
+.home-hero__badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+  border-radius: 999px;
+  padding: 5px 14px;
+  margin-bottom: 18px;
+}
+
+.home-hero__title {
+  font-family: 'Merriweather', serif;
+  font-size: clamp(2.6rem, 6.5vw, 4.3rem);
+  line-height: 1.06;
+  color: #e8f4f0;
+  margin: 0 0 16px;
+}
+
+.home-hero__promise {
+  max-width: 58ch;
+  font-size: 1.12rem;
+  line-height: 1.65;
+  color: #a8b0b9;
+  margin: 0 0 26px;
+}
+
+.home-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-section {
+  max-width: var(--container-max, 1240px);
+  margin: 0 auto;
+  padding: 26px 20px;
+}
+
+.home-doors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.home-door {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(15, 59, 45, 0.92);
+  border: 1px solid #1c5a45;
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  text-decoration: none;
+  transition: border-color 200ms ease, filter 200ms ease;
+}
+
+.home-door:hover,
+.home-door--featured {
+  border-color: #d4af37;
+}
+
+.home-door:hover {
+  filter: brightness(1.07);
+}
+
+.home-door__badge {
+  align-self: flex-start;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d4af37;
+  border: 1px solid #1c5a45;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.home-door--featured .home-door__badge {
+  background: #d4af37;
+  color: #0f3b2d;
+  border-color: #d4af37;
+}
+
+.home-door__title {
+  font-family: 'Merriweather', serif;
+  font-size: 1.12rem;
+  color: #e8f4f0;
+  margin: 0;
+}
+
+.home-door__promise {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #a8b0b9;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.home-door__cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+.home-section--feed {
+  padding-bottom: 10px;
+}
+
+.home-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.home-feed-card {
+  background: rgba(15, 59, 45, 0.92);
+  border: 1px solid #1c5a45;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.home-feed-card h3 {
+  font-family: 'Merriweather', serif;
+  color: #e8f4f0;
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+.home-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-feed-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 0;
+  border-bottom: 1px solid #1c5a45;
+}
+
+.home-feed-list li:last-child {
+  border-bottom: none;
+}
+
+.home-feed-list a {
+  color: #e8f4f0;
+  text-decoration: none;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.home-feed-list a:hover {
+  color: #d4af37;
+}
+
+.home-feed-list span {
+  font-size: 0.78rem;
+  color: #a8b0b9;
+}
+
+.home-feed-state {
+  color: #a8b0b9;
+  font-size: 0.92rem;
+}
+
+.home-feed-more {
+  display: inline-block;
+  margin-top: 12px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #d4af37;
+  text-decoration: none;
+}
+
+.home-support-band {
+  max-width: var(--container-max, 1240px);
+  margin: 0 auto;
+  padding: 18px 20px 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+}
+
+.home-support-band__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a8b0b9;
+}
+
+.home-support-band__link {
+  color: #e8f4f0;
+  text-decoration: none;
+  font-size: 0.92rem;
+  border-bottom: 1px solid transparent;
+}
+
+.home-support-band__link:hover {
+  color: #d4af37;
+  border-bottom-color: #d4af37;
+}
