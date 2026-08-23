@@ -75,6 +75,9 @@ One sentence: what you can do here
 - **Offer:** real goods, kits, specimens - each listing carries provenance and knowledge profile (history, classification, uses, safety).
 - **CTA:** Browse listings / List an item
 - **Direction:** ivory product cards on raised panels; price + provenance chip always visible; filters as left rail on desktop.
+- **Data gap (backend follow-up):** the marketplace item payload currently exposes no price or
+  provenance fields, so cards cannot show those chips yet. Expose `price` and a
+  `provenanceSummary` on `/api/items` responses, then render both chips on `.item-card`.
 
 #### Archive Library `/archive`
 - **Offer:** the living archive - civilization dossiers, pure life knowledge, long-form cultural context.
@@ -119,9 +122,11 @@ One sentence: what you can do here
 
 ## 5. Rollout order
 
-1. **Foundation** (done with this doc): tokens promoted in `base.css`, `SectionIntro` component shipped.
-2. **Home** - hero + six section cards + feed restyle (highest leverage: expresses every part).
-3. **Marketplace + Archive** - the two faces of the business (commerce/knowledge).
+1. **Foundation** (done 2026-08-23): tokens promoted via `styles/vision.css`, `SectionIntro` component shipped.
+2. **Home** (done 2026-08-23): hero + door grid + live strip + support band.
+3. **Marketplace + Archive** (done 2026-08-23): SectionIntro on Marketplace; serif card/entry typography,
+   gold category + active states, clamped descriptions, paper-style reader panel. Price/provenance
+   chips pending backend field exposure.
 4. **Writings + Books** - the reading path.
 5. **Partnerships + Get Started** - the growth path.
 6. Legacy migration: replace navy/cyan values across remaining pages; delete dead overrides.
