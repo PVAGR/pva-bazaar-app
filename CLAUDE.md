@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PVA Bazaar is an artisan marketplace with digital provenance, built as a full-stack web application that combines traditional crafts with blockchain technology for provenance tracking and fractional ownership.
+PVA Bazaar is a personal website and business suite: an artisan marketplace with digital provenance plus archive, publishing and operations surfaces.
+
+Start from `CANONICAL_MAP.md` (source of truth), then `RUNBOOK.md`, `ARCHITECTURE.md`, `STATUS.md`. If anything conflicts with the canonical map or `Frontend/public/live-map.json`, those win.
 
 ## Architecture
 
@@ -20,11 +22,11 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Blockchain Integration**: Web3.js integration for on-chain verification (`utils/blockchain.js`)
 - **Additional Services**: IPFS integration, vector database, and embedding services
 
-### Frontend (`/Frontend/`)
+### Frontend (`/Frontend/`) - canonical public site
 
 - **Framework**: Vanilla JavaScript with Vite build system
-- **Structure**: HTML pages in `/pages/` with shared assets in `/src/`
-- **Key Pages**: artifact viewer, portfolio, dashboard, checkout/mint, provenance tracking
+- **Structure**: HTML pages in `/pages/` with shared assets in `/src/`; static route data in `/public/`
+- **Deploy**: GitHub Pages via `.github/workflows/deploy-frontend.yml`
 
 ### Next app – sanctuary layer (`/apps/pva-bazaar-web/`)
 
@@ -33,16 +35,23 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Run**: `npm run dev:web` from repo root, or `npm run dev` from `apps/pva-bazaar-web`
 - **Docs**: See `apps/pva-bazaar-web/README.md` for env (verification API URL, Etsy shop URL) and deploy options. Serves `/sitemap.xml`, `/robots.txt` (base URL from env), and `GET /api/health` for deployment checks.
 
+### Other surfaces
+
+- `apps/web-com`: small Vite/React experiment; sole consumer of `packages/ui` + `packages/oracle-engine`.
+- `contracts/`: Hardhat smart contracts (ERC-721 provenance).
+- `content/`: library content; the IPFS publish workflow reads `content/library`.
+- `_archive/` and `docs/history/`: legacy sites, drafts, and superseded docs - reference only.
+
 ### Venture docs
 
 - **Index**: `docs/README.md` lists venture/ops docs (product sourcing, Etsy listings, OPS workflow, cyber café, Web3 MVP), lore (Pasha VII), and technical docs. Deploy sanctuary: `docs/DEPLOY-SANCTUARY.md`; Phase 1 execution checklist: `docs/PHASE1-EXECUTION.md`.
 
 ### Deployment
 
-- **Platform**: Vercel (serverless functions)
+- **Platform**: GitHub Pages (frontend) + Vercel (serverless API)
 - **Entry Points**:
-  - `/backend/api/index.js`: Main serverless API handler
-  - `/Frontend/server.js`: Alternative server configuration
+  - `/api/[...path].js`: Vercel serverless catchall (bundles `backend/**`)
+  - `/backend/server.js`: backend server used by `vercel-backend.json`
 - **Database**: MongoDB with connection caching for serverless optimization
 
 ## Development Commands
@@ -68,7 +77,7 @@ node seed.js         # Populate database with sample data
 
 - `vercel.json`: Vercel deployment configuration with API routing
 - `Frontend/vite.config.js`: Vite build configuration
-- `pva-bazaar-app.env`: Environment variables template
+- `.env.example` (+ `.env.example.*` variants): environment variable templates
 
 ## Database Setup
 
