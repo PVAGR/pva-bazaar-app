@@ -98,6 +98,13 @@ Result: a newcomer reads README -> CANONICAL_MAP -> done.
 
 ## Phase 6 - Script diet
 
+> DONE: removed ~20 dead/duplicate scripts (broken `start`/`health`, railway/render/flyio +
+> one-command wrappers and their shell scripts, docker targets + Dockerfile/compose files,
+> verify:* near-duplicates, qa orchestrator aliases). Everything referenced by workflows, husky
+> hooks, backend tooling or docs was kept. Bonus: repo tracked both README.md and readme.md -
+> merged into a single README.md.
+> Deferred: deploy-production.mjs kept as the manual prod-deploy tool; contracts:* kept intact.
+
 ~95 npm scripts today. Keep only what you actually ran in the last month (check shell history); archive the rest into a `Makefile`-style comment block or `docs/history/scripts.md`. Likely survivors:
 
 ```
