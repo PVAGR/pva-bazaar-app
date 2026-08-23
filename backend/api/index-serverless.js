@@ -286,6 +286,8 @@ app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/passport', passportRoutes);
 app.use('/api/verification', verificationRoutes);
+// Public proposal board feed used by the home front door and civic surfaces.
+app.use('/api/proposals', require('../routes/proposals'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {
