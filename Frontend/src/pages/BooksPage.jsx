@@ -2,6 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { FEATURED_BOOKS } from '../data/books.js';
+import SectionIntro from '../components/SectionIntro.jsx';
 import './BooksPage.css';
 
 export default function BooksPage() {
@@ -16,29 +17,17 @@ export default function BooksPage() {
       </Helmet>
 
       <section className="books-page section-card">
-        <header className="books-page__hero">
-          <div>
-            <p className="pill">Books</p>
-            <h1>Start here first.</h1>
-            <p className="books-page__lead">
-              These two books are the clearest entrance into the larger work. They explain the labor model, the
-              philosophy, and the long-range blueprint behind PVA Bazaar as pure life knowledge in a bazaar format:
-              truthful living, meaningful labor, preserved memory, and systems designed to endure instead of disappear.
-            </p>
-          </div>
-
-          <aside className="books-page__heroPanel">
-            <h2>Reading order</h2>
-            <ol>
-              <li><strong>The Infinite Jobs</strong> explains the kinds of human work that should remain sacred, useful, and worth preserving.</li>
-              <li><strong>Magnum Opus Guide</strong> turns those commitments into a blueprint for continuity, stewardship, and open legacy.</li>
-            </ol>
-            <p>
-              If someone wants to understand the heart of this project before the marketplace, archive, or governance
-              layers, send them here.
-            </p>
-          </aside>
-        </header>
+        <SectionIntro
+          badge="The reading path"
+          title="Two books explain everything."
+          promise="These are the clearest entrance into the larger work: the labor model, the philosophy, and the long-range blueprint behind PVA Bazaar - truthful living, meaningful labor, preserved memory."
+          actions={(
+            <>
+              <Link className="pva-btn pva-btn--primary" to="/books/published">Open published shelf</Link>
+              <Link className="pva-btn pva-btn--ghost" to="/books/publish">Publish a book</Link>
+            </>
+          )}
+        />
 
         <div className="books-page__grid">
           {FEATURED_BOOKS.map((book) => (
@@ -117,15 +106,6 @@ export default function BooksPage() {
           <div className="books-page__actions">
             <Link className="books-page__button books-page__button--primary" to="/">
               Return to home
-            </Link>
-            <Link className="books-page__button books-page__button--primary" to="/books/published">
-              Browse published books
-            </Link>
-            <Link className="books-page__button books-page__button--primary" to="/books/publish">
-              Publish your own book
-            </Link>
-            <Link className="books-page__button" to="/marketplace">
-              Browse marketplace
             </Link>
             <Link className="books-page__button" to="/about">
               Read the mission
