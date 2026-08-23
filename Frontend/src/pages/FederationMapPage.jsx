@@ -21,6 +21,7 @@ import {
   fetchFederationIpLocation,
 } from '../lib/api';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
+import { getToken } from '../lib/auth';
 import './FederationMapPage.css';
 
 const COUNTRY_COORDS = {
@@ -278,16 +279,24 @@ export default function FederationMapPage() {
   async function loadBootstrap() {
     setLoading(true);
     setError('');
+    // Presence, game state and HK progression are account-scoped; only ask
+    // for them when a session token exists so guests browse without 401s.
+    const hasSession = Boolean(getToken());
+    const authedCalls = hasSession
+      ? [
+          fetchMyFederationPresence(),
+          fetchFederationGameState(),
+          fetchFederationHkProfile(),
+          fetchFederationHkProgressionHistory(12),
+          fetchMyFederationFaction(),
+        ]
+      : [Promise.resolve(null), Promise.resolve(null), Promise.resolve(null), Promise.resolve(null), Promise.resolve(null)];
     try {
       const [liveResult, meResult, quizResultResponse, gameStateResult, worldResult, hkProfileResult, hkHistoryResult, factionResult] = await Promise.allSettled([
         fetchFederationLiveMap(90),
-        fetchMyFederationPresence(),
+        ...authedCalls,
         fetchFederationIntroQuizDefinition(),
-        fetchFederationGameState(),
         fetchFederationGameWorld(),
-        fetchFederationHkProfile(),
-        fetchFederationHkProgressionHistory(12),
-        fetchMyFederationFaction(),
       ]);
 
       const liveResponse = liveResult.status === 'fulfilled' ? liveResult.value : null;
@@ -341,7 +350,7 @@ export default function FederationMapPage() {
 
       if (hkProfileResponse?.ok && hkProfileResponse.profile) {
         setHkProfile(hkProfileResponse.profile);
-      } else {
+      } else if (hasSession) {
         const onboardResponse = await onboardFederationHkPlayer().catch(() => ({ ok: false }));
         if (onboardResponse?.ok && onboardResponse.profile) {
           setHkProfile(onboardResponse.profile);

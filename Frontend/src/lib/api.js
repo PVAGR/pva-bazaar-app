@@ -176,6 +176,11 @@ export const fetchCurrentUserWithFallback = async () => {
       return { ok: true, user };
     }
   }
+  if (!token) {
+    // No session: do not ping /auth/me and fill the console with 401s.
+    const localUser = getLocalCurrentUser();
+    return localUser ? { ok: true, user: localUser } : { ok: false, user: null };
+  }
 
   try {
     return await fetchCurrentUser();

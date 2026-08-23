@@ -61,6 +61,7 @@ const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 const StreamsPage = lazy(() => import('./pages/StreamsPage.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
 const OpeningHomePage = lazy(() => import('./pages/OpeningHomePage.jsx'));
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const BooksPage = lazy(() => import('./pages/BooksPage.jsx'));
 const BookShelfPage = lazy(() => import('./pages/BookShelfPage.jsx'));
 const BookPublishingPage = lazy(() => import('./pages/BookPublishingPage.jsx'));
@@ -135,8 +136,8 @@ export default function App() {
         <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
         <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
-        <Route path="/" element={<Layout><OpeningHomePage /></Layout>} />
-        <Route path="/welcome" element={<Navigate to="/" replace />} />
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/welcome" element={<Layout><OpeningHomePage /></Layout>} />
         <Route path="/books" element={<Layout><BooksPage /></Layout>} />
         <Route path="/books/published" element={<Layout><BookShelfPage /></Layout>} />
         <Route path="/books/publish" element={<RequireUserAuth><Layout><BookPublishingPage /></Layout></RequireUserAuth>} />
