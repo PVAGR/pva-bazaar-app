@@ -1,10 +1,10 @@
-# Blueprint v1 Architecture & Data Flow
+# Architecture
 
-Use this as the system layout reference.
+System layout reference for PVA Bazaar.
 The canonical live routing map is `Frontend/public/live-map.json`.
 If a doc disagrees with that map, the map wins.
 
-## Live continuity map
+## Live surfaces
 
 | Surface | Canonical URL |
 |---|---|
@@ -12,15 +12,22 @@ If a doc disagrees with that map, the map wins.
 | Backend | https://api.pvabazaar.org |
 | API base | https://api.pvabazaar.org/api |
 | Status page | https://pvabazaar.org/status.html |
-| Fallback backend | https://pva-bazaar-app-1.onrender.com |
 
-## System overview
+## Components
 
-- Public UI: `Frontend/`
-- Static live site: GitHub Pages
-- API/backend: Vercel
+- Public UI: `Frontend/` (vanilla JS + Vite) - static build to GitHub Pages
+- Serverless entry: `api/[...path].js` (Vercel catchall, bundles `backend/**`)
+- Backend: `backend/` (Express 5, Mongoose/MongoDB Atlas, Cloudinary media)
+- Secondary app: `apps/pva-bazaar-web` (Next.js sanctuary layer)
+- Contracts: `contracts/` (Hardhat; ERC-721 provenance)
+- Content: `content/` (writings, library data; IPFS publish pipeline reads `content/library`)
 - Live routing data: `Frontend/public/live-map.json`
-- Status and verification pages: `status.html`, `llms.txt`, `readable-site.json`, `sitemap.xml`
+- Status and discovery pages: built from `Frontend/public/` (`status.html`, `llms.txt`, `readable-site.json`, `sitemap.xml`)
+
+## Deploys
+
+- Frontend: GitHub Pages via `.github/workflows/deploy-frontend.yml`
+- Backend: Vercel via `.github/workflows/deploy-backend-live.yml` (+ repo-root catchall from `vercel.json`)
 
 ## Operational rule
 

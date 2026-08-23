@@ -1,0 +1,44 @@
+{
+  "name": "pvabazaar-livestream",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@pinata/sdk": "^2.1.0",
+    "axios": "^1.13.4",
+    "bcryptjs": "^3.0.3",
+    "did-jwt": "^8.0.18",
+    "did-jwt-vc": "^3.2.15",
+    "did-resolver": "^4.1.0",
+    "dids": "^5.0.3",
+    "dotenv": "^17.2.3",
+    "ethr-did-resolver": "^11.0.5",
+    "form-data": "^4.0.5",
+    "hls.js": "^1.6.15",
+    "key-did-provider-ed25519": "^4.0.2",
+    "key-did-resolver": "^4.0.0",
+    "lucide-react": "^0.563.0",
+    "mongoose": "^9.1.5",
+    "next": "16.1.6",
+    "next-auth": "^4.24.13",
+    "pkh-did-resolver": "^2.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
