@@ -186,7 +186,6 @@
   },
   "workspaces": [
     "apps/*",
-    "services/*",
     "packages/*",
     "backend",
     "Frontend"
