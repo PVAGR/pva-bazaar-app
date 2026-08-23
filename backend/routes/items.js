@@ -1149,6 +1149,26 @@ router.post('/register', authenticateToken, async (req, res) => {
       reverseImage: buildReverseImageSnapshot(reverseImage),
     };
 
+    // Defensive: Mongoose rejects explicitly-undefined values on embedded
+    // object paths ("Cast to Object failed for value undefined"). Strip any
+    // undefined keys and guarantee every declared sub-object is a plain
+    // object before validation.
+    for (const key of Object.keys(artifactData.provenance)) {
+      if (artifactData.provenance[key] === undefined) delete artifactData.provenance[key];
+    }
+    const provenanceObjectDefaults = {
+      royalty: { bps: 1000, percent: 10, beneficiaryType: 'creator', beneficiaryWallet: '' },
+      chain: { network: 'base', contractAddress: '', tokenStandard: 'ERC-721', tokenId: '' },
+      documentation: {},
+      review: {},
+      reverseImage: {},
+    };
+    for (const [key, value] of Object.entries(provenanceObjectDefaults)) {
+      if (!artifactData.provenance[key] || typeof artifactData.provenance[key] !== 'object') {
+        artifactData.provenance[key] = value;
+      }
+    }
+
     // Add optional fields if provided
     if (measurements) {
       artifactData.description += `\n\nMeasurements: ${sanitize(measurements)}`;
@@ -1178,10 +1198,10 @@ router.post('/register', authenticateToken, async (req, res) => {
     await artifact.save();
     ensureItemAccessCode(artifact);
 
-    artifact.provenance = {
-      ...(artifact.provenance || {}),
-      feedPath: `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`,
-    };
+    // Direct assignment only: spreading the mongoose subdocument here
+    // materializes embedded-object paths as undefined and fails the next
+    // validation pass.
+    artifact.provenance.feedPath = `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`;
     await artifact.save();
 
     let syndicationResult = null;
