@@ -374,3 +374,37 @@
   outline: none;
   border-color: #d4af37;
 }
+
+/* ---------- Verification: the trust face ---------- */
+
+.verification-page .pva-section-intro {
+  padding-top: 34px;
+}
+
+.marketplace-page .item-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.marketplace-page .item-price {
+  color: #d4af37;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.marketplace-page .item-provenance-pill {
+  border: 1px solid #d4af37;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #d4af37;
+  text-decoration: none;
+}
+
+.home-support-band__link.home-support-band__link--accent {
+  color: #d4af37;
+}

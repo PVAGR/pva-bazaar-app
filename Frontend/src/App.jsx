@@ -66,6 +66,7 @@ const BookShelfPage = lazy(() => import('./pages/BookShelfPage.jsx'));
 const BookPublishingPage = lazy(() => import('./pages/BookPublishingPage.jsx'));
 const BookReaderPage = lazy(() => import('./pages/BookReaderPage.jsx'));
 const BookHomePage = lazy(() => import('./pages/BookHomePage.jsx'));
+const VerificationPage = lazy(() => import('./pages/VerificationPage.jsx'));
 const WritingStudioPage = lazy(() => import('./pages/WritingStudioPage.jsx'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'));
 const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
@@ -160,6 +161,7 @@ export default function App() {
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/partnerships" element={<Layout><PartnershipsPage /></Layout>} />
+        <Route path="/verification" element={<Layout><VerificationPage /></Layout>} />
         <Route path="/referral" element={<Layout><ReferralPage /></Layout>} />
         <Route path="/partners" element={<Layout><PartnersPage /></Layout>} />
         <Route path="/provenance" element={<Layout><ProvenancePage /></Layout>} />

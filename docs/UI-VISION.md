@@ -75,9 +75,9 @@ One sentence: what you can do here
 - **Offer:** real goods, kits, specimens - each listing carries provenance and knowledge profile (history, classification, uses, safety).
 - **CTA:** Browse listings / List an item
 - **Direction:** ivory product cards on raised panels; price + provenance chip always visible; filters as left rail on desktop.
-- **Data gap (backend follow-up):** the marketplace item payload currently exposes no price or
-  provenance fields, so cards cannot show those chips yet. Expose `price` and a
-  `provenanceSummary` on `/api/items` responses, then render both chips on `.item-card`.
+- **Done 2026-08-23:** cards now render price (from `priceCents`, already in the list payload)
+  and a "Provenance" chip linking to `/verification?q=<slug|id>` when provenance documentation
+  exists.
 
 #### Archive Library `/archive`
 - **Offer:** the living archive - civilization dossiers, pure life knowledge, long-form cultural context.
@@ -119,6 +119,9 @@ One sentence: what you can do here
 | Cart/Checkout | buy with confidence | progress steps, provenance summary beside payment |
 | HeelKawn `/heelkawn` | companion app download | dark device mockup, QR |
 | Status/Legal pages | trust in plain words | quiet typography, no marketing |
+
+> Built 2026-08-23: `/verification` page now exists (artifact/slug/certificate lookup with
+> seal + hash panel), linked from marketplace provenance chips and the home support band.
 
 ## 5. Rollout order
 

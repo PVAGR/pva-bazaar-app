@@ -794,6 +794,21 @@ export async function fetchVerificationByArtifact(idOrSlug) {
   }
 }
 
+// --- Public certificate lookup for the Verification page ---
+export async function fetchVerificationByCertificate(certificateId) {
+  if (!certificateId) return { ok: false, error: 'missing-certificate-id' };
+  try {
+    const response = await apiGet(`/verification/certificate/${encodeURIComponent(certificateId)}`);
+    if (response && response.ok) {
+      return { ok: true, verification: response.verification };
+    }
+    return { ok: false, error: response?.error || 'not-found', verification: null };
+  } catch (err) {
+    const status = err?.response?.status;
+    return { ok: false, error: status === 404 ? 'not-found' : 'network', verification: null };
+  }
+}
+
 // fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
 export async function fetchMarketplaceItem(slugOrId) {
   if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };

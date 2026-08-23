@@ -5,6 +5,26 @@ import useDebounce from "../hooks/useDebounce";
 import SectionIntro from "../components/SectionIntro.jsx";
 import "./MarketplacePage.css";
 
+function formatPrice(priceCents, currency = "USD") {
+  if (priceCents === null || priceCents === undefined || priceCents === "") return null;
+  const cents = Number(priceCents);
+  if (!Number.isFinite(cents) || cents <= 0) return null;
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+  } catch {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
+}
+
+function hasDocumentedProvenance(item) {
+  const provenance = item?.provenance;
+  if (!provenance || typeof provenance !== "object") return false;
+  const docs = provenance.documentation;
+  if (Array.isArray(docs) && docs.length > 0) return true;
+  if (docs && typeof docs === "object" && Object.keys(docs).length > 0) return true;
+  return Boolean(provenance.verificationStatus || provenance.chainBound);
+}
+
 const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141a2b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe8ff' font-family='Arial,sans-serif' font-size='24'%3EPVA Bazaar%3C/text%3E%3C/svg%3E";
 const MARKETPLACE_PORTAL_LINKS = [
   { key: 'home', label: 'Home', to: '/', note: 'Personal portal and site atlas' },
@@ -202,7 +222,13 @@ export default function MarketplacePage() {
                   className="item-image"
                 />
                 <div className="item-info">
-                  <h2 className="item-title">{item.name || item.title}</h2>
+                  <div className="item-title-row">
+                    <h2 className="item-title">{item.name || item.title}</h2>
+                    {(() => {
+                      const price = formatPrice(item.priceCents, item.currency);
+                      return price ? <span className="item-price">{price}</span> : null;
+                    })()}
+                  </div>
                   <div className="item-meta">
                     <span className="item-category">{item.category}</span>
                     <span className={`item-status-pill status-${item?.catalog?.availabilityStatus || "available"}`}>
@@ -211,6 +237,11 @@ export default function MarketplacePage() {
                     <span className="item-uniqueness-pill">
                       {item?.catalog?.isUnique ? "One-of-One" : `Bulk: ${item?.catalog?.bulkQuantity || 0}`}
                     </span>
+                    {hasDocumentedProvenance(item) ? (
+                      <Link to={`/verification?q=${encodeURIComponent(item.slug || item.id)}`} className="item-provenance-pill">
+                        Provenance
+                      </Link>
+                    ) : null}
                   </div>
                   <p className="item-desc">{item.description}</p>
                 </div>
