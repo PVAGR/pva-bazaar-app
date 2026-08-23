@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
+import SectionIntro from "../components/SectionIntro.jsx";
 import "./MarketplacePage.css";
 
 const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141a2b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe8ff' font-family='Arial,sans-serif' font-size='24'%3EPVA Bazaar%3C/text%3E%3C/svg%3E";
@@ -88,19 +89,18 @@ export default function MarketplacePage() {
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
-        <div className="marketplace-header-copy">
-          <p className="marketplace-kicker">Business portal</p>
-          <h1>Marketplace</h1>
-          <p className="marketplace-tagline">
-            A public trade surface for sourcing, listings, and product discovery. Use it alongside the archive,
-            writing studio, and recovery tools as one connected site.
-          </p>
-        </div>
-        <div className="marketplace-nav-links">
-          <Link to="/" className="marketplace-nav-link">Home</Link>
-          <Link to="/archive" className="marketplace-nav-link">Archive</Link>
-          <Link to="/showroom" className="marketplace-nav-link">Go to Showroom</Link>
-        </div>
+        <SectionIntro
+          badge="Commerce"
+          title="Objects that carry their story"
+          promise="A public trade surface for sourcing, listings, and product discovery - every listing pairs the object with its provenance and knowledge profile."
+          actions={(
+            <>
+              <Link to="/showroom" className="pva-btn pva-btn--primary">Browse the Showroom</Link>
+              <Link to="/archive" className="pva-btn pva-btn--ghost">Read the Archive</Link>
+              <Link to="/" className="pva-btn pva-btn--ghost">Home</Link>
+            </>
+          )}
+        />
         <div className="marketplace-portal-row" aria-label="Marketplace portal shortcuts">
           {MARKETPLACE_PORTAL_LINKS.map((link) => (
             <Link key={link.key} to={link.to} className="marketplace-portal-card">
