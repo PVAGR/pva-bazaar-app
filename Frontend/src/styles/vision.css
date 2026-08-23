@@ -249,3 +249,77 @@
   color: #d4af37;
   border-bottom-color: #d4af37;
 }
+
+/* ---------- Marketplace: commerce face (rollout step 3) ---------- */
+
+.marketplace-page .item-title {
+  font-family: 'Merriweather', serif;
+  font-weight: 700;
+  color: #e8f4f0;
+}
+
+.marketplace-page .item-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #a8b0b9;
+}
+
+.marketplace-page .item-image {
+  aspect-ratio: 4 / 3;
+  height: auto;
+  border-radius: 10px;
+}
+
+.marketplace-page .item-category {
+  background: rgba(212, 175, 55, 0.16);
+  color: #d4af37;
+  border-color: #1c5a45;
+}
+
+.marketplace-page .category-chip.selected {
+  background: #d4af37;
+  color: #0f3b2d;
+  border-color: #d4af37;
+}
+
+.marketplace-page .marketplace-filter {
+  background: rgba(15, 59, 45, 0.92);
+  border: 1px solid #1c5a45;
+  color: #e8f4f0;
+  border-radius: 10px;
+}
+
+/* ---------- Archive: lamplight knowledge face (rollout step 3) ---------- */
+
+.archive-library .entry-title {
+  font-family: 'Merriweather', serif;
+  line-height: 1.35;
+}
+
+.archive-library .entry-item {
+  text-align: left;
+}
+
+.archive-library .entry-item.active {
+  border-color: #d4af37;
+}
+
+.archive-library .entry-category {
+  color: #d4af37;
+}
+
+/* Reader panel reads like paper under lamplight */
+.archive-library .archive-content {
+  border: 1px solid #1c5a45;
+  border-radius: 14px;
+}
+
+.archive-library .markdown-content h1,
+.archive-library .markdown-content h2,
+.archive-library .markdown-content h3 {
+  font-family: 'Merriweather', serif;
+}
