@@ -127,8 +127,9 @@ One sentence: what you can do here
 3. **Marketplace + Archive** (done 2026-08-23): SectionIntro on Marketplace; serif card/entry typography,
    gold category + active states, clamped descriptions, paper-style reader panel. Price/provenance
    chips pending backend field exposure.
-4. **Writings + Books** - the reading path.
-5. **Partnerships + Get Started** - the growth path.
+4. **Writings + Books** (done 2026-08-23): Books opens with SectionIntro; serif shelf typography.
+5. **Partnerships + Get Started** (done 2026-08-23): SectionIntro on both; gold chips; signup panel
+   styled as raised card with gold focus states.
 6. Legacy migration: replace navy/cyan values across remaining pages; delete dead overrides.
 
 **Acceptance per section:** passes `qa:brand:check`, answers What/do/why above fold, one accent,

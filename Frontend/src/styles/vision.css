@@ -346,3 +346,31 @@
   border-color: #1c5a45;
   color: #d4af37;
 }
+
+/* ---------- Partnerships + Get Started: growth path (rollout step 5) ---------- */
+
+.static-page h2 {
+  font-family: 'Merriweather', serif;
+}
+
+.static-page__chip {
+  border-color: #1c5a45;
+  color: #d4af37;
+}
+
+.get-started h2,
+.get-started h3 {
+  font-family: 'Merriweather', serif;
+}
+
+.get-started__signup {
+  border: 1px solid #1c5a45;
+  border-radius: 14px;
+  background: rgba(15, 59, 45, 0.92);
+}
+
+.get-started__form input:focus,
+.get-started__form select:focus {
+  outline: none;
+  border-color: #d4af37;
+}
