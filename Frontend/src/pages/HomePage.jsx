@@ -78,12 +78,13 @@ export default function HomePage({ entries = [] }) {
   return (
     <div className="home-page">
       <section className="home-hero" aria-label="PVA Bazaar introduction">
-        <span className="pill home-hero__badge">Pure Life Knowledge · Pura Vida Ayurveda</span>
+        <span className="pill home-hero__badge">Pura Vida Ayurveda · Pure Life Knowledge</span>
         <h1 className="home-hero__title">The Living Bazaar</h1>
         <p className="home-hero__promise">
-          A marketplace where objects and ideas carry their story. Read the archive and writings,
-          buy and sell real goods with provenance, publish books, and partner with institutions -
-          all from one front door.
+          This began as notes I could not stop writing - the day <em>pura vida</em> met Ayurveda and I
+          realized they say the same thing: pure life knowledge. Everything here remembers where it came
+          from. Read the writings, buy pieces that carry the story of the hands that made them, publish
+          books, and build something that lasts.
         </p>
         <div className="home-hero__actions">
           <Link className="pva-btn pva-btn--primary" to="/archive">Open the archive</Link>
@@ -97,11 +98,12 @@ export default function HomePage({ entries = [] }) {
           <span className="pva-section-intro__badge">The doors</span>
           <h2 className="pva-section-intro__title">Everything has a place</h2>
           <p className="pva-section-intro__promise">
-            Each door is a complete section with its own promise. Start anywhere; the site keeps its shape.
+            These are the rooms of this bazaar - each built around one real promise. Start anywhere;
+            nothing here is filler.
           </p>
         </header>
         <div className="home-doors">
-          {HOME_CORE_ROUTES.map((section) => (
+          {HOME_CORE_ROUTES.filter((section) => section.to !== '/').map((section) => (
             <Link
               key={section.key}
               to={section.to}
@@ -173,6 +175,7 @@ export default function HomePage({ entries = [] }) {
         ))}
         <Link to="/recovery" className="home-support-band__link">Recovery</Link>
         <Link to="/verification" className="home-support-band__link home-support-band__link--accent">Verify an artifact</Link>
+        <Link to="/partnerships#promoter" className="home-support-band__link home-support-band__link--accent">Become a promoter - earn 5–50%</Link>
         <Link to="/heelkawn" className="home-support-band__link">HeelKawn</Link>
       </nav>
 

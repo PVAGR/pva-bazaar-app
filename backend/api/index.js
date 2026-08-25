@@ -445,6 +445,7 @@ app.use('/api/archive', archiveRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/items', itemsRoutes);
+app.use('/api/promoters', require('../routes/promoters'));
 app.use('/api/item-inquiries', itemInquiriesRoutes);
 app.use('/api/omnichannel', omnichannelRoutes);
 app.use('/api/solana', solanaRoutes);

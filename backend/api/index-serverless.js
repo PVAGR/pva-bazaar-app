@@ -289,6 +289,8 @@ app.use('/api/verification', verificationRoutes);
 // Public proposal board feed used by the home front door and civic surfaces.
 // Router paths already begin with /proposals, so mount at /api like the full server.
 app.use('/api', require('../routes/proposals'));
+// Promoter / consignment-ambassador program (QR codes, tokens, tiered shares).
+app.use('/api/promoters', require('../routes/promoters'));
 
 app.get('/api/openapi.json', (req, res) => {
   try {
