@@ -8,10 +8,20 @@ const router = express.Router();
 const Promoter = require('../models/Promoter');
 const Artifact = require('../models/Artifact');
 const { sendCustomEmail } = require('../service/emailService');
+const { promoterSignupLimiter, promoterRedeemLimiter } = require('../middleware/rateLimit');
 
 const ADMIN_INBOX = process.env.PROMOTER_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'pvaglobalreach@gmail.com';
 const SITE_URL = process.env.PUBLIC_SITE_URL || process.env.ALLOWED_ORIGIN || 'https://pvabazaar.org';
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no lookalikes (I L O 0 1)
+
+function mongooseSafeId(value) {
+  try {
+    if (!/^[a-f\d]{24}$/i.test(value)) return null;
+    return new (require('mongoose').Types.ObjectId)(value);
+  } catch (_) {
+    return null;
+  }
+}
 
 function commissionPercentForPriceCents(priceCents) {
   if (!Number.isFinite(priceCents) || priceCents <= 0) return 5;
@@ -50,7 +60,7 @@ function publicPromoter(doc) {
 }
 
 // POST /api/promoters/signup - create a promoter account + 4-char token
-router.post('/signup', async (req, res) => {
+router.post('/signup', promoterSignupLimiter, async (req, res) => {
   try {
     const name = String(req.body?.name || '').trim();
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -124,7 +134,7 @@ router.get('/mine/:code', async (req, res) => {
 });
 
 // POST /api/promoters/redeem - buyer submits a promoter code with their order intent
-router.post('/redeem', async (req, res) => {
+router.post('/redeem', promoterRedeemLimiter, async (req, res) => {
   try {
     const code = String(req.body?.code || '').trim().toUpperCase();
     const itemRef = String(req.body?.itemId || req.body?.itemSlug || '').trim();
@@ -214,14 +224,5 @@ router.post('/redeem', async (req, res) => {
     return res.status(500).json({ ok: false, error: err.message });
   }
 });
-
-function mongooseSafeId(value) {
-  try {
-    if (!/^[a-f\d]{24}$/i.test(value)) return null;
-    return new (require('mongoose').Types.ObjectId)(value);
-  } catch (_) {
-    return null;
-  }
-}
 
 module.exports = router;

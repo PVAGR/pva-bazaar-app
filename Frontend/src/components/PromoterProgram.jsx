@@ -310,6 +310,42 @@ export default function PromoterProgram() {
           </form>
         </div>
       </div>
+
+      {promoter?.code && ledger && ledger.length > 0 && (
+        <div className="promoter-dashboard">
+          <h3>Your redemption ledger</h3>
+          <div className="promoter-ledger-summary">
+            <span>{ledger.length} total order{ledger.length === 1 ? '' : 's'}</span>
+            <span>{'$'}{(promoter.earnedCents / 100).toFixed(2)} total earned</span>
+          </div>
+          <div className="promoter-ledger-table-wrap">
+            <table className="promoter-ledger-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th>Your share</th>
+                  <th>Commission</th>
+                  <th>Buyer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledger.map((r, idx) => (
+                  <tr key={r.createdAt || idx}>
+                    <td>{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                    <td>{r.itemTitle || r.itemSlug || '—'}</td>
+                    <td>{r.itemPriceCents ? `$${(r.itemPriceCents / 100).toFixed(2)}` : '—'}</td>
+                    <td>{r.commissionPercent ? `${r.commissionPercent}%` : '—'}</td>
+                    <td className="promoter-ledger-earned">{r.commissionCents ? `$${(r.commissionCents / 100).toFixed(2)}` : '—'}</td>
+                    <td>{r.buyerName || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

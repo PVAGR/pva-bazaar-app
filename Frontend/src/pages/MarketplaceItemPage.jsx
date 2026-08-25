@@ -83,13 +83,14 @@ export default function MarketplaceItemPage() {
 
   useEffect(() => {
     try {
-      const fromUrl = new URLSearchParams(window.location.hash.split("?")[1] || "").get("ref") || "";
-      const stored = window.localStorage.getItem("pva:referral-code") || "";
+      const hashParams = new URLSearchParams(window.location.hash.split("?")[1] || "");
+      const fromUrl = hashParams.get("promoter") || hashParams.get("ref") || "";
+      const stored = window.localStorage.getItem("pva:referral-code") || window.localStorage.getItem("pva:promoter-code") || "";
       setPromoCode((fromUrl || stored).trim().toUpperCase());
     } catch {
       setPromoCode("");
     }
-  }, [item && (item.slug || item.id)]);
+  }, [slugOrId]);
 
   async function submitPromoOrder(event) {
     event.preventDefault();
