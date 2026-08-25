@@ -39,6 +39,28 @@ const checkoutLimiter = rateLimit({
   },
 });
 
+// Promoter signup limiter: 5 requests per 15 minutes per IP (prevent spam signups)
+const promoterSignupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ ok: false, error: 'Too many signup attempts. Please try again later.' });
+  },
+});
+
+// Promoter redeem limiter: 20 requests per 15 minutes per IP
+const promoterRedeemLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ ok: false, error: 'Too many redemption requests. Please try again later.' });
+  },
+});
+
 // Webhook limiter: 1000 requests per 15 minutes per IP (high, but not unlimited)
 const webhookLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -54,5 +76,7 @@ module.exports = {
   generalLimiter,
   authLimiter,
   checkoutLimiter,
+  promoterSignupLimiter,
+  promoterRedeemLimiter,
   webhookLimiter,
 };

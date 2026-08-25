@@ -408,3 +408,90 @@
 .home-support-band__link.home-support-band__link--accent {
   color: #d4af37;
 }
+
+/* ---------- Marketplace density pass (fit the page cleanly) ---------- */
+
+.marketplace-page .marketplace-header {
+  margin-bottom: 1.1rem;
+}
+
+.marketplace-page .marketplace-portal-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.marketplace-page .marketplace-portal-card {
+  padding: 10px 12px;
+}
+
+.marketplace-page .marketplace-atlas {
+  margin-bottom: 14px;
+}
+
+.marketplace-page .item-grid {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.marketplace-page .item-image {
+  aspect-ratio: 1 / 1;
+}
+
+/* ---------- Promoter order panel on item pages ---------- */
+
+.item-promo-panel {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #d4af37;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.08);
+  padding: 14px;
+}
+
+.item-promo-line {
+  margin: 0 0 10px;
+  color: #e8f4f0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.item-promo-line .mono {
+  color: #d4af37;
+  letter-spacing: 0.2em;
+}
+
+.item-promo-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item-promo-form input {
+  flex: 1 1 180px;
+  background: rgba(28, 90, 69, 0.55);
+  border: 1px solid #1c5a45;
+  border-radius: 10px;
+  color: #e8f4f0;
+  padding: 9px 12px;
+  font-size: 0.92rem;
+}
+
+.item-promo-form input:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+.item-promo-success {
+  margin: 0;
+  color: #4ef8a3;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.item-promo-error {
+  margin: 8px 0 0;
+  color: #e8f4f0;
+  font-size: 0.86rem;
+}

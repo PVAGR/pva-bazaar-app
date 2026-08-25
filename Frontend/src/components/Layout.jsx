@@ -124,16 +124,6 @@ export default function Layout({ children }) {
     PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
 
-  const traversal = useMemo(() => {
-    const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
-    const currentIndex = publicRoutes.findIndex((route) => route.to === pathname);
-    if (currentIndex < 0) return { prev: null, next: null };
-    return {
-      prev: currentIndex > 0 ? publicRoutes[currentIndex - 1] : null,
-      next: currentIndex < publicRoutes.length - 1 ? publicRoutes[currentIndex + 1] : null,
-    };
-  }, [pathname]);
-
   return (
     <div className={`layout ${darkMode ? 'layout--dark' : 'layout--light'}`}>
       <Helmet>
@@ -210,33 +200,6 @@ export default function Layout({ children }) {
       </header>
 
       <main id="main-content" className="layout__main">
-        {pathname !== '/' && routeIdentity?.title ? (
-          <div className="layout__hero">
-            <div className="layout__heroInner">
-              {routeIdentity.badge ? (
-                <span className="layout__heroBadge">{routeIdentity.badge}</span>
-              ) : null}
-              <h1 className="layout__heroTitle">{routeIdentity.title}</h1>
-              {routeIdentity.description ? (
-                <p className="layout__heroDescription">{routeIdentity.description}</p>
-              ) : null}
-              {(traversal.prev || traversal.next) ? (
-                <div className="layout__traversal">
-                  {traversal.prev ? (
-                    <NavLink to={traversal.prev.to} className="layout__traversalLink">
-                      ← {traversal.prev.title}
-                    </NavLink>
-                  ) : <span />}
-                  {traversal.next ? (
-                    <NavLink to={traversal.next.to} className="layout__traversalLink">
-                      {traversal.next.title} →
-                    </NavLink>
-                  ) : <span />}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
         {children}
       </main>
 

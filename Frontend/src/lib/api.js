@@ -814,6 +814,49 @@ export async function fetchVerificationByCertificate(certificateId) {
   }
 }
 
+// --- Promoter / consignment-ambassador program ---
+export const promoterQrUrl = (code) => `${getPreferredApiBase() || ''}/promoters/qr/${encodeURIComponent(code)}.png`;
+
+export async function signupPromoter({ name, email, handle, platform }) {
+  try {
+    const data = await apiPost('/promoters/signup', { name, email, handle, platform });
+    if (data?.ok && data.promoter) return { ok: true, promoter: data.promoter, existing: Boolean(data.existing) };
+    return { ok: false, error: data?.error || 'Signup failed' };
+  } catch (err) {
+    return { ok: false, error: err?.response?.data?.error || err.message };
+  }
+}
+
+export async function fetchPromoterPublic(code) {
+  try {
+    const data = await apiGet(`/promoters/public/${encodeURIComponent(code)}`);
+    if (data?.ok) return { ok: true, promoter: data.promoter };
+    return { ok: false, error: data?.error || 'not-found' };
+  } catch (err) {
+    return { ok: false, error: 'network' };
+  }
+}
+
+export async function redeemPromoCode({ code, itemId, buyerName, buyerEmail, buyerNote }) {
+  try {
+    const data = await apiPost('/promoters/redeem', { code, itemId, buyerName, buyerEmail, buyerNote });
+    if (data?.ok) return { ok: true, ...data };
+    return { ok: false, error: data?.error || 'Redemption failed' };
+  } catch (err) {
+    return { ok: false, error: err?.response?.data?.error || err.message };
+  }
+}
+
+export async function fetchPromoterMine(code) {
+  try {
+    const data = await apiGet(`/promoters/mine/${encodeURIComponent(code)}`);
+    if (data?.ok) return { ok: true, promoter: data.promoter, redemptions: data.redemptions || [] };
+    return { ok: false, error: data?.error || 'not-found' };
+  } catch (err) {
+    return { ok: false, error: 'network' };
+  }
+}
+
 // fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
 export async function fetchMarketplaceItem(slugOrId) {
   if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };

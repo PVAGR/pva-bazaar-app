@@ -2,6 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import SectionIntro from '../components/SectionIntro.jsx';
+import PromoterProgram from '../components/PromoterProgram.jsx';
 import './PublicLandingPage.css';
 
 const PARTNERS = [
@@ -65,6 +66,8 @@ export default function PartnershipsPage() {
           <p>Writers, editors, and documenters can help preserve the stories behind products and knowledge.</p>
         </article>
       </div>
+
+      <PromoterProgram />
     </section>
   );
 }

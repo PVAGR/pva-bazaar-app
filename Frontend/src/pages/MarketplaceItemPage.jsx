@@ -8,6 +8,7 @@ import {
   fetchCryptoCheckoutConfig,
   prepareCryptoCheckout,
   confirmCryptoCheckoutPayment,
+  redeemPromoCode,
 } from "../lib/api";
 import "./MarketplaceItemPage.css";
 
@@ -74,6 +75,42 @@ export default function MarketplaceItemPage() {
   const [cryptoError, setCryptoError] = useState("");
   const [cryptoSuccess, setCryptoSuccess] = useState("");
   const [addedToCart, setAddedToCart] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoForm, setPromoForm] = useState({ buyerName: "", buyerEmail: "", buyerNote: "" });
+  const [promoResult, setPromoResult] = useState(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoBusy, setPromoBusy] = useState(false);
+
+  useEffect(() => {
+    try {
+      const hashParams = new URLSearchParams(window.location.hash.split("?")[1] || "");
+      const fromUrl = hashParams.get("promoter") || hashParams.get("ref") || "";
+      const stored = window.localStorage.getItem("pva:referral-code") || window.localStorage.getItem("pva:promoter-code") || "";
+      setPromoCode((fromUrl || stored).trim().toUpperCase());
+    } catch {
+      setPromoCode("");
+    }
+  }, [slugOrId]);
+
+  async function submitPromoOrder(event) {
+    event.preventDefault();
+    if (promoBusy) return;
+    setPromoBusy(true);
+    setPromoError("");
+    const res = await redeemPromoCode({
+      code: promoCode,
+      itemId: item.slug || item.id,
+      buyerName: promoForm.buyerName,
+      buyerEmail: promoForm.buyerEmail,
+      buyerNote: promoForm.buyerNote,
+    });
+    setPromoBusy(false);
+    if (!res.ok) {
+      setPromoError(res.error || "Could not submit");
+      return;
+    }
+    setPromoResult(res);
+  }
 
   function addToCart(id) {
     try {
@@ -540,6 +577,42 @@ export default function MarketplaceItemPage() {
           >
             Verify this item
           </Link>
+
+          {promoCode ? (
+            <section className="item-promo-panel" aria-label="Promoter order">
+              <p className="item-promo-line">
+                Referred by promoter token <strong className="mono">{promoCode}</strong> - order through
+                the desk and their consignment share is calculated automatically.
+              </p>
+              {promoResult ? (
+                <p className="item-promo-success" role="status">
+                  Received - {promoResult.promoter.name} earns {promoResult.commissionPercent}% on this
+                  order. We will confirm by email.
+                </p>
+              ) : (
+                <form className="item-promo-form" onSubmit={submitPromoOrder}>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={promoForm.buyerName}
+                    onChange={(e) => setPromoForm((p) => ({ ...p, buyerName: e.target.value }))}
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    value={promoForm.buyerEmail}
+                    onChange={(e) => setPromoForm((p) => ({ ...p, buyerEmail: e.target.value }))}
+                    required
+                  />
+                  <button type="submit" className="buy-btn" disabled={promoBusy}>
+                    {promoBusy ? 'Sending…' : `Order with token ${promoCode}`}
+                  </button>
+                </form>
+              )}
+              {promoError ? <p className="item-promo-error" role="alert">{promoError}</p> : null}
+            </section>
+          ) : null}
 
           <section className="item-crypto-panel" aria-label="Crypto checkout">
             <h2>Buy With Crypto</h2>
