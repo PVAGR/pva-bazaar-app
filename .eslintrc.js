@@ -16,5 +16,38 @@ module.exports = {
     'qa/reports/',
     'qa/backstop/',
     'pva-bazaar-app/',
+    'apps/pva-bazaar-web/',
+    '_archive/',
+    'apps/web-com/',
+    'packages/ui/postcss.config.js',
+    'packages/ui/tailwind.config.js',
+    'Frontend/public/sw.js',
+    'Frontend/public/magnum-opus.js',
+    'public/magnum-opus.js',
+    'assets/',
+    'backend/service/api.js',
+    'backend/utils/api.js',
+  ],
+  overrides: [
+    {
+      files: ['**/*.test.js', '**/*.test.jsx', '**/*.test.ts', '**/*.test.tsx', '**/__tests__/**'],
+      env: {
+        node: true,
+      },
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        vi: 'readonly',
+      },
+      rules: {
+        'no-undef': 'off',
+      },
+    },
   ],
 };

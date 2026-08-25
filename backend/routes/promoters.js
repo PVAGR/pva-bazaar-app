@@ -84,7 +84,7 @@ router.get('/qr/:code.png', async (req, res) => {
     // qrcode is an optional runtime dep; generate without failing the module.
     let qr;
     try {
-      // eslint-disable-next-line global-require, import/no-unresolved
+      // eslint-disable-next-line global-require
       qr = require('qrcode');
     } catch (err) {
       return res.status(503).json({ ok: false, error: 'QR generation unavailable' });

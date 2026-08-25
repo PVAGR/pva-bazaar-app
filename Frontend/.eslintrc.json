@@ -15,7 +15,7 @@
   },
   "rules": {
     "no-console": ["warn", {
-      "allow": []
+      "allow": ["warn", "error"]
     }]
   },
   "overrides": [
