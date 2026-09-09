@@ -1,0 +1,26 @@
+name: Fetch Vercel Runtime Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-logs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch latest production deployment logs
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          echo "Fetching latest production deployment for project..."
+          DEPLOYMENTS=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&target=production&limit=1")
+          DEPLOY_ID=$(echo "$DEPLOYMENTS" | jq -r '.deployments[0].uid')
+          echo "Latest deployment: $DEPLOY_ID"
+          echo "Fetching runtime logs..."
+          LOGS=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v3/deployments/$DEPLOY_ID/logs?limit=100")
+          echo "$LOGS" | jq -r '.logs[]?.message // .logs[]?.text // .logs[]?' 2>/dev/null \
+            | grep -iE 'error|exception|stack|cannot|failed|crash|typeerror|referenceerror|syntaxerror' || echo "(no error lines found in logs)"
