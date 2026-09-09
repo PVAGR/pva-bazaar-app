@@ -17,4 +17,5 @@ jobs:
           npm i -g vercel@latest
           # Use Vercel CLI to fetch runtime logs for the production deployment
           # The CLI handles auth and API endpoint resolution
-          vercel logs https://pva-backend-api.vercel.app --token=$VERCEL_TOKEN --output json 2>&1 | head -200
+          vercel logs https://pva-backend-api.vercel.app --token=$VERCEL_TOKEN --json 2>&1 | head -200
+
