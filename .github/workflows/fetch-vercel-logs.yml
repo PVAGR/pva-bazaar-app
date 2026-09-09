@@ -22,5 +22,9 @@ jobs:
           echo "Fetching runtime logs..."
           LOGS=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
             "https://api.vercel.com/v3/deployments/$DEPLOY_ID/logs?limit=100")
+          echo "Raw logs response:"
+          echo "$LOGS" | head -c 4000
+          echo ""
+          echo "--- Attempting to parse logs ---"
           echo "$LOGS" | jq -r '.logs[]?.message // .logs[]?.text // .logs[]?' 2>/dev/null \
-            | grep -iE 'error|exception|stack|cannot|failed|crash|typeerror|referenceerror|syntaxerror' || echo "(no error lines found in logs)"
+            | grep -iE 'error|exception|stack|cannot|failed|crash|typeerror|referenceerror|syntaxerror' || echo "(no error lines found in parsed logs)"
