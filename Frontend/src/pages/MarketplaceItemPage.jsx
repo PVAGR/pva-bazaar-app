@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { useParams, Link } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { Helmet } from "react-helmet-async";
 import {
   fetchMarketplaceItem,
@@ -52,6 +54,7 @@ export default function MarketplaceItemPage() {
   const [error, setError] = useState(null);
   const [mainIdx, setMainIdx] = useState(0);
   const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState("");
   const [sendingInquiry, setSendingInquiry] = useState(false);
   const [inquiryResult, setInquiryResult] = useState("");
   const [inquiryError, setInquiryError] = useState("");
@@ -120,7 +123,7 @@ export default function MarketplaceItemPage() {
       localStorage.setItem('pva:cart', JSON.stringify(items));
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
-    } catch {}
+    } catch { /* storage unavailable — ignore */ }
   }
 
   useEffect(() => {
@@ -294,7 +297,7 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+      <Link to="/marketplace" className="back-link">â† Back to Marketplace</Link>
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">
@@ -546,15 +549,17 @@ export default function MarketplaceItemPage() {
             onClick={async () => {
               if (buying) return;
               setBuying(true);
+              setBuyError("");
               try {
                 const res = await createCheckoutSession(item.id);
                 if (res.ok && res.url) {
                   window.location.href = res.url;
                 } else {
-                  alert(res.error || "Failed to start checkout");
+                  // No redirect happened: surface the failure inline and stay.
+                  setBuyError(`${res.error || "Failed to start checkout"} â€” you were not charged and can retry.`);
                 }
               } catch (e) {
-                alert(e.message || "Checkout error");
+                setBuyError(`${e.message || "Checkout error"} â€” you were not charged and can retry.`);
               } finally {
                 setBuying(false);
               }
@@ -562,6 +567,7 @@ export default function MarketplaceItemPage() {
           >
             {buying ? "Redirecting..." : "Buy"}
           </button>
+          {buyError ? <div className="item-inquiry-error" role="alert">{buyError}</div> : null}
           <button
             className="buy-btn"
             style={{ background: 'var(--site-bg)', border: '2px solid #1a7d3a', color: '#1a7d3a' }}
@@ -606,7 +612,7 @@ export default function MarketplaceItemPage() {
                     required
                   />
                   <button type="submit" className="buy-btn" disabled={promoBusy}>
-                    {promoBusy ? 'Sending…' : `Order with token ${promoCode}`}
+                    {promoBusy ? 'Sendingâ€¦' : `Order with token ${promoCode}`}
                   </button>
                 </form>
               )}
@@ -629,7 +635,7 @@ export default function MarketplaceItemPage() {
                 <div className="item-crypto-meta">
                   <span>Network: {cryptoConfig.network}</span>
                   <span>Chain ID: {cryptoConfig.chainId}</span>
-                  <span>Quote: 1 ETH ≈ ${cryptoConfig.quoteUsdPerEth.toLocaleString()}</span>
+                  <span>Quote: 1 ETH â‰ˆ ${cryptoConfig.quoteUsdPerEth.toLocaleString()}</span>
                 </div>
 
                 <div className="item-crypto-form-grid">

@@ -31,9 +31,14 @@ function logFulfillment(eventId, orderId, action, payload, success = true, error
 // Use express.raw in index.js for this route!
 router.post("/stripe", async (req, res) => {
   const sig = req.headers["stripe-signature"];
+  // Signature verification needs the exact raw bytes. When the general JSON
+  // parser runs first (full-server entry stashes req.rawBody via its verify
+  // callback), prefer that buffer; when express.raw ran first (serverless
+  // entry), req.body is already the raw Buffer.
+  const payload = Buffer.isBuffer(req.rawBody) ? req.rawBody : req.body;
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(payload, sig, STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).json({ error: `Webhook signature verification failed: ${err.message}` });
   }

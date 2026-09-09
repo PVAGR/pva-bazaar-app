@@ -38,7 +38,7 @@ const ONLINE_PARTNER = {
 
 beforeEach(() => {
   window.localStorage.clear();
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {

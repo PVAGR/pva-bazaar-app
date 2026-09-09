@@ -33,7 +33,10 @@ router.post('/', requireAuth, async (req, res) => {
 router.get('/:productId', async (req, res) => {
   try {
     const product = await productService.getProductWithDetails(req.params.productId);
-    if (!product) {
+    // Public reads are published-only: drafts/archived products must not leak
+    // through the public endpoint (owners use the authenticated seller flows).
+    // Note: the service returns a { product, [type] } wrapper.
+    if (!product || product?.product?.status !== 'published') {
       return res.status(404).json({ error: 'Product not found' });
     }
 

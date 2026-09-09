@@ -29,9 +29,9 @@ router.get('/dashboard', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'No shop found for this user' });
     }
 
-    // Get seller stats
+    // Get seller stats (Artifact ownership field is `creator`, not `createdBy`).
     const totalProducts = await Artifact.countDocuments({
-      createdBy: req.user._id,
+      creator: req.user._id,
       status: 'published',
     });
 
@@ -250,12 +250,12 @@ router.get('/products', requireAuth, async (req, res) => {
     const limit = Math.min(100, parseInt(req.query.limit) || 20);
     const skip = (page - 1) * limit;
 
-    const products = await Artifact.find({ createdBy: req.user._id })
+    const products = await Artifact.find({ creator: req.user._id })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Artifact.countDocuments({ createdBy: req.user._id });
+    const total = await Artifact.countDocuments({ creator: req.user._id });
 
     res.json({
       products: products.map((p) => ({

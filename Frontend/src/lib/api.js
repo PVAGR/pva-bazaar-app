@@ -1,6 +1,5 @@
 ﻿import api from "./axios";
 import { getToken } from "./auth";
-import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
 import {
   apiUrl,
@@ -100,6 +99,12 @@ export const fetchTransactions = async (limit = 10) => {
       apiGet('/orders/escrow', { params: { limit: boundedLimit } }).catch(() => ({ ok: false, items: [] })),
     ]);
 
+    // Both sources failed: report unavailability (null), never a fake-empty
+    // history. A partial success still returns the real records obtained.
+    if (ordersResponse?.ok === false && escrowResponse?.ok === false) {
+      return null;
+    }
+
     const orderItems = Array.isArray(ordersResponse?.items) ? ordersResponse.items : [];
     const escrowItems = Array.isArray(escrowResponse?.items) ? escrowResponse.items : [];
 
@@ -130,7 +135,7 @@ export const fetchTransactions = async (limit = 10) => {
 
     return normalized;
   } catch (_err) {
-    return [];
+    return null;
   }
 };
 export const fetchAdminTransactions = (limit = 25) =>
@@ -903,7 +908,10 @@ export async function fetchPromoterMine(code) {
   }
 }
 
-// fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
+// fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id.
+// Server-authoritative: the record must come from the production API. Sample
+// inventory is never substituted — a failure is reported as a failure so the
+// UI can show an explicit unavailable state instead of a fake live product.
 export async function fetchMarketplaceItem(slugOrId) {
   if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };
   try {
@@ -912,16 +920,8 @@ export async function fetchMarketplaceItem(slugOrId) {
     if (response && response.ok && response.item) {
       return { ok: true, item: response.item };
     }
-    const fallbackItem = findFeaturedItem(slugOrId);
-    if (fallbackItem) {
-      return { ok: true, item: fallbackItem, fallback: true };
-    }
-    return { ok: false, item: null };
+    return { ok: false, item: null, error: response?.error || response?.message || 'Item not found' };
   } catch (err) {
-    const fallbackItem = findFeaturedItem(slugOrId);
-    if (fallbackItem) {
-      return { ok: true, item: fallbackItem, fallback: true };
-    }
     return { ok: false, item: null, error: err.message };
   }
 }
@@ -968,6 +968,9 @@ export async function fetchItemProvenanceVerification(slugOrId, { live = true } 
 }
 // Marketplace API functions
 // fetchMarketplaceItems({ limit=12, cursor=null, category=null, q=null, signal=null, availabilityStatus=null, isUnique=null, originCountry=null, color=null })
+//
+// Server-authoritative: an empty backend returns an empty list, and a failed
+// request returns ok:false. Sample inventory is never injected as live data.
 export async function fetchMarketplaceItems({
   limit = 12,
   cursor = null,
@@ -993,16 +996,6 @@ export async function fetchMarketplaceItems({
     const config = signal ? { signal } : undefined;
     const response = await apiGet(url, config);
     if (response && response.ok && Array.isArray(response.items)) {
-      const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
-      if (!hasFilters && response.items.length === 0) {
-        return {
-          ok: true,
-          items: FEATURED_INVENTORY.slice(0, limit),
-          nextCursor: null,
-          categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
-          fallback: true,
-        };
-      }
       return {
         ok: true,
         items: response.items,
@@ -1010,29 +1003,34 @@ export async function fetchMarketplaceItems({
         categories: response.categories || [],
       };
     }
-    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
-    if (!hasFilters) {
-      return {
-        ok: true,
-        items: FEATURED_INVENTORY.slice(0, limit),
-        nextCursor: null,
-        categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
-        fallback: true,
-      };
-    }
-    return { ok: false, items: [], nextCursor: null, categories: [] };
+    return {
+      ok: false,
+      items: [],
+      nextCursor: null,
+      categories: [],
+      error: response?.error || response?.message || 'Failed to load marketplace items',
+    };
   } catch (err) {
-    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
-    if (!hasFilters) {
-      return {
-        ok: true,
-        items: FEATURED_INVENTORY.slice(0, limit),
-        nextCursor: null,
-        categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
-        fallback: true,
-      };
-    }
     return { ok: false, items: [], nextCursor: null, categories: [], error: err.message };
+  }
+}
+
+/**
+ * Revalidate an explicit id set against the server (cart/checkout use).
+ * Only published records come back; deleted/draft/unknown ids are simply
+ * absent. Never throws — callers treat absence as unavailable.
+ */
+export async function fetchItemsByIds(ids = []) {
+  const clean = [...new Set((Array.isArray(ids) ? ids : []).map((id) => String(id || '').trim()).filter(Boolean))].slice(0, 50);
+  if (!clean.length) return { ok: true, items: [] };
+  try {
+    const response = await apiGet(`/items?ids=${clean.map(encodeURIComponent).join(',')}&limit=50`);
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items };
+    }
+    return { ok: false, items: [], error: response?.error || response?.message || 'Failed to revalidate cart items' };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
   }
 }
 
