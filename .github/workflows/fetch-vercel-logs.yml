@@ -7,15 +7,23 @@ jobs:
   fetch-logs:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch runtime logs via Vercel CLI
+      - name: Fetch deployment details and build events
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
         run: |
           set -euo pipefail
-          npm i -g vercel@latest
-          # Use Vercel CLI to fetch runtime logs for the production deployment
-          # The CLI handles auth and API endpoint resolution
-          vercel logs https://pva-backend-api.vercel.app --token=$VERCEL_TOKEN --json 2>&1 | head -200
-
+          echo "=== Latest production deployments (full details) ==="
+          curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&target=production&limit=3" \
+            | jq '[.deployments[] | {uid, state: .readyState, error: .errorMessage, created: .createdAt, url}]'
+          echo ""
+          echo "=== Build events for latest deployment ==="
+          DEPLOY_ID=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&target=production&limit=1" \
+            | jq -r '.deployments[0].uid')
+          curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v3/deployments/$DEPLOY_ID/events?limit=100&direction=forward" \
+            | jq -r '.[]? | select(.type == "stdout" or .type == "stderr") | .text' \
+            | grep -iE 'error|warn|fail|cannot|missing|module' | head -50 || echo "(no matching build event lines)"
