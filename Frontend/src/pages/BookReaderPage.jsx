@@ -3,21 +3,17 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
-import { fetchPublicBookProject, getApiBase } from '../lib/api';
+import { apiUrl as toApiUrl, fetchPublicBookProject } from '../lib/api';
 import { fetchManuscriptFromMirrors } from '../lib/manuscriptArchives';
 import { findLocalPublishedBookBySlug } from '../lib/localBookVault';
 import './BookReaderPage.css';
 
-function toApiUrl(path) {
-  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
-  const base = getApiBase().replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
-}
-
 export default function BookReaderPage() {
   const { slug } = useParams();
   const [book, setBook] = useState(null);
+  // `isLocalPreview` — the online record was unreachable, so we are showing a
+  // browser-only copy. It must NEVER be presented as a published book.
+  const [isLocalPreview, setIsLocalPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [manuscriptText, setManuscriptText] = useState('');
@@ -30,6 +26,7 @@ export default function BookReaderPage() {
       setLoading(true);
       setError('');
       setManuscriptText('');
+      setIsLocalPreview(false);
       try {
         const data = await fetchPublicBookProject(slug);
         if (!data?.ok || !data?.item) {
@@ -39,8 +36,13 @@ export default function BookReaderPage() {
       } catch (err) {
         const localBook = findLocalPublishedBookBySlug(slug);
         if (!cancelled && localBook) {
+          // Online record unavailable — show the browser copy ONLY as a
+          // clearly-labeled local preview, with the real error visible.
           setBook(localBook);
-          setError('');
+          setIsLocalPreview(true);
+          setError(
+            `Online record unavailable (${err.message || 'network error'}). Showing a preview of the copy stored in THIS browser only — it is not verified as published.`,
+          );
         } else if (!cancelled) {
           setError(err.message || 'Failed to load book');
         }
@@ -97,7 +99,7 @@ export default function BookReaderPage() {
       <section className="book-reader section-card">
         <header className="book-reader__hero">
           <div>
-            <p className="pill">Published book</p>
+            <p className="pill">{isLocalPreview ? 'Local preview — not verified online' : 'Published book'}</p>
             <h1>{book?.title || 'Book reader'}</h1>
             {book?.subtitle ? <p className="book-reader__subtitle">{book.subtitle}</p> : null}
             {book?.authorName ? <p className="book-reader__author">by {book.authorName}</p> : null}
@@ -123,7 +125,7 @@ export default function BookReaderPage() {
             {loading ? <p className="book-reader__muted">Loading book…</p> : null}
             {error ? <div className="book-reader__error" role="alert">{error}</div> : null}
 
-            {!loading && !error && readerIframeSrc && manuscriptText ? (
+            {!loading && (!error || isLocalPreview) && readerIframeSrc && manuscriptText ? (
               <div className="book-reader__tabs">
                 <button className={`book-reader__tab ${viewMode === 'iframe' ? 'is-active' : ''}`} onClick={() => setViewMode('iframe')}>
                   Rendered view
@@ -134,7 +136,7 @@ export default function BookReaderPage() {
               </div>
             ) : null}
 
-            {!loading && !error && viewMode === 'iframe' && readerIframeSrc ? (
+            {!loading && (!error || isLocalPreview) && viewMode === 'iframe' && readerIframeSrc ? (
               <div className="book-reader__iframeWrap">
                 <iframe
                   src={readerIframeSrc}
@@ -145,7 +147,7 @@ export default function BookReaderPage() {
               </div>
             ) : null}
 
-            {!loading && !error && viewMode === 'markdown' && manuscriptText ? (
+            {!loading && (!error || isLocalPreview) && viewMode === 'markdown' && manuscriptText ? (
               <div className="book-reader__localRender">
                 <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
                   {manuscriptText}
@@ -153,11 +155,11 @@ export default function BookReaderPage() {
               </div>
             ) : null}
 
-            {!loading && !error && manuscriptLoading ? (
+            {!loading && (!error || isLocalPreview) && manuscriptLoading ? (
               <p className="book-reader__muted">Loading manuscript text…</p>
             ) : null}
 
-            {!loading && !error && !readerIframeSrc && !manuscriptText && !manuscriptLoading ? (
+            {!loading && (!error || isLocalPreview) && !readerIframeSrc && !manuscriptText && !manuscriptLoading ? (
               <p className="book-reader__muted">This book does not have rendered content yet.</p>
             ) : null}
           </article>
@@ -169,7 +171,8 @@ export default function BookReaderPage() {
               {book?.audience ? <li><strong>Audience:</strong> {book.audience}</li> : null}
               {book?.language ? <li><strong>Language:</strong> {book.language}</li> : null}
               {book?.wordCount ? <li><strong>Words:</strong> {book.wordCount}</li> : null}
-              {book?.status ? <li><strong>Status:</strong> {book.status}</li> : null}
+              {book?.status && !isLocalPreview ? <li><strong>Status:</strong> {book.status}</li> : null}
+              {isLocalPreview ? <li><strong>Status:</strong> local preview — not verified online</li> : null}
             </ul>
 
             {book?.mirrors ? (

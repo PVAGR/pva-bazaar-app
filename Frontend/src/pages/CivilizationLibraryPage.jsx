@@ -1,15 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { apiGet } from '../lib/api';
-import { ENV } from '../config/env.ts';
+import { apiGet, apiUrl as toApiUrl } from '../lib/api';
 import './CivilizationLibraryPage.css';
-
-function toApiUrl(path) {
-  const base = ENV.API_URL.replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
-}
 
 export default function CivilizationLibraryPage() {
   const [items, setItems] = useState([]);

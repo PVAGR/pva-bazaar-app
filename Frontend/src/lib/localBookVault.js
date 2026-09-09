@@ -1,3 +1,16 @@
+/**
+ * localBookVault — browser-only crash-recovery storage for book drafts.
+ *
+ * CONTRACT (canonical architecture):
+ * - localStorage / IndexedDB here are TEMPORARY drafts, autosave, and
+ *   crash-recovery ONLY. They are NEVER the authoritative published record.
+ * - Every record produced by this module carries `source: 'local'`.
+ * - UI code MUST NOT merge these records into remote/published lists as
+ *   though they came from MongoDB. Local drafts belong in a clearly separate
+ *   "Local drafts on this device" section.
+ * - A book is PUBLISHED online only when the production API confirms it AND
+ *   the public record verifies by slug/id (see verifyBookPublishedOnline).
+ */
 const BOOKS_KEY = 'pva:local-book-projects-v1';
 const MAX_DATA_URL_BYTES = 250 * 1024;
 
@@ -109,6 +122,8 @@ export function normalizeLocalBook(raw) {
     updatedAt: book.updatedAt || new Date().toISOString(),
     createdAt: book.createdAt || new Date().toISOString(),
     pendingPublish,
+    lastOnlineError: String(book.lastOnlineError || '').slice(0, 500),
+    lastOnlineAttemptAt: book.lastOnlineAttemptAt || null,
     manuscriptMarkdown,
     webHtml: String(book.webHtml || ''),
     frontCover: book.frontCover || {},
@@ -169,6 +184,40 @@ export function saveLocalBookProject(payload) {
 export function deleteLocalBookProject(bookId) {
   const id = String(bookId || '');
   const books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
+  saveBooks(books);
+  return true;
+}
+
+/**
+ * Record that an online save/publish attempt failed, keeping the draft
+ * intact for retry. The draft stays `source: 'local'` with
+ * `pendingPublish: true` so the UI can show an explicit "Failed to publish —
+ * retry" state instead of pretending the write succeeded.
+ */
+export function markLocalDraftPublishFailed(payload, errorMessage) {
+  const saved = saveLocalBookProject(Object.assign({}, payload || {}, {
+    pendingPublish: true,
+    lastOnlineError: String(errorMessage || 'Online save failed').slice(0, 500),
+    lastOnlineAttemptAt: new Date().toISOString(),
+  }));
+  return saved;
+}
+
+/**
+ * Clear the pending-publish flag once the server has confirmed the write
+ * (the remote record is now authoritative).
+ */
+export function clearLocalDraftPendingPublish(bookId) {
+  const id = String(bookId || '');
+  if (!id) return false;
+  const books = loadBooks();
+  const idx = books.findIndex(function(b) { return String(b.id || b._id || '') === id; });
+  if (idx < 0) return false;
+  books[idx] = Object.assign({}, books[idx], {
+    pendingPublish: false,
+    lastOnlineError: '',
+    updatedAt: new Date().toISOString(),
+  });
   saveBooks(books);
   return true;
 }

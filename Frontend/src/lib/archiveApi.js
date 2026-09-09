@@ -1,7 +1,7 @@
 import { apiFetch } from './api.js';
 
 export async function fetchAdminStatus(token) {
-  const res = await apiFetch('/api/admin/status', {
+  const res = await apiFetch('/admin/status', {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   const json = await res.json().catch(() => ({}));
@@ -10,7 +10,7 @@ export async function fetchAdminStatus(token) {
 }
 
 export async function requestAdminToken(secret) {
-  const res = await apiFetch('/api/admin/token', {
+  const res = await apiFetch('/admin/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ secret }),
@@ -26,7 +26,7 @@ export async function requestDevToken(secret) {
 }
 
 export async function createArchiveEntry(entry, token) {
-  const res = await apiFetch('/api/archive', {
+  const res = await apiFetch('/archive', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export async function createArchiveEntry(entry, token) {
  * @returns {Promise<Array>} Array of entry objects
  */
 export async function fetchArchiveEntries() {
-  const res = await apiFetch('/api/archive');
+  const res = await apiFetch('/archive');
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.message || 'Fetch entries failed');
   const entries = json.entries || [];
@@ -59,7 +59,7 @@ export async function fetchArchiveEntries() {
  * @returns {Promise<Object|null>} The entry object or null
  */
 export async function fetchArchiveEntryById(id, opts = {}) {
-  const res = await apiFetch(`/api/archive/${id}`, { signal: opts.signal });
+  const res = await apiFetch(`/archive/${id}`, { signal: opts.signal });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.message || 'Fetch entry failed');
   const entry = json.entry || null;

@@ -335,6 +335,16 @@
 
   <script>
     const API_BASE = 'https://api.pvabazaar.org/api';
+    // API_BASE already ends in `/api` — never append `/api` again (would
+    // produce `/api/api/...`). All backend paths go through api().
+    function api(path) {
+      const base = String(API_BASE || '').replace(/\/+$/, '');
+      const withSlash = String(path || '').startsWith('/') ? String(path) : `/${path}`;
+      const normalized = /\/api$/i.test(base) && /^\/api\//i.test(withSlash)
+        ? withSlash.slice(4)
+        : withSlash;
+      return `${base}${normalized}`;
+    }
 
     async function createEntry() {
       const title = document.getElementById('entryTitle').value;
@@ -347,7 +357,7 @@
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/entry`, {
+        const response = await fetch(api('/legacy/entry'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -375,7 +385,7 @@
 
     async function loadEntries() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/chain`);
+        const response = await fetch(api('/legacy/chain'));
         const data = await response.json();
 
         if (data.ok && data.chain.entries.length > 0) {
@@ -413,7 +423,7 @@
 
     async function viewEntry(hash) {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/entry/${hash}`);
+        const response = await fetch(api(`/legacy/entry/${hash}`));
         const data = await response.json();
 
         if (data.ok) {
@@ -426,7 +436,7 @@
 
     async function verifyChain() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/verify`);
+        const response = await fetch(api('/legacy/verify'));
         const data = await response.json();
 
         if (data.ok) {
@@ -443,7 +453,7 @@
 
     async function checkResurrection() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/resurrection-status`);
+        const response = await fetch(api('/legacy/resurrection-status'));
         const data = await response.json();
 
         if (data.ok) {
@@ -460,11 +470,11 @@
     }
 
     async function downloadJournal() {
-      window.open(`${API_BASE}/api/legacy/journal`, '_blank');
+      window.open(api('/legacy/journal'), '_blank');
     }
 
     async function downloadJSON() {
-      window.open(`${API_BASE}/api/legacy/download`, '_blank');
+      window.open(api('/legacy/download'), '_blank');
     }
 
     function addGuardian() {

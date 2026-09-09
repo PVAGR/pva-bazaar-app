@@ -6,7 +6,7 @@ import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken, clearToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import useConnectionMode from '../hooks/useConnectionMode.js';
-import { getPreferredApiBase } from '../lib/apiBase';
+import { apiUrl } from '../lib/apiBase';
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') return null;
@@ -110,11 +110,8 @@ export default function Layout({ children }) {
         if (normalized.length >= 4) {
           window.localStorage.setItem('pva:referral-code', normalized);
           window.localStorage.setItem('pva:inbound-ref', normalized);
-          const base = getPreferredApiBase();
-          if (base) {
-            fetch(`${base}/api/referrals/${encodeURIComponent(normalized)}/click`, { method: 'POST' })
-              .catch(() => { /* non-blocking */ });
-          }
+          fetch(apiUrl(`/referrals/${encodeURIComponent(normalized)}/click`), { method: 'POST' })
+            .catch(() => { /* non-blocking */ });
         }
       }
     } catch (_err) { /* non-blocking */ }

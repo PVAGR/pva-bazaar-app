@@ -485,7 +485,7 @@ export default function WritingStudioPage() {
         if (blogDraft.directBlogPublish) {
           try {
             const adminToken = await ensureAdminToken();
-            const setup = await apiJson('/api/blogs/setup', {
+            const setup = await apiJson('/blogs/setup', {
               method: 'POST',
               token: adminToken,
               body: {
@@ -494,7 +494,7 @@ export default function WritingStudioPage() {
               },
             });
 
-            await apiJson(`/api/blogs/${encodeURIComponent(draftSlug)}/update`, {
+            await apiJson(`/blogs/${encodeURIComponent(draftSlug)}/update`, {
               method: 'POST',
               body: {
                 edit: setup.editSecret,
@@ -514,7 +514,7 @@ export default function WritingStudioPage() {
             publicationResults.push(result);
             rememberPublication(result);
           } catch (error) {
-            const submitted = await apiJson('/api/contribute/submit', {
+            const submitted = await apiJson('/contribute/submit', {
               method: 'POST',
               body: {
                 title: blogDraft.title.trim(),
@@ -534,7 +534,7 @@ export default function WritingStudioPage() {
             rememberPublication(result);
           }
         } else {
-          const submitted = await apiJson('/api/contribute/submit', {
+          const submitted = await apiJson('/contribute/submit', {
             method: 'POST',
             body: {
               title: blogDraft.title.trim(),

@@ -3,6 +3,33 @@
   gap: 1rem;
 }
 
+/* Source badges: make online vs. on-this-device unmistakable. */
+.book-publish__listHeading {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.book-publish__badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid currentColor;
+  vertical-align: middle;
+}
+
+.book-publish__badge--online {
+  color: #1a7d3a;
+  background: color-mix(in srgb, #1a7d3a 10%, transparent);
+}
+
+.book-publish__badge--local {
+  color: #8a5a00;
+  background: color-mix(in srgb, #b37a00 12%, transparent);
+}
+
 .book-publish__hero,
 .book-publish__atlas,
 .book-publish__panel,

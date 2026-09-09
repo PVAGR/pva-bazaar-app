@@ -3,12 +3,15 @@ import { getToken } from "./auth";
 import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
 import {
+  apiUrl,
   clearApiBaseOverride,
   getApiBaseCandidates,
   getPreferredApiBase,
   normalizeApiBaseUrl,
   rememberApiBase,
 } from './apiBase';
+
+export { apiUrl };
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
@@ -295,6 +298,46 @@ export async function deleteBookProject(bookId) {
   return apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`);
 }
 
+/**
+ * Server-authoritative publish verification.
+ *
+ * A book counts as PUBLISHED online only when the public API returns the
+ * record by slug (or the owner-scoped API returns it by id with
+ * status === 'published'). Call this AFTER a successful save/publish POST
+ * and BEFORE showing any "Published" UI. Returns the verified item or throws.
+ */
+export async function verifyBookPublishedOnline({ id = '', slug = '' } = {}) {
+  const cleanSlug = String(slug || '').trim();
+  const cleanId = String(id || '').trim();
+  let lastError = null;
+
+  if (cleanSlug) {
+    try {
+      const pub = await fetchPublicBookProject(cleanSlug);
+      if (pub?.ok && pub?.item && String(pub.item?.status || '').toLowerCase() === 'published') {
+        return pub.item;
+      }
+      lastError = new Error(pub?.error || `Public record not found for slug "${cleanSlug}"`);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  if (cleanId) {
+    try {
+      const mine = await fetchBookProjectById(cleanId);
+      if (mine?.ok && mine?.item && String(mine.item?.status || '').toLowerCase() === 'published') {
+        return mine.item;
+      }
+      lastError = new Error(mine?.error || `Published record not confirmed for id "${cleanId}"`);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Published book could not be verified against the online API');
+}
+
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
 export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
 export const createProposal = (payload) => apiPost('/proposals', payload);
@@ -457,7 +500,10 @@ export async function apiUpload(path, formData, extraHeaders = {}, timeoutMs) {
   const headers = {
     ...extraHeaders,
   };
-  const adminPath = /^\/api\/cloud-storage\//i.test(String(path || '')) || /^\/api\/admin\//i.test(String(path || ''));
+  // Canonical paths omit the `/api` prefix (the axios/fetch base already ends
+  // in `/api`); legacy `/api/...` paths are still tolerated by the failover
+  // normalizer, so match both forms here.
+  const adminPath = /^\/(api\/)?cloud-storage\//i.test(String(path || '')) || /^\/(api\/)?admin\//i.test(String(path || ''));
   const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin:token') || localStorage.getItem('admin_token') : '';
   const token = adminPath && adminToken ? adminToken : getToken();
   if (token) {
