@@ -1,16 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { fetchPublishedBookProjects, getApiBase } from '../lib/api';
+import { apiUrl as toApiUrl, fetchPublishedBookProjects } from '../lib/api';
 import { listLocalPublishedBookProjects } from '../lib/localBookVault';
 import './BookShelfPage.css';
-
-function toApiUrl(path) {
-  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
-  const base = getApiBase().replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
-}
 
 function formatDate(value) {
   if (!value) return 'Recently published';
@@ -19,24 +12,6 @@ function formatDate(value) {
   } catch (_err) {
     return 'Recently published';
   }
-}
-
-function normalizeBookKey(book) {
-  return String(book?.slug || book?.id || book?._id || '')
-    .trim()
-    .toLowerCase();
-}
-
-function mergeBooksByKey(primary = [], secondary = []) {
-  const merged = [];
-  const seen = new Set();
-  for (const book of [...primary, ...secondary]) {
-    const key = normalizeBookKey(book);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    merged.push(book);
-  }
-  return merged;
 }
 
 function isAdminUser() {
@@ -55,8 +30,7 @@ async function deleteBookAsAdmin(bookId) {
   const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
   if (!token) throw new Error('Not authenticated');
 
-  const base = getApiBase().replace(/\/+$/, '');
-  const response = await fetch(`${base}/book-publishing/${encodeURIComponent(bookId)}`, {
+  const response = await fetch(toApiUrl(`/book-publishing/${encodeURIComponent(bookId)}`), {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -71,7 +45,11 @@ async function deleteBookAsAdmin(bookId) {
 }
 
 export default function BookShelfPage() {
+  // `books` = ONLINE published records only (production API → MongoDB).
+  // `localDrafts` = browser-only copies, shown in a separate clearly-labeled
+  // section and NEVER merged into the published list.
   const [books, setBooks] = useState([]);
+  const [localDrafts, setLocalDrafts] = useState([]);
   const [query, setQuery] = useState('');
   const [draftQuery, setDraftQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -115,24 +93,28 @@ export default function BookShelfPage() {
     async function load() {
       setLoading(true);
       setError('');
+      // Local browser copies are listed separately no matter what — they are
+      // never presented as published books.
+      try {
+        if (!cancelled) setLocalDrafts(listLocalPublishedBookProjects());
+      } catch (_err) {
+        if (!cancelled) setLocalDrafts([]);
+      }
       try {
         const data = await fetchPublishedBookProjects(activeQuery ? { q: activeQuery, limit: 48 } : { limit: 48 });
         if (!data?.ok) {
           throw new Error(data?.error || 'Failed to load published books');
         }
-        const localItems = listLocalPublishedBookProjects();
         const items = Array.isArray(data.items) ? data.items : [];
-        const merged = mergeBooksByKey(items, localItems);
         if (!cancelled) {
-          setBooks(merged);
+          setBooks(items);
         }
       } catch (err) {
-        const localItems = listLocalPublishedBookProjects();
+        // Online shelf failed: keep the published list EMPTY and say so.
+        // Local browser copies stay in their own section below.
         if (!cancelled) {
-          setBooks(localItems);
-          if (!localItems.length) {
-            setError(err.message || 'Failed to load published books');
-          }
+          setBooks([]);
+          setError(`Published books could not be loaded from the online library (${err.message || 'network error'}). Nothing here is shown as published from this device.`);
         }
       } finally {
         if (!cancelled) {
@@ -183,7 +165,11 @@ export default function BookShelfPage() {
         {error ? <p className="book-shelf__error" role="alert">{error}</p> : null}
 
         {filteredBooks.length === 0 ? (
-          <p className="book-shelf__empty">No published books match your search.</p>
+          <p className="book-shelf__empty">
+            {error
+              ? 'The online library is unreachable right now — no books are shown as published.'
+              : 'No published books match your search.'}
+          </p>
         ) : (
           <ul className="book-shelf__grid">
             {filteredBooks.map((book) => (
@@ -246,6 +232,28 @@ export default function BookShelfPage() {
             ))}
           </ul>
         )}
+
+        {localDrafts.length > 0 ? (
+          <section className="book-shelf__local" aria-label="Local drafts on this device">
+            <h2 className="book-shelf__localHeading">On this device only — not published</h2>
+            <p className="book-shelf__muted">
+              These copies live only in this browser. They are NOT in the online
+              library and are NOT visible to anyone else. Open the publishing
+              workspace to save or publish them.
+            </p>
+            <ul className="book-shelf__localList">
+              {localDrafts.map((draft) => (
+                <li key={draft.id || draft._id} className="book-shelf__localItem">
+                  <strong>{draft.title || 'Untitled'}</strong>
+                  <span> · Local draft · {draft.wordCount || 0} words</span>
+                  <Link className="book-shelf__button" to="/books/publish">
+                    Open publishing workspace
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </section>
 
       {deleteTarget ? (

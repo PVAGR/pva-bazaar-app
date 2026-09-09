@@ -41,10 +41,20 @@
     }
   }
 
+  // The configured URL may be a site origin (https://pvabazaar.org) or an API
+  // base that already ends in `/api`. Normalize so we never request `/api/api/...`.
+  function resolveWatchdogUrl(rawBase) {
+    const base = String(rawBase || '').replace(/\/+$/, '');
+    if (!base) return '';
+    if (/\/api$/i.test(base)) return `${base}/openclaw/watchdog-status`;
+    return `${base}/api/openclaw/watchdog-status`;
+  }
+
   async function fetchStatus() {
     try {
-      const base = String(config.apiUrl || '').replace(/\/+$/, '');
-      const response = await fetch(`${base}/api/openclaw/watchdog-status`);
+      const url = resolveWatchdogUrl(config.apiUrl);
+      if (!url) throw new Error('API base URL is not configured');
+      const response = await fetch(url);
       const data = await response.json();
       
       currentStatus = {

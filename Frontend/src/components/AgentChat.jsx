@@ -34,7 +34,7 @@ export default function AgentChat({ initialInput = '' }) {
 
   const checkAgentStatus = async () => {
     try {
-      const response = await apiFetch('/api/agent/status');
+      const response = await apiFetch('/agent/status');
       const data = await response.json();
       if (data.ok && data.ollama.status === 'online') {
         setAgentStatus('online');
@@ -65,7 +65,7 @@ export default function AgentChat({ initialInput = '' }) {
         setMessages(convo.messages || []);
       } else {
         // Create new conversation
-        const newResponse = await apiFetch('/api/agent/conversation', {
+        const newResponse = await apiFetch('/agent/conversation', {
           method: 'POST',
           body: JSON.stringify({
             userId,
@@ -113,7 +113,7 @@ export default function AgentChat({ initialInput = '' }) {
       setMessages((prev) => [...prev, userMsg]);
 
       // Send to API
-      const response = await apiFetch('/api/agent/chat', {
+      const response = await apiFetch('/agent/chat', {
         method: 'POST',
         body: JSON.stringify({
           conversationId,
@@ -148,7 +148,7 @@ export default function AgentChat({ initialInput = '' }) {
     }
 
     try {
-      const response = await apiFetch(`/api/agent/conversation/${conversationId}/clear`, {
+      const response = await apiFetch(`/agent/conversation/${conversationId}/clear`, {
         method: 'POST',
       });
       const data = await response.json();

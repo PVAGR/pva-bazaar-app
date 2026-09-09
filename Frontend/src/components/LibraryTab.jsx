@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ENV } from '../config/env';
-import { apiDelete, apiGet, apiPost, apiPut, apiUpload } from '../lib/api';
+import { apiDelete, apiGet, apiPost, apiPut, apiUpload, apiUrl as toApiUrl } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
 import './LibraryTab.css';
@@ -18,12 +17,6 @@ const EMPTY_FORM = {
   skillLevel: 'intro',
   language: 'en',
 };
-
-function toApiUrl(path) {
-  const base = ENV.API_URL.replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
-}
 
 export default function LibraryTab() {
   const [items, setItems] = useState([]);
@@ -384,7 +377,7 @@ export default function LibraryTab() {
       payload.append('file', selectedFile);
       Object.entries(form).forEach(([key, value]) => payload.append(key, value));
 
-      const data = await apiUpload('/api/admin/library', payload);
+      const data = await apiUpload('/admin/library', payload);
       if (!data.ok) {
         throw new Error(data.error || 'Upload failed');
       }

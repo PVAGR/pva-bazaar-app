@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { getPreferredApiBase } from '../lib/apiBase';
+import { apiUrl } from '../lib/apiBase';
 import './PartnersPage.css';
 
 const PARTNERS_KEY = 'pva:partners-directory';
@@ -64,10 +64,8 @@ function mapApiPartner(p) {
 }
 
 async function fetchApprovedPartners() {
-  const base = getPreferredApiBase();
-  if (!base) return null;
   try {
-    const res = await fetch(`${base}/partners/public`);
+    const res = await fetch(apiUrl('/partners/public'));
     if (!res.ok) return null;
     const data = await res.json();
     const list = Array.isArray(data?.partners) ? data.partners.map(mapApiPartner) : [];
@@ -157,21 +155,19 @@ export default function PartnersPage() {
     // business a live partner page link). If the API is unreachable we keep a
     // local copy so the application is never silently lost.
     const submitBackend = async () => {
-      const base = getPreferredApiBase();
-      if (base) {
-        try {
-          const res = await fetch(`${base}/api/partners/apply`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: form.name.trim(),
-              email: form.contact.trim(),
-              company: form.name.trim(),
-              website: form.website.trim(),
-              message: form.description.trim(),
-              businessType: form.categories[0] || '',
-            }),
-          });
+      try {
+        const res = await fetch(apiUrl('/partners/apply'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            email: form.contact.trim(),
+            company: form.name.trim(),
+            website: form.website.trim(),
+            message: form.description.trim(),
+            businessType: form.categories[0] || '',
+          }),
+        });
           const data = await res.json().catch(() => ({}));
           if (res.ok) {
             const existing = loadPartners();
@@ -183,7 +179,6 @@ export default function PartnersPage() {
             return;
           }
         } catch (_apiErr) { /* fall back to local save below */ }
-      }
       const existing = loadPartners();
       savePartners([...existing, record]);
       setSubmitted(true);

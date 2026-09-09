@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { getToken } from '../lib/auth';
-import { getPreferredApiBase } from '../lib/apiBase';
+import { apiUrl } from '../lib/apiBase';
 import './ReferralPage.css';
 
 const STORAGE_KEY = 'pva:referral-data';
@@ -134,10 +134,9 @@ export default function ReferralPage() {
   // Pull live stats straight from the backend (online, not browser-local).
   const fetchLiveStats = useCallback(async (record) => {
     const emailKey = record?.email || data?.email || '';
-    const base = getPreferredApiBase();
-    if (!emailKey || !base) return;
+    if (!emailKey) return;
     try {
-      const res = await fetch(`${base}/api/referrals/earnings`, {
+      const res = await fetch(apiUrl('/referrals/earnings'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailKey }),
@@ -168,10 +167,8 @@ export default function ReferralPage() {
     // Backend-authoritative: the code is persisted, emailed to the owner, and
     // earns commissions automatically. No local-only codes.
     const issueBackend = async () => {
-      const base = getPreferredApiBase();
-      if (!base) { setErr('Referral service is offline. Please try again shortly.'); return; }
       try {
-        const res = await fetch(`${base}/api/referrals/register`, {
+        const res = await fetch(apiUrl('/referrals/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: trimmedEmail, name: name.trim() }),

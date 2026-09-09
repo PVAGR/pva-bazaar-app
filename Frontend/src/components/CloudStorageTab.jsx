@@ -99,7 +99,7 @@ export default function CloudStorageTab() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const data = await apiUpload(`/api/cloud-storage/upload/${provider}`, formData);
+      const data = await apiUpload(`/cloud-storage/upload/${provider}`, formData);
 
       if (data.ok) {
         setSuccess(`✅ Uploaded to ${provider.toUpperCase()}: ${data.url}`);

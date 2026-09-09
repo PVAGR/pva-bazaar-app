@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { apiGet, apiPost } from '../lib/api';
-import { ENV } from '../config/env.ts';
+import { apiGet, apiPost, apiUrl as toApiUrl } from '../lib/api';
 import './CareerQuizPage.css';
-
-function toApiUrl(path) {
-  const base = ENV.API_URL.replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
-}
 
 export default function CareerQuizPage() {
   const [quiz, setQuiz] = useState(null);

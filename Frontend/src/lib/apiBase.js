@@ -106,3 +106,34 @@ export function rememberApiBase(url) {
 export function clearApiBaseOverride() {
   safeWriteStorage(STORAGE_KEY, "");
 }
+
+/**
+ * Canonical URL builder for production API calls.
+ *
+ * The preferred API base ALWAYS ends in `/api` (see normalizeApiBaseUrl).
+ * Feature code must NOT guess whether `/api` is present and must NOT
+ * concatenate `/api` manually — that produces `/api/api/...` URLs.
+ *
+ * Use this helper for every direct `fetch()` against the backend:
+ *
+ *   import { apiUrl } from '../lib/apiBase';
+ *   fetch(apiUrl('/referrals/earnings'), { ... })
+ *
+ * Rules:
+ * - `path` is the route WITHOUT the `/api` prefix (e.g. `/referrals/earnings`).
+ * - A legacy `/api/...`-prefixed path is tolerated (prefix stripped once) so
+ *   old call sites keep working, but new code should omit it.
+ * - Absolute http(s)/data:/blob: URLs pass through untouched.
+ * - Slashes between base and path are normalized.
+ */
+export function apiUrl(path) {
+  const raw = String(path || "");
+  if (!raw || /^(https?:|data:|blob:)/i.test(raw)) return raw;
+  const base = getPreferredApiBase().replace(/\/+$/, "");
+  const withSlash = raw.startsWith("/") ? raw : `/${raw}`;
+  const normalized =
+    base.toLowerCase().endsWith("/api") && /^\/api\//i.test(withSlash)
+      ? withSlash.slice(4)
+      : withSlash;
+  return `${base}${normalized}`;
+}

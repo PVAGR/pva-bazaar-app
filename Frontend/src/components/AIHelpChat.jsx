@@ -35,7 +35,7 @@ const AIHelpChat = ({ userId, defaultTopic = 'general' }) => {
     setLoading(true);
 
     try {
-      const response = await apiFetch('/api/ai-help/ask', {
+      const response = await apiFetch('/ai-help/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const AIHelpChat = ({ userId, defaultTopic = 'general' }) => {
 
   const fetchGuide = async (selectedTopic) => {
     try {
-      const response = await apiFetch(`/api/ai-help/guides/${selectedTopic}`);
+      const response = await apiFetch(`/ai-help/guides/${selectedTopic}`);
       const guide = await response.json();
 
       const message = {

@@ -4,18 +4,23 @@ import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import {
+  apiUrl as toApiUrl,
   deleteBookProject,
+  fetchBookProjectById,
   fetchMyBookProjects,
-  getApiBase,
+  fetchPublicBookProject,
   saveBookProject,
+  verifyBookPublishedOnline,
 } from '../lib/api';
 import { uploadToInternetArchive, uploadToPinata } from '../lib/manuscriptArchives';
 import { ENV } from '../config/env';
 
 const ManuscriptVersionPanel = lazy(() => import('../components/ManuscriptVersionPanel'));
 import {
+  clearLocalDraftPendingPublish,
   deleteLocalBookProject,
   listLocalBookProjects,
+  markLocalDraftPublishFailed,
   saveLocalBookProject,
 } from '../lib/localBookVault';
 import './BookPublishingPage.css';
@@ -33,11 +38,30 @@ const EMPTY_FORM = {
   manuscriptMarkdown: '',
 };
 
-function toApiUrl(path) {
-  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
-  const base = getApiBase().replace(/\/+$/, '');
-  const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-  return `${base}${normalized}`;
+/**
+ * Persistence states shown in the UI. Local browser storage is crash-recovery
+ * ONLY — a book is "online" solely when the production API confirms it.
+ */
+const PERSISTENCE_LABEL = {
+  'local-draft': 'Local draft — on this device only',
+  'saving-online': 'Saving online…',
+  'online-draft': 'Online draft — saved in your account',
+  'publishing': 'Publishing…',
+  'published': 'Published — verified online',
+  'save-failed': 'Failed to save online — draft kept on this device',
+  'publish-failed': 'Failed to publish — draft kept on this device',
+};
+
+function sourceOf(book) {
+  return String(book?.source || '') === 'local' ? 'local' : 'online';
+}
+
+function persistenceOf(book) {
+  if (sourceOf(book) === 'local') {
+    if (book?.lastOnlineError || book?.pendingPublish) return 'publish-failed';
+    return 'local-draft';
+  }
+  return String(book?.status || '').toLowerCase() === 'published' ? 'published' : 'online-draft';
 }
 
 function countWords(text) {
@@ -53,18 +77,6 @@ function normalizeBookKey(book) {
     .toLowerCase();
 }
 
-function mergeBooksByKey(primary = [], secondary = []) {
-  const merged = [];
-  const seen = new Set();
-  for (const book of [...primary, ...secondary]) {
-    const key = normalizeBookKey(book);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    merged.push(book);
-  }
-  return merged;
-}
-
 async function fileToDataUrl(file) {
   if (!file) return '';
   return new Promise((resolve, reject) => {
@@ -73,13 +85,6 @@ async function fileToDataUrl(file) {
     reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
-}
-
-async function dataUrlToFile(dataUrl, filename, fallbackType = 'application/octet-stream') {
-  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
-  const response = await fetch(dataUrl);
-  const blob = await response.blob();
-  return new File([blob], filename || 'asset', { type: blob.type || fallbackType });
 }
 
 const MAX_BACKEND_PUBLISH_BYTES = 4 * 1024 * 1024;
@@ -111,8 +116,7 @@ function estimateMultipartOverhead(fieldCount = 0, fileCount = 0) {
 }
 
 function getBookPublishRequestUrl() {
-  const base = getApiBase().replace(/\/+$/, '');
-  return `${base}/book-publishing`;
+  return toApiUrl('/book-publishing');
 }
 
 function loadImageFromFile(file) {
@@ -200,8 +204,8 @@ async function compressFileForUpload(file, maxBytes = 500000) {
   return file;
 }
 
-async function uploadFormatFileViaSignedUrl(file, folder, resourceType = 'raw', apiBase, authToken) {
-  const signedRes = await fetch(`${apiBase}/book-publishing/signed-upload`, {
+async function uploadFormatFileViaSignedUrl(file, folder, resourceType = 'raw', authToken) {
+  const signedRes = await fetch(toApiUrl('/book-publishing/signed-upload'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -268,55 +272,14 @@ async function extractDocxText(file) {
   return String(result?.value || '').trim();
 }
 
-async function buildRemotePayloadFromBook(book) {
-  const payload = new FormData();
-  if (book?.id) payload.append('bookId', book.id);
-  payload.append('title', book?.title || '');
-  payload.append('subtitle', book?.subtitle || '');
-  payload.append('authorName', book?.authorName || '');
-  payload.append('slug', book?.slug || '');
-  payload.append('description', book?.description || '');
-  payload.append('genre', book?.genre || 'general');
-  payload.append('audience', book?.audience || 'general');
-  payload.append('language', book?.language || 'en');
-  payload.append('manuscriptMarkdown', book?.manuscriptMarkdown || '');
-  payload.append('publish', book?.status === 'published' ? 'true' : 'false');
-
-  const frontCoverUrl = String(book?.frontCover?.url || '');
-  const backCoverUrl = String(book?.backCover?.url || '');
-  if (frontCoverUrl && /^https?:\/\//i.test(frontCoverUrl) && !frontCoverUrl.startsWith('data:')) {
-    payload.append('frontCoverUrl', frontCoverUrl);
-    payload.append('frontCoverPublicId', book?.frontCover?.publicId || '');
-  } else if (frontCoverUrl.startsWith('data:')) {
-    const frontCoverFile = await dataUrlToFile(
-      frontCoverUrl,
-      book?.frontCover?.originalName || `${book?.slug || 'book'}-front-cover`,
-      book?.frontCover?.mimeType || 'image/png',
-    );
-    if (frontCoverFile) {
-      payload.append('frontCover', frontCoverFile, frontCoverFile.name || `${book?.slug || 'book'}-front-cover`);
-    }
-  }
-
-  if (backCoverUrl && /^https?:\/\//i.test(backCoverUrl) && !backCoverUrl.startsWith('data:')) {
-    payload.append('backCoverUrl', backCoverUrl);
-    payload.append('backCoverPublicId', book?.backCover?.publicId || '');
-  } else if (backCoverUrl.startsWith('data:')) {
-    const backCoverFile = await dataUrlToFile(
-      backCoverUrl,
-      book?.backCover?.originalName || `${book?.slug || 'book'}-back-cover`,
-      book?.backCover?.mimeType || 'image/png',
-    );
-    if (backCoverFile) {
-      payload.append('backCover', backCoverFile, backCoverFile.name || `${book?.slug || 'book'}-back-cover`);
-    }
-  }
-
-  return payload;
-}
-
 export default function BookPublishingPage() {
+  // `books` holds ONLINE records only (production API → MongoDB).
+  // `localDrafts` holds browser-only crash-recovery drafts (source: 'local').
+  // The two lists are NEVER merged — see the separate UI sections below.
   const [books, setBooks] = useState([]);
+  const [localDrafts, setLocalDrafts] = useState([]);
+  const [onlineError, setOnlineError] = useState('');
+  const [persistenceNote, setPersistenceNote] = useState('');
   const [selectedBookId, setSelectedBookId] = useState('');
   const [frontCoverFile, setFrontCoverFile] = useState(null);
   const [backCoverFile, setBackCoverFile] = useState(null);
@@ -352,12 +315,12 @@ export default function BookPublishingPage() {
   const pdfInputRef = useRef(null);
   const docxInputRef = useRef(null);
   const manuscriptImportedTextRef = useRef('');
-  const syncInFlightRef = useRef(false);
 
-  const selectedBook = useMemo(
-    () => books.find((item) => item.id === selectedBookId) || null,
-    [books, selectedBookId],
-  );
+  const selectedBook = useMemo(() => {
+    const all = [...books, ...localDrafts];
+    return all.find((item) => String(item.id) === String(selectedBookId)) || null;
+  }, [books, localDrafts, selectedBookId]);
+  const selectedSource = selectedBook ? sourceOf(selectedBook) : '';
 
   const wordCount = useMemo(() => countWords(form.manuscriptMarkdown), [form.manuscriptMarkdown]);
   const estimatedPages = Math.max(1, Math.ceil(wordCount / 300));
@@ -429,148 +392,36 @@ export default function BookPublishingPage() {
     setManuscriptSizeBytes(0);
   }, [selectedBook]);
 
-  async function syncLocalPublishedBooks(remoteBooks = [], localBooks = []) {
-    if (syncInFlightRef.current) return;
-    syncInFlightRef.current = true;
+  function refreshLocalDrafts() {
     try {
-      const remoteSlugs = new Set(
-        (remoteBooks || [])
-          .map((book) => String(book?.slug || '').trim().toLowerCase())
-          .filter(Boolean),
-      );
-      const candidates = (localBooks || []).filter((book) => {
-        const isPublished = String(book?.status || '').toLowerCase() === 'published';
-        const slug = String(book?.slug || '').trim().toLowerCase();
-        return isPublished && slug && !remoteSlugs.has(slug);
-      });
-
-      if (!candidates.length) return;
-
-      let syncedCount = 0;
-      const syncedItems = [];
-      for (const localBook of candidates) {
-        try {
-          const payload = await buildRemotePayloadFromBook(localBook);
-          const data = await saveBookProject(payload);
-          if (data?.ok && data?.item) {
-            syncedCount += 1;
-            syncedItems.push(data.item);
-          }
-        } catch (_err) {
-          // Keep syncing the remaining local books.
-        }
-      }
-
-      if (syncedItems.length) {
-        setBooks((prev) => {
-          const next = [...prev];
-          for (const item of syncedItems) {
-            const key = String(item?.id || item?._id || '').trim();
-            const slug = String(item?.slug || '').trim().toLowerCase();
-            const filtered = next.filter((book) => {
-              const bookKey = String(book?.id || book?._id || '').trim();
-              const bookSlug = String(book?.slug || '').trim().toLowerCase();
-              return bookKey !== key && bookSlug !== slug;
-            });
-            filtered.unshift(item);
-            next.splice(0, next.length, ...filtered);
-          }
-          return next;
-        });
-        setSelectedBookId(String(syncedItems[0]?.id || syncedItems[0]?._id || selectedBookId || ''));
-      }
-
-      if (syncedCount > 0) {
-        setSuccess((prev) => prev || `${syncedCount} local published book${syncedCount === 1 ? '' : 's'} synced online.`);
-      }
-    } finally {
-      syncInFlightRef.current = false;
+      setLocalDrafts(listLocalBookProjects());
+    } catch (_err) {
+      setLocalDrafts([]);
     }
   }
 
-  async function syncQueuedPublishDrafts(remoteBooks = [], localBooks = []) {
-    const remoteSlugs = new Set(
-      (remoteBooks || [])
-        .map((book) => String(book?.slug || '').trim().toLowerCase())
-        .filter(Boolean),
-    );
-    const queued = (localBooks || []).filter((book) => {
-      const slug = String(book?.slug || '').trim().toLowerCase();
-      return Boolean(book?.pendingPublish) && slug && !remoteSlugs.has(slug);
-    });
-
-    if (!queued.length) return;
-
-    let syncedCount = 0;
-    const syncedItems = [];
-    for (const localBook of queued) {
-      try {
-        const payload = await buildRemotePayloadFromBook(localBook);
-        payload.set('publish', 'true');
-        const data = await saveBookProject(payload);
-        if (data?.ok && data?.item) {
-          syncedCount += 1;
-          syncedItems.push(data.item);
-          saveLocalBookProject({
-            ...localBook,
-            pendingPublish: false,
-            status: 'published',
-            publishedAt: data.item.publishedAt || new Date().toISOString(),
-            slug: data.item.slug || localBook.slug,
-            title: data.item.title || localBook.title,
-            subtitle: data.item.subtitle || localBook.subtitle,
-            authorName: data.item.authorName || localBook.authorName,
-            description: data.item.description || localBook.description,
-            genre: data.item.genre || localBook.genre,
-            audience: data.item.audience || localBook.audience,
-            language: data.item.language || localBook.language,
-            manuscriptMarkdown: data.item.manuscriptMarkdown || localBook.manuscriptMarkdown,
-          });
-        }
-      } catch (_err) {
-        // Keep trying queued books individually.
-      }
-    }
-
-    if (syncedItems.length) {
-      setBooks((prev) => {
-        const next = [...prev];
-        for (const item of syncedItems) {
-          const key = normalizeBookKey(item);
-          const filtered = next.filter((book) => normalizeBookKey(book) !== key);
-          filtered.unshift(item);
-          next.splice(0, next.length, ...filtered);
-        }
-        return next;
-      });
-      setSelectedBookId(String(syncedItems[0]?.id || syncedItems[0]?._id || selectedBookId || ''));
-    }
-
-    if (syncedCount > 0) {
-      setSuccess((prev) => prev || `${syncedCount} queued publish${syncedCount === 1 ? '' : 'es'} synced online.`);
-    }
-  }
+  // NOTE: there is deliberately NO silent background sync of local books to
+  // the server. Every online write is an explicit user action (Save draft /
+  // Save and publish / Retry) whose result is verified server-side before
+  // any success is shown. Silent auto-uploads previously made local-only
+  // books look published and hid real API failures.
 
   async function loadBooks() {
     setLoading(true);
     setError('');
+    setOnlineError('');
+    // Local crash-recovery drafts are always listed separately, even when the
+    // API is healthy — they are never merged into the online list.
+    refreshLocalDrafts();
     try {
       const data = await fetchMyBookProjects();
       if (!data?.ok) {
         throw new Error(data?.error || 'Failed to load your books');
       }
       const items = Array.isArray(data.items) ? data.items : [];
-      const localItems = listLocalBookProjects();
-      const merged = mergeBooksByKey(items, localItems);
-      setBooks(merged);
+      setBooks(items);
       if (!selectedBookId && items.length) {
         setSelectedBookId(items[0].id);
-      } else if (!selectedBookId && localItems.length) {
-        setSelectedBookId(localItems[0].id);
-      }
-      if (items.length || localItems.length) {
-        void syncLocalPublishedBooks(items, localItems);
-        void syncQueuedPublishDrafts(items, localItems);
       }
     } catch (err) {
       const isAuth = err?.status === 401 || err?.response?.status === 401
@@ -582,14 +433,13 @@ export default function BookPublishingPage() {
         }
         return;
       }
-      const localItems = listLocalBookProjects();
-      setBooks(localItems);
-      if (!selectedBookId && localItems.length) {
-        setSelectedBookId(localItems[0].id);
-      }
-      if (!localItems.length) {
-        setError(err.message || 'Failed to load your books');
-      }
+      // Online data failed: keep the online list EMPTY and say so explicitly.
+      // Local drafts remain visible in their own section below — they are
+      // clearly labeled "on this device only" and never presented as online.
+      setBooks([]);
+      const message = err.message || 'Failed to load your online books';
+      setOnlineError(message);
+      setError(`Online books unavailable: ${message}. Your drafts on this device are listed separately below.`);
     } finally {
       setLoading(false);
     }
@@ -618,6 +468,16 @@ export default function BookPublishingPage() {
 
   function selectBook(book) {
     setSelectedBookId(book.id);
+  }
+
+  // Load a browser-only draft into the editor so the author can review it
+  // and explicitly retry the online save/publish. This never writes online
+  // by itself.
+  function retryLocalDraft(draft) {
+    setError('');
+    setSuccess('');
+    setPersistenceNote('');
+    selectBook(draft);
   }
 
   function handleFieldChange(event) {
@@ -768,12 +628,11 @@ export default function BookPublishingPage() {
     }
     setCloudinaryUploadState({ status: 'uploading', url: '' });
     try {
-      const apiBase = getApiBase();
       const authToken = (() => {
         try { return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || ''; }
         catch (_e) { return ''; }
       })();
-      const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
+      const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', authToken);
       setCloudinaryUploadState({ status: 'done', url: result.secure_url });
       setError('');
       setSuccess('Manuscript uploaded to Cloudinary.');
@@ -863,12 +722,11 @@ export default function BookPublishingPage() {
       tasks.push((async () => {
         setCloudinaryUploadState({ status: 'uploading', url: '' });
         try {
-          const apiBase = getApiBase();
           const authToken = (() => {
             try { return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || ''; }
             catch (_e) { return ''; }
           })();
-          const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', apiBase, authToken);
+          const result = await uploadFormatFileViaSignedUrl(fileToUpload, 'pva-bazaar-books/book-manuscripts', 'raw', authToken);
           setCloudinaryUploadState({ status: 'done', url: result.secure_url });
           return { service: 'Cloudinary', ok: true };
         } catch (e) {
@@ -908,16 +766,22 @@ export default function BookPublishingPage() {
     setError('');
     setSuccess('');
     setSavedBookSlug('');
+    setPersistenceNote(publish ? 'publishing' : 'saving-online');
     const errors = {};
     if (!form.title.trim()) errors.title = 'Title is required';
     if (!form.manuscriptMarkdown.trim() && !manuscriptFile) errors.manuscriptMarkdown = 'Manuscript content is required';
     if (Object.keys(errors).length) {
       setFormErrors(errors);
       setSaving(false);
+      setPersistenceNote('');
       setError('Please fix the highlighted fields before saving.');
       return;
     }
     const requestUrl = getBookPublishRequestUrl();
+    // Only send a bookId when editing an ONLINE record. Local draft ids
+    // (e.g. `local-book-...`) are browser-only and must never be sent as the
+    // server-side book id — the server creates a fresh record for them.
+    const editingOnlineId = selectedSource === 'online' && form.bookId ? form.bookId : '';
     const authToken = (() => {
       try {
         return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
@@ -933,7 +797,6 @@ export default function BookPublishingPage() {
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
       ]);
 
-      const apiBase = getApiBase();
       let frontCoverResult = null;
       let backCoverResult = null;
       let htmlResult = null;
@@ -945,14 +808,14 @@ export default function BookPublishingPage() {
       // causes network errors on large payloads.
       if (preparedFrontCover) {
         try {
-          frontCoverResult = await uploadFormatFileViaSignedUrl(preparedFrontCover, 'pva-bazaar-books/book-covers', 'image', apiBase, authToken);
+          frontCoverResult = await uploadFormatFileViaSignedUrl(preparedFrontCover, 'pva-bazaar-books/book-covers', 'image', authToken);
         } catch (e) {
           console.warn('Cloudinary front cover upload failed:', e.message);
         }
       }
       if (preparedBackCover) {
         try {
-          backCoverResult = await uploadFormatFileViaSignedUrl(preparedBackCover, 'pva-bazaar-books/book-covers', 'image', apiBase, authToken);
+          backCoverResult = await uploadFormatFileViaSignedUrl(preparedBackCover, 'pva-bazaar-books/book-covers', 'image', authToken);
         } catch (e) {
           console.warn('Cloudinary back cover upload failed:', e.message);
         }
@@ -960,21 +823,21 @@ export default function BookPublishingPage() {
       if (htmlFile) {
         try {
           const compressed = await compressFileForUpload(htmlFile);
-          htmlResult = await uploadFormatFileViaSignedUrl(compressed, 'pva-bazaar-books/book-html', 'raw', apiBase, authToken);
+          htmlResult = await uploadFormatFileViaSignedUrl(compressed, 'pva-bazaar-books/book-html', 'raw', authToken);
         } catch (e) {
           console.warn('HTML upload via signed URL failed:', e.message);
         }
       }
       if (pdfFile) {
         try {
-          pdfResult = await uploadFormatFileViaSignedUrl(pdfFile, 'pva-bazaar-books/book-pdfs', 'raw', apiBase, authToken);
+          pdfResult = await uploadFormatFileViaSignedUrl(pdfFile, 'pva-bazaar-books/book-pdfs', 'raw', authToken);
         } catch (e) {
           console.warn('PDF upload via signed URL failed:', e.message);
         }
       }
       if (docxFile) {
         try {
-          docxResult = await uploadFormatFileViaSignedUrl(docxFile, 'pva-bazaar-books/book-docx', 'raw', apiBase, authToken);
+          docxResult = await uploadFormatFileViaSignedUrl(docxFile, 'pva-bazaar-books/book-docx', 'raw', authToken);
         } catch (e) {
           console.warn('DOCX upload via signed URL failed:', e.message);
         }
@@ -982,7 +845,7 @@ export default function BookPublishingPage() {
 
       const buildPayload = (overrides = {}) => {
         const payload = new FormData();
-        if (overrides.bookId || form.bookId) payload.append('bookId', overrides.bookId || form.bookId);
+        if (overrides.bookId || editingOnlineId) payload.append('bookId', overrides.bookId || editingOnlineId);
         payload.append('title', overrides.title || form.title);
         payload.append('subtitle', overrides.subtitle || form.subtitle);
         payload.append('authorName', overrides.authorName || form.authorName);
@@ -1045,24 +908,95 @@ export default function BookPublishingPage() {
         }
 
         const saved = remoteData.item;
-        setBooks((prev) => {
-          const withoutDuplicate = prev.filter((book) => {
-            const sameRemoteId = String(book.id || '') === String(saved.id || '');
-            const sameSlug = normalizeBookKey(book) === normalizeBookKey(saved);
-            return !(sameRemoteId || sameSlug);
-          });
-          return [saved, ...withoutDuplicate].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
-        });
-        setSelectedBookId(saved.id);
-        setSavedBookSlug(publish ? saved.slug || '' : '');
-        if (saved.slug) {
-          setForm(prev => ({ ...prev, slug: saved.slug }));
+
+        // ── Server-authoritative verification ──────────────────────────
+        // The write is NOT trusted until the server confirms the record.
+        // For publishes we re-read the PUBLIC record by slug/id; for draft
+        // saves we re-read the owner-scoped record by id. Only a verified
+        // record produces a success state.
+        let verified = null;
+        try {
+          if (publish) {
+            verified = await verifyBookPublishedOnline({ id: saved.id || saved._id || '', slug: saved.slug || '' });
+          } else {
+            const reread = await fetchBookProjectById(saved.id || saved._id || '');
+            if (reread?.ok && reread?.item) {
+              verified = reread.item;
+            } else {
+              throw new Error(reread?.error || 'Saved record could not be re-read from the server');
+            }
+          }
+        } catch (verifyErr) {
+          // The POST may have succeeded while verification failed (replica
+          // lag, routing, partial write). Do NOT claim success: keep the
+          // user's work in a clearly-marked local draft and surface the
+          // real error so nothing is lost and nothing is misrepresented.
+          markLocalDraftPublishFailed(
+            {
+              id: selectedSource === 'local' ? selectedBookId : undefined,
+              title: form.title,
+              subtitle: form.subtitle,
+              authorName: form.authorName,
+              slug: saved.slug || form.slug,
+              description: form.description,
+              genre: form.genre,
+              audience: form.audience,
+              language: form.language,
+              manuscriptMarkdown: form.manuscriptMarkdown,
+              status: publish ? 'published' : 'draft',
+              pendingPublish: publish,
+            },
+            verifyErr?.message || 'Verification failed',
+          );
+          refreshLocalDrafts();
+          setPersistenceNote(publish ? 'publish-failed' : 'save-failed');
+          setError(
+            `The server accepted the ${publish ? 'publish' : 'save'} request but the record could not be verified online (${verifyErr?.message || 'verification failed'}). Your work was kept as a local draft on this device — it is NOT published. Please retry once the API is reachable.`,
+          );
+          setSuccess('');
+          return;
         }
 
+        const finalItem = verified || saved;
+        setBooks((prev) => {
+          const withoutDuplicate = prev.filter((book) => {
+            const sameRemoteId = String(book.id || '') === String(finalItem.id || '');
+            const sameSlug = normalizeBookKey(book) === normalizeBookKey(finalItem);
+            return !(sameRemoteId || sameSlug);
+          });
+          return [finalItem, ...withoutDuplicate].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+        });
+        setSelectedBookId(finalItem.id);
+        setSavedBookSlug(publish ? finalItem.slug || '' : '');
+        if (finalItem.slug) {
+          setForm(prev => ({ ...prev, slug: finalItem.slug }));
+        }
+        // A former local draft with the same slug is now superseded by the
+        // verified online record — drop the stale browser copy so it can
+        // never masquerade as a second record.
+        try {
+          const stale = listLocalBookProjects().filter((draft) => {
+            const a = String(draft?.slug || '').trim().toLowerCase();
+            const b = String(finalItem?.slug || '').trim().toLowerCase();
+            return a && b && a === b;
+          });
+          for (const draft of stale) {
+            const key = String(draft.id || draft._id || '');
+            if (key && key !== String(finalItem.id || finalItem._id || '')) {
+              deleteLocalBookProject(key);
+            } else {
+              clearLocalDraftPendingPublish(key);
+            }
+          }
+          refreshLocalDrafts();
+        } catch (_cleanupErr) { /* non-blocking */ }
+
+        setPersistenceNote(publish ? 'published' : 'online-draft');
+        setOnlineError('');
         setSuccess(
           publish
-            ? `"${saved.title}" is published online and visible on the public bookshelf.`
-            : `"${saved.title}" was saved as a draft.`,
+            ? `"${finalItem.title}" is published online and verified on the public bookshelf.`
+            : `"${finalItem.title}" was saved as an online draft in your account.`,
         );
 
         return;
@@ -1083,36 +1017,71 @@ export default function BookPublishingPage() {
           }
           return;
         }
+        // Online write failed: retain the work as an explicitly-marked local
+        // draft (crash recovery) and report the REAL error. Never claim the
+        // book is saved or published.
+        markLocalDraftPublishFailed(
+          {
+            id: selectedSource === 'local' ? selectedBookId : undefined,
+            title: form.title,
+            subtitle: form.subtitle,
+            authorName: form.authorName,
+            slug: form.slug,
+            description: form.description,
+            genre: form.genre,
+            audience: form.audience,
+            language: form.language,
+            manuscriptMarkdown: form.manuscriptMarkdown,
+            status: 'draft',
+            pendingPublish: publish,
+          },
+          networkErr?.message || 'Online save failed',
+        );
+        refreshLocalDrafts();
+        setPersistenceNote(publish ? 'publish-failed' : 'save-failed');
         setError(describePublishFailure(networkErr, { requestUrl, tokenPresent }));
         setSuccess('');
       }
     } catch (err) {
       setError(err.message || 'Failed to save book');
+      setPersistenceNote('');
     } finally {
       setSaving(false);
     }
   }
 
   async function removeBook(bookId) {
-    if (!window.confirm('Delete this book project? This removes the draft and attached local cover files.')) {
+    const target = [...books, ...localDrafts].find((item) => String(item.id) === String(bookId));
+    const isLocalOnly = !target || sourceOf(target) === 'local';
+    if (!window.confirm(isLocalOnly
+      ? 'Delete this local draft? It exists only in this browser and will be gone permanently.'
+      : 'Delete this online book project? This removes the server record.')) {
       return;
     }
     setSaving(true);
     setError('');
     setSuccess('');
     try {
+      if (isLocalOnly) {
+        deleteLocalBookProject(bookId);
+        setSuccess('Local draft deleted from this device.');
+        resetForm();
+        refreshLocalDrafts();
+        return;
+      }
       const data = await deleteBookProject(bookId);
       if (!data?.ok) {
         throw new Error(data?.error || 'Failed to delete book');
       }
-      setSuccess('Book project deleted.');
+      setSuccess('Online book project deleted.');
+      setPersistenceNote('');
       resetForm();
       await loadBooks();
     } catch (err) {
-      deleteLocalBookProject(bookId);
-      setSuccess('Book project deleted locally.');
-      resetForm();
-      await loadBooks();
+      // A failed online delete must stay an error — never silently present a
+      // local-only deletion as though the server record were gone.
+      setError(`Delete failed: ${err.message || 'Failed to delete book'}. The online record was NOT removed.`);
+      setSuccess('');
     } finally {
       setSaving(false);
     }
@@ -1215,14 +1184,25 @@ export default function BookPublishingPage() {
             <div className="book-publish__panelHeader">
               <div>
                 <p className="pill">Your books</p>
-                <h2>Drafts and published editions</h2>
+                <h2>Online books &amp; local drafts</h2>
               </div>
               <button type="button" className="book-publish__button" onClick={resetForm}>
                 New book
               </button>
             </div>
 
-            {loading ? <p className="book-publish__muted">Loading your books…</p> : null}
+            {loading ? <p className="book-publish__muted">Loading your online books…</p> : null}
+            {persistenceNote && PERSISTENCE_LABEL[persistenceNote] ? (
+              <p className="book-publish__muted" role="status">
+                <strong>State:</strong> {PERSISTENCE_LABEL[persistenceNote]}
+              </p>
+            ) : null}
+            {selectedBook ? (
+              <p className="book-publish__muted" role="status">
+                <strong>Editing:</strong> {selectedBook.title || 'Untitled book'} —{' '}
+                {PERSISTENCE_LABEL[persistenceOf(selectedBook)]}
+              </p>
+            ) : null}
             {error ? (
               <div className="book-publish__error" role="alert">
                 <strong>Error:</strong> {error}
@@ -1239,15 +1219,26 @@ export default function BookPublishingPage() {
               </div>
             ) : null}
 
+            <h3 className="book-publish__listHeading">Online books (your account)</h3>
+            {onlineError ? (
+              <div className="book-publish__error" role="alert">
+                <strong>Online data unavailable:</strong> {onlineError} Nothing below
+                is presented as published — local drafts on this device are
+                listed separately.
+              </div>
+            ) : null}
             <div className="book-publish__list">
               {books.length ? books.map((book) => (
                 <article
-                  key={book.id}
+                  key={`online-${book.id}`}
                   className={`book-publish__listItem ${book.id === selectedBookId ? 'is-selected' : ''}`}
                 >
                   <button type="button" className="book-publish__listButton" onClick={() => selectBook(book)}>
                     <strong>{book.title}</strong>
-                    <span>{book.status} · {book.wordCount || 0} words</span>
+                    <span>
+                      <span className="book-publish__badge book-publish__badge--online">Online</span>{' '}
+                      {book.status} · {book.wordCount || 0} words
+                    </span>
                     {book.subtitle ? <em>{book.subtitle}</em> : null}
                   </button>
                   <div className="book-publish__listActions">
@@ -1267,7 +1258,49 @@ export default function BookPublishingPage() {
                   </div>
                 </article>
               )) : (
-                <p className="book-publish__muted">No book projects yet. Start a new one on the right.</p>
+                <p className="book-publish__muted">
+                  {onlineError
+                    ? 'Online list could not be loaded. Your device drafts are below.'
+                    : 'No online books yet. Save a draft to create one in your account.'}
+                </p>
+              )}
+            </div>
+
+            <h3 className="book-publish__listHeading">Local drafts on this device</h3>
+            <p className="book-publish__muted">
+              Browser-only autosave / crash-recovery copies. These are NOT online
+              and NOT published — they exist only in this browser until you
+              explicitly save or publish them.
+            </p>
+            <div className="book-publish__list">
+              {localDrafts.length ? localDrafts.map((draft) => (
+                <article
+                  key={`local-${draft.id}`}
+                  className={`book-publish__listItem ${draft.id === selectedBookId ? 'is-selected' : ''}`}
+                >
+                  <button type="button" className="book-publish__listButton" onClick={() => selectBook(draft)}>
+                    <strong>{draft.title}</strong>
+                    <span>
+                      <span className="book-publish__badge book-publish__badge--local">This device only</span>{' '}
+                      {PERSISTENCE_LABEL[persistenceOf(draft)]} · {draft.wordCount || 0} words
+                    </span>
+                    {draft.lastOnlineError ? <em>Last online error: {draft.lastOnlineError}</em> : null}
+                  </button>
+                  <div className="book-publish__listActions">
+                    <button type="button" className="book-publish__button" onClick={() => retryLocalDraft(draft)}>
+                      {draft.lastOnlineError || draft.pendingPublish ? 'Review & retry' : 'Edit'}
+                    </button>
+                    <button
+                      type="button"
+                      className="book-publish__button book-publish__button--danger"
+                      onClick={() => removeBook(draft.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              )) : (
+                <p className="book-publish__muted">No local drafts on this device.</p>
               )}
             </div>
           </section>
