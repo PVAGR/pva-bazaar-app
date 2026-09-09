@@ -131,8 +131,54 @@ local-only: keep the browser copy, check API health, then use
 - Runbook pointers: `docs/DEVICE_LOSS_RECOVERY_RUNBOOK.md`,
   `docs/DEPLOYMENT.md`.
 
-## 8. What NOT to do
+## 8. PARTNERS — authority and verification
 
+- Approved partner records live in MongoDB (`PartnerProfile`,
+  `status: 'approved'`). The flagship PVA Bazaar profile is seeded
+  server-side (`ensureSeedProfile`); there is no frontend seed in the
+  directory.
+- The public directory (`GET {API}/partners/public`) returns approved
+  profiles only. The frontend renders exactly that list — browser records
+  are never merged in. API failure shows "Online partner directory is
+  temporarily unavailable" with an empty list.
+- Applications (`POST {API}/partners/apply`) create a `PartnerSubmission`
+  (`status: 'new'`), deduplicated per email (repeat → HTTP 200,
+  `duplicate: true`, same id). Only 201/200-with-`ok:true` counts as
+  submitted; the UI shows the returned reference id and labels it a
+  submission receipt, never an approval.
+- A failed application keeps the form as `pva:partner-application-draft`
+  (this device only, clearly labeled, with retry) and never enters the
+  directory. Approvals happen only via the admin-gated
+  `POST {API}/partners/submissions/:id/approve` flow.
+- Verify a submission reached the backend: check the admin submissions list
+  or confirm the applicant received the reference id from a 201 response.
+  A business is listed publicly only after approval + appearance in
+  `GET {API}/partners/public`.
+
+## 9. REFERRALS — authority, cache, and money safety
+
+- Authoritative source: MongoDB `ReferralCode` (unique code + unique email),
+  via `POST {API}/referrals/register` (stable code per email; repeat
+  registration returns the same code), `POST {API}/referrals/earnings`
+  (owner-gated by email), `POST {API}/referrals/:code/click`.
+- The browser stores only a pointer (code + email) after server-confirmed
+  registration. No local-only codes exist.
+- Dashboard stats carry an explicit freshness state: `Live` (just read),
+  `Saved data — not live` (API failed, cached values labeled with last
+  refresh time + Retry), `Stats unavailable` (nothing trustworthy — balances
+  render as "Unknown"/"—", never $0). Absence of data is not a zero balance.
+- Click pings (`Layout.jsx` on `?ref=`) are fire-and-forget, never block
+  navigation, and are deduplicated per code per tab session
+  (`pva:ref-click-sent:*` in sessionStorage) to avoid refresh inflation.
+  Backend increments `clicks` per ping without dedup — treat clicks as
+  approximate traffic, sales/settlements as exact.
+- Earnings and payouts render only backend values; the client never
+  computes balances from localStorage.
+- Verify referral API health: `POST {API}/referrals/earnings` with a known
+  owner email must return `{ok:true, data:{…}}`; unknown emails return 404
+  (never fake zeros); unknown click codes return 404.
+
+## 10. What NOT to do
 - Do not migrate off Vercel, add paid services, or build a parallel
   backend/frontend/database without an explicit decision record.
 - Do not merge localStorage records into server lists, show success toasts

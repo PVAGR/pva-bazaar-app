@@ -232,4 +232,27 @@ describe('Referral Module', () => {
       expect(res.body.data.payouts[0].netPayoutCents).toBe(475);
     });
   });
+
+  describe('Click tracking + earnings error contract', () => {
+    it('returns 404 for clicks on an unknown code (no silent success)', async () => {
+      const res = await request(app).post('/api/referrals/ZZZZZZ/click');
+      expect(res.status).toBe(404);
+      expect(res.body.ok).toBe(false);
+    });
+
+    it('rejects earnings lookup without an email (400)', async () => {
+      const res = await request(app).post('/api/referrals/earnings').send({});
+      expect(res.status).toBe(400);
+      expect(res.body.ok).toBe(false);
+    });
+
+    it('returns 404 for earnings on an unknown email (never a fake zero)', async () => {
+      const res = await request(app)
+        .post('/api/referrals/earnings')
+        .send({ email: 'nobody-here@example.com' });
+      expect(res.status).toBe(404);
+      expect(res.body.ok).toBe(false);
+      expect(res.body.data).toBeUndefined();
+    });
+  });
 });
