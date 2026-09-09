@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { Helmet } from 'react-helmet-async';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken, clearToken } from '../lib/auth';
@@ -100,6 +103,10 @@ export default function Layout({ children }) {
   // with HashRouter). Stored under the same keys the Next app + checkout use so
   // any subsequent purchase is attributed to the referrer, and the referrer's
   // click is reported to the backend so it is visible online (not just in a browser).
+  //
+  // Click-ping safety: fire-and-forget, never blocks navigation, never shows
+  // UI, and is deduplicated per referral code per tab session (sessionStorage)
+  // so refreshes and remounts cannot inflate click counts or storm the API.
   useEffect(() => {
     try {
       const hashRef = (globalThis.location.hash || '').match(/[?&]ref=([^&#]*)/);
@@ -110,8 +117,21 @@ export default function Layout({ children }) {
         if (normalized.length >= 4) {
           window.localStorage.setItem('pva:referral-code', normalized);
           window.localStorage.setItem('pva:inbound-ref', normalized);
-          fetch(apiUrl(`/referrals/${encodeURIComponent(normalized)}/click`), { method: 'POST' })
-            .catch(() => { /* non-blocking */ });
+          const pingKey = `pva:ref-click-sent:${normalized}`;
+          let alreadySent = false;
+          try {
+            alreadySent = window.sessionStorage.getItem(pingKey) === '1';
+          } catch (_e) { /* storage unavailable — send once anyway */ }
+          if (!alreadySent) {
+            try {
+              window.sessionStorage.setItem(pingKey, '1');
+            } catch (_e) { /* ignore */ }
+            fetch(apiUrl(`/referrals/${encodeURIComponent(normalized)}/click`), { method: 'POST' })
+              .catch((pingErr) => {
+                // Click tracking must never break navigation; log and move on.
+                console.warn('[referral] click ping failed:', pingErr?.message || pingErr);
+              });
+          }
         }
       }
     } catch (_err) { /* non-blocking */ }

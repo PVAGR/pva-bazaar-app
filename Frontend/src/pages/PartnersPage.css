@@ -354,3 +354,8 @@
     width: 100%;
   }
 }
+.partners-page__muted {
+  color: var(--site-text-muted);
+  font-size: 0.9rem;
+}
+

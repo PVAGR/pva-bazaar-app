@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { Helmet } from 'react-helmet-async';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { Link } from 'react-router-dom';
 import { getToken } from '../lib/auth';
 import { apiUrl } from '../lib/apiBase';
@@ -7,6 +9,27 @@ import './ReferralPage.css';
 
 const STORAGE_KEY = 'pva:referral-data';
 const REFERRAL_BASE = 'https://pvabazaar.org';
+
+/**
+ * Referral data contract:
+ * - The referral CODE record is server-authoritative. It is stored locally
+ *   only as a convenience pointer (code + email) after the backend confirms
+ *   registration. No local-only registration ever exists.
+ * - Earnings/stats freshness is explicit:
+ *     live        — just read from the production API (MongoDB).
+ *     stale       — API unreachable; showing last saved values, labeled.
+ *     unavailable — API unreachable and nothing saved; shown as unavailable,
+ *                   NEVER as $0 / 0 (absence of data is not a zero balance).
+ *     loading     — first fetch in flight.
+ */
+function formatRefreshTime(value) {
+  if (!value) return '';
+  try {
+    return new Date(value).toLocaleString();
+  } catch (_e) {
+    return String(value);
+  }
+}
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -108,13 +131,17 @@ async function sendReferralEmail({ toEmail, toName, code, referralUrl }) {
 
 export default function ReferralPage() {
   const isLoggedIn = Boolean(getToken());
-  const [data, setData]         = useState(null);   // referral record
+  const [data, setData]         = useState(null);   // referral record (server-issued, cached pointer)
   const [live, setLive]         = useState(null);   // live earnings from the backend
+  const [statsState, setStatsState] = useState('loading'); // loading | live | stale | unavailable
+  const [lastRefreshAt, setLastRefreshAt] = useState('');
+  const [statsError, setStatsError] = useState('');
   const [name,  setName]        = useState('');
   const [email, setEmail]       = useState('');
   const [sendTo, setSendTo]     = useState('');
   const [sendName, setSendName] = useState('');
   const [busy,  setBusy]        = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [msg,   setMsg]         = useState('');
   const [err,   setErr]         = useState('');
   const [copied, setCopied]     = useState(false);
@@ -132,23 +159,46 @@ export default function ReferralPage() {
   }, []);
 
   // Pull live stats straight from the backend (online, not browser-local).
+  // Freshness is explicit: live on success; stale when the API fails but a
+  // saved record exists; unavailable when there is nothing trustworthy to
+  // show. Cached values are NEVER presented as live.
   const fetchLiveStats = useCallback(async (record) => {
     const emailKey = record?.email || data?.email || '';
-    if (!emailKey) return;
+    if (!emailKey) {
+      setStatsState('unavailable');
+      return;
+    }
+    setStatsState((prev) => (prev === 'live' ? prev : 'loading'));
+    setStatsError('');
     try {
       const res = await fetch(apiUrl('/referrals/earnings'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailKey }),
       });
-      if (!res.ok) return;
-      const body = await res.json();
-      if (body?.ok && body?.data) setLive(body.data);
-    } catch (_err) { /* keep cached values if the API is down */ }
-  }, [data?.email]);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.ok || !body?.data) {
+        throw new Error(body?.error || `Earnings request failed (${res.status})`);
+      }
+      setLive(body.data);
+      setLastRefreshAt(new Date().toISOString());
+      setStatsState('live');
+      setStatsError('');
+    } catch (fetchErr) {
+      // No silent fallback: label exactly what the user is seeing.
+      if (record || data) {
+        setStatsState('stale');
+      } else {
+        setStatsState('unavailable');
+      }
+      setStatsError(fetchErr?.message || 'Live stats unavailable');
+    }
+  }, [data]);
 
   useEffect(() => {
-    if (data?.email) fetchLiveStats(data);
+    // Always resolve freshness explicitly, even when the saved record has no
+    // email (→ 'unavailable', never a silent loading state or fake zero).
+    if (data) fetchLiveStats(data);
   }, [data, fetchLiveStats]);
 
   const referralUrl = data
@@ -164,8 +214,11 @@ export default function ReferralPage() {
       return;
     }
 
-    // Backend-authoritative: the code is persisted, emailed to the owner, and
-    // earns commissions automatically. No local-only codes.
+    // Backend-authoritative: the code is issued by the server and only then
+    // stored. A failed request never creates a local registration.
+    setRegistering(true);
+    setErr('');
+    setMsg('');
     const issueBackend = async () => {
       try {
         const res = await fetch(apiUrl('/referrals/register'), {
@@ -173,32 +226,36 @@ export default function ReferralPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: trimmedEmail, name: name.trim() }),
         });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data?.data?.code) {
+        const payload = await res.json().catch(() => ({}));
+        if (res.ok && payload?.data?.code) {
           const record = {
-            code: data.data.code,
-            name: data.data.name || name.trim(),
-            email: data.data.email || trimmedEmail,
-            createdAt: new Date(data.data.joinedAt || Date.now()).toISOString(),
-            sales: data.data.sales || 0,
-            clicks: data.data.clicks || 0,
-            totalCommissionsCents: data.data.totalCommissionsCents || 0,
-            pendingCents: data.data.pendingCents || 0,
+            code: payload.data.code,
+            name: payload.data.name || name.trim(),
+            email: payload.data.email || trimmedEmail,
+            createdAt: new Date(payload.data.joinedAt || Date.now()).toISOString(),
+            sales: payload.data.sales || 0,
+            clicks: payload.data.clicks || 0,
+            totalCommissionsCents: payload.data.totalCommissionsCents || 0,
+            pendingCents: payload.data.pendingCents || 0,
           };
           saveData(record);
           setData(record);
           setErr('');
           setMsg(
-            data.emailDelivered
+            payload.emailDelivered
               ? `Your referral code is ${record.code} and it was emailed to you. Share your link below to start earning.`
               : `Your referral code is ${record.code}. We could not email it this time — save it now and share your link below to start earning.`,
           );
           fetchLiveStats(record);
           return;
         }
-        setErr(data?.error || 'Referral registration failed. Please try again.');
+        // Server rejected the registration: no code, no local record, no success.
+        setErr(payload?.error || 'Referral registration failed. Please try again.');
       } catch (_apiErr) {
-        setErr('Referral service is offline. Please try again shortly.');
+        // Offline: nothing was registered. Input is preserved for retry.
+        setErr('Referral service is offline — no code was registered. Please try again shortly.');
+      } finally {
+        setRegistering(false);
       }
     };
     issueBackend();
@@ -327,8 +384,12 @@ export default function ReferralPage() {
                   required
                 />
               </label>
-              <button type="submit" className="referral-page__btn referral-page__btn--primary">
-                Generate my referral code
+              <button
+                type="submit"
+                className="referral-page__btn referral-page__btn--primary"
+                disabled={registering}
+              >
+                {registering ? 'Registering…' : 'Generate my referral code'}
               </button>
               {!isLoggedIn ? (
                 <p className="referral-page__hint">
@@ -342,6 +403,44 @@ export default function ReferralPage() {
             <section className="referral-page__dashboard section-card">
               <p className="pill">Your referral code</p>
               <h2>{data.code}</h2>
+              <div className="referral-page__freshness" role="status">
+                {statsState === 'live' ? (
+                  <>
+                    <span className="referral-page__freshnessBadge referral-page__freshnessBadge--live">Live</span>
+                    <span className="referral-page__muted">Stats refreshed {formatRefreshTime(lastRefreshAt)} from the online ledger.</span>
+                  </>
+                ) : null}
+                {statsState === 'loading' ? (
+                  <>
+                    <span className="referral-page__freshnessBadge">Loading…</span>
+                    <span className="referral-page__muted">Reading your stats from the online ledger.</span>
+                  </>
+                ) : null}
+                {statsState === 'stale' ? (
+                  <>
+                    <span className="referral-page__freshnessBadge referral-page__freshnessBadge--stale">Saved data — not live</span>
+                    <span className="referral-page__muted">
+                      Live stats unavailable ({statsError || 'network error'}). Showing last saved values
+                      {lastRefreshAt ? ` from ${formatRefreshTime(lastRefreshAt)}` : ''} — they may be out of date.
+                    </span>
+                    <button type="button" className="referral-page__btn" onClick={() => fetchLiveStats(data)}>
+                      Retry live stats
+                    </button>
+                  </>
+                ) : null}
+                {statsState === 'unavailable' ? (
+                  <>
+                    <span className="referral-page__freshnessBadge referral-page__freshnessBadge--unavailable">Stats unavailable</span>
+                    <span className="referral-page__muted">
+                      Could not reach the online ledger ({statsError || 'network error'}) and nothing is saved on this
+                      device. Balances below are unknown — not $0.
+                    </span>
+                    <button type="button" className="referral-page__btn" onClick={() => fetchLiveStats(data)}>
+                      Retry live stats
+                    </button>
+                  </>
+                ) : null}
+              </div>
               <div className="referral-page__linkRow">
                 <input
                   type="text"
@@ -369,31 +468,42 @@ export default function ReferralPage() {
                 </div>
                 <div className="referral-page__stat">
                   <span>Link clicks</span>
-                  <strong>{live?.clicks ?? data.clicks ?? 0}</strong>
+                  <strong>{statsState === 'unavailable' ? '—' : (live?.clicks ?? data.clicks ?? 0)}</strong>
                 </div>
                 <div className="referral-page__stat">
                   <span>Referrals</span>
-                  <strong>{live?.sales ?? data.sales ?? 0}</strong>
+                  <strong>{statsState === 'unavailable' ? '—' : (live?.sales ?? data.sales ?? 0)}</strong>
                 </div>
                 <div className="referral-page__stat">
                   <span>Conversion</span>
-                  <strong>{formatConversion(live?.clicks ?? data.clicks ?? 0, live?.sales ?? data.sales ?? 0)}</strong>
+                  <strong>
+                    {statsState === 'unavailable'
+                      ? '—'
+                      : formatConversion(live?.clicks ?? data.clicks ?? 0, live?.sales ?? data.sales ?? 0)}
+                  </strong>
                 </div>
                 <div className="referral-page__stat">
                   <span>Earnings</span>
-                  <strong>${((live?.totalCommissionsCents ?? data.totalCommissionsCents ?? 0) / 100).toFixed(2)}</strong>
+                  <strong>
+                    {statsState === 'unavailable'
+                      ? 'Unknown'
+                      : `$${((live?.totalCommissionsCents ?? data.totalCommissionsCents ?? 0) / 100).toFixed(2)}`}
+                  </strong>
                 </div>
               </div>
               <button
                 type="button"
                 className="referral-page__btn referral-page__btn--ghost"
-                onClick={() => { saveData(null); localStorage.removeItem(STORAGE_KEY); setData(null); setMsg(''); }}
+                onClick={() => { saveData(null); localStorage.removeItem(STORAGE_KEY); setData(null); setLive(null); setStatsState('unavailable'); setMsg(''); }}
               >
                 Reset and create new code
               </button>
             </section>
 
-            <ActivityList payouts={live?.payouts ?? []} recent={live?.recent ?? []} />
+            <ActivityList
+              payouts={statsState === 'unavailable' ? null : (live?.payouts ?? [])}
+              recent={statsState === 'unavailable' ? null : (live?.recent ?? [])}
+            />
 
             <section className="referral-page__send section-card">
               <p className="pill">Send your code by email</p>
@@ -466,7 +576,24 @@ export default function ReferralPage() {
   );
 }
 
+// Note: ActivityList is used in JSX above; the repo eslint config has no React
+// plugin, so JSX usage alone does not satisfy no-unused-vars.
+// eslint-disable-next-line no-unused-vars
 function ActivityList({ payouts = [], recent = [] }) {
+  // `null` means the activity feed could not be loaded (API unreachable) —
+  // that is "unknown", never "no activity".
+  if (payouts === null || recent === null) {
+    return (
+      <section className="referral-page__send section-card">
+        <p className="pill">Activity</p>
+        <h2>Your recent activity</h2>
+        <p>
+          Activity is currently unavailable — the online ledger could not be reached.
+          This does not mean you have no activity. Retry live stats above.
+        </p>
+      </section>
+    );
+  }
   if (payouts.length === 0 && recent.length === 0) {
     return (
       <section className="referral-page__send section-card">
