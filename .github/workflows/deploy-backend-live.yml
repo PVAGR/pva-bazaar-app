@@ -155,7 +155,7 @@ jobs:
 
       - name: Deploy backend project to Vercel
         id: vercel_action
-        uses: amondnet/vercel-action@v25
+        uses: amondnet/vercel-action@v42.3.0
         continue-on-error: true
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
@@ -168,12 +168,18 @@ jobs:
         id: vercel_fallback
         if: steps.vercel_action.outcome != 'success'
         continue-on-error: true
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
         run: |
           npm i -g vercel@latest
           cd backend
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
-          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          # Deploy sources and let Vercel build server-side (same builder as the
+          # Git integration). Do NOT use `vercel build` + `--prebuilt`: the
+          # locally-built prebuilt bundle crashed at runtime on 2026-09-09
+          # (FUNCTION_INVOCATION_FAILED on every route) while server-built
+          # deployments of the same code ran fine.
+          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
 
       - name: Ensure backend deploy succeeded
         if: always()
