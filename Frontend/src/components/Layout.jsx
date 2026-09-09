@@ -114,7 +114,9 @@ export default function Layout({ children }) {
       ref = decodeURIComponent(ref);
       if (ref) {
         const normalized = ref.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (normalized.length >= 4) {
+        // Backend codes are 6–16 chars (see normalizeCode + getStoredReferralCode).
+        // Shorter strings are never attributable, so they are not pinged either.
+        if (normalized.length >= 6) {
           window.localStorage.setItem('pva:referral-code', normalized);
           window.localStorage.setItem('pva:inbound-ref', normalized);
           const pingKey = `pva:ref-click-sent:${normalized}`;

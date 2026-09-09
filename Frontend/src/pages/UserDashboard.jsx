@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { apiGet, fetchTransactions } from '../lib/api.js';
 import { createLogger } from '../lib/logger.js';
 import { getToken } from '../lib/auth.js';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import NavLink from '../components/NavLink.jsx';
+// eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import AdminNav from '../components/AdminNav.jsx';
 import '../pages/UserDashboard.css';
 
@@ -35,15 +37,19 @@ export default function UserDashboard() {
   const [commandNoteStatus, setCommandNoteStatus] = useState('saved');
   const [dashboardData, setDashboardData] = useState({
     userOrders: [],
+    ordersOk: true,
     userItems: [],
     userTransactions: [],
+    transactionsOk: true,
     deals: [],
     contacts: [],
     templates: [],
     streams: [],
     marketplaceStats: { totalItems: 0, totalSales: 0 },
+    marketplaceStatsOk: true,
     escrowStatus: [],
     salesMetrics: { totalSales: 0, thisMonth: 0, thisWeek: 0 },
+    salesOk: true,
     loading: true,
     error: null,
   });
@@ -110,28 +116,43 @@ export default function UserDashboard() {
         : Array.isArray(ordersR.value?.orders)
           ? ordersR.value.orders
           : [];
+      // Order history is trustworthy only when the request actually succeeded.
+      // A failed request must read "unavailable", never an empty history.
+      const ordersOk = ordersR.status === 'fulfilled' && !ordersR.value?.error
+        && (Array.isArray(ordersR.value?.items) || Array.isArray(ordersR.value?.orders));
       const txItems = Array.isArray(txR.value)
         ? txR.value
         : Array.isArray(txR.value?.items)
           ? txR.value.items
           : [];
+      const txOk = txR.status === 'fulfilled' && txR.value !== null && !txR.value?.error;
       const escrowItems = Array.isArray(escrowR.value?.items)
         ? escrowR.value.items
         : Array.isArray(escrowR.value)
           ? escrowR.value
           : [];
+      // Sales metrics are financial state: failure must read "unavailable",
+      // never $0.00. Success shape is { ok:true, totalSales, thisMonth, ... }.
+      const salesValue = salesR.status === 'fulfilled' && salesR.value && !salesR.value?.error ? salesR.value : null;
+      const salesOk = Boolean(salesValue && (typeof salesValue.totalSales === 'number' || typeof salesValue.thisMonth === 'number'));
+      const mpValue = mpR.status === 'fulfilled' && mpR.value && !mpR.value?.error ? mpR.value : null;
+      const mpOk = Boolean(mpValue && (typeof mpValue.totalItems === 'number' || typeof mpValue.totalSales === 'number'));
 
       setDashboardData({
-        userOrders: ordersR.status === 'fulfilled' ? orderItems : [],
+        userOrders: ordersOk ? orderItems : [],
+        ordersOk,
         userItems: itemsR.status === 'fulfilled' ? (Array.isArray(itemsR.value?.items) ? itemsR.value.items : []) : [],
-        userTransactions: txR.status === 'fulfilled' ? txItems : [],
+        userTransactions: txOk ? txItems : [],
+        transactionsOk: txOk,
         deals: dealsR.status === 'fulfilled' && Array.isArray(dealsR.value?.items) ? dealsR.value.items : [],
         contacts: contactsR.status === 'fulfilled' && Array.isArray(contactsR.value?.items) ? contactsR.value.items : [],
         templates: templatesR.status === 'fulfilled' && Array.isArray(templatesR.value?.items) ? templatesR.value.items : [],
         streams: streamsR.status === 'fulfilled' && Array.isArray(streamsR.value?.items) ? streamsR.value.items : [],
-        marketplaceStats: mpR.status === 'fulfilled' ? mpR.value : { totalItems: 0, totalSales: 0 },
+        marketplaceStats: mpOk ? mpValue : { totalItems: 0, totalSales: 0 },
+        marketplaceStatsOk: mpOk,
         escrowStatus: escrowR.status === 'fulfilled' ? escrowItems : [],
-        salesMetrics: salesR.status === 'fulfilled' ? salesR.value : { totalSales: 0, thisMonth: 0, thisWeek: 0 },
+        salesMetrics: salesOk ? salesValue : { totalSales: 0, thisMonth: 0, thisWeek: 0 },
+        salesOk,
         loading: false,
         error: null,
       });
@@ -332,13 +353,13 @@ export default function UserDashboard() {
                   </div>
                   <div className="stat-card">
                     <span className="stat-label">all sales</span>
-                    <span className="stat-value">${dashboardData.salesMetrics.totalSales?.toFixed(2) || '0.00'}</span>
-                    <span className="stat-unit">lifetime</span>
+                    <span className="stat-value">{dashboardData.salesOk ? `$${dashboardData.salesMetrics.totalSales?.toFixed(2) || '0.00'}` : 'Unavailable'}</span>
+                    <span className="stat-unit">lifetime{dashboardData.salesOk ? '' : ' · ledger unreachable'}</span>
                   </div>
                   <div className="stat-card">
                     <span className="stat-label">this month</span>
-                    <span className="stat-value">${dashboardData.salesMetrics.thisMonth?.toFixed(2) || '0.00'}</span>
-                    <span className="stat-unit">current</span>
+                    <span className="stat-value">{dashboardData.salesOk ? `$${dashboardData.salesMetrics.thisMonth?.toFixed(2) || '0.00'}` : 'Unavailable'}</span>
+                    <span className="stat-unit">current{dashboardData.salesOk ? '' : ' · ledger unreachable'}</span>
                   </div>
                 </div>
 
@@ -381,7 +402,9 @@ export default function UserDashboard() {
 
                 <div className="overview-section">
                   <h2>Recent Activity</h2>
-                  {dashboardData.userTransactions.length > 0 ? (
+                  {!dashboardData.transactionsOk ? (
+                    <p className="empty-state">Activity unavailable — the order ledger could not be reached. This does not mean you have no activity.</p>
+                  ) : dashboardData.userTransactions.length > 0 ? (
                     <div className="activity-list">
                       {dashboardData.userTransactions.slice(0, 5).map((tx, i) => (
                         <div key={i} className="activity-item">
@@ -401,11 +424,11 @@ export default function UserDashboard() {
                   <div className="mp-stats">
                     <div className="mp-stat">
                       <p className="stat-title">Items for Sale</p>
-                      <p className="stat-big">{dashboardData.marketplaceStats.totalItems || 0}</p>
+                      <p className="stat-big">{dashboardData.marketplaceStatsOk ? (dashboardData.marketplaceStats.totalItems || 0) : '—'}</p>
                     </div>
                     <div className="mp-stat">
                       <p className="stat-title">Recent Sales</p>
-                      <p className="stat-big">${dashboardData.marketplaceStats.totalSales?.toFixed(2) || '0.00'}</p>
+                      <p className="stat-big">{dashboardData.marketplaceStatsOk ? `$${dashboardData.marketplaceStats.totalSales?.toFixed(2) || '0.00'}` : 'Unavailable'}</p>
                     </div>
                   </div>
                 </div>
@@ -444,7 +467,11 @@ export default function UserDashboard() {
             {activeTab === 'orders' && (
               <section className="tab-content orders-content">
                 <h2>Your Orders</h2>
-                {dashboardData.userOrders.length > 0 ? (
+                {!dashboardData.ordersOk ? (
+                  <div className="empty-state">
+                    <p>Order history unavailable — the order ledger could not be reached. This does not mean you have no orders.</p>
+                  </div>
+                ) : dashboardData.userOrders.length > 0 ? (
                   <div className="orders-list">
                     {dashboardData.userOrders.map((order, i) => (
                       <div key={i} className="order-card">
@@ -500,7 +527,9 @@ export default function UserDashboard() {
             {activeTab === 'transactions' && (
               <section className="tab-content transactions-content">
                 <h2>Your Activity</h2>
-                {dashboardData.userTransactions.length > 0 ? (
+                {!dashboardData.transactionsOk ? (
+                  <p className="empty-state">Activity unavailable — the order ledger could not be reached. This does not mean you have no activity.</p>
+                ) : dashboardData.userTransactions.length > 0 ? (
                   <div className="transactions-list">
                     {dashboardData.userTransactions.map((tx, i) => (
                       <div key={i} className="transaction-card">

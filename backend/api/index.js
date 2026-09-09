@@ -228,7 +228,7 @@ app.use('/admin', authLimiter);
 app.use('/api/auth', authLimiter);
 app.use('/api/oracle', authLimiter);
 app.use('/orders', authLimiter);
-app.use('/checkout', checkoutLimiter);
+app.use('/api/checkout', checkoutLimiter);
 app.use('/webhooks', webhookLimiter);
 app.use('/api/webhooks', webhookLimiter);
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints

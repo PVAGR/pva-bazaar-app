@@ -48,7 +48,7 @@ const LIVE_DATA = {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  vi.restoreAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(() => {

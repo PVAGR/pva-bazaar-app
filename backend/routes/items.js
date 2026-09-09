@@ -227,11 +227,33 @@ router.get('/', async (req, res) => {
       isUnique,
       originCountry,
       color,
+      ids,
     } = req.query;
     const isAdmin = hasAdminAccess(req);
     const filter = {};
     if (!isAdmin || includeDrafts !== 'true') {
       filter.status = 'published';
+    }
+    // Cart/checkout revalidation: fetch an explicit id set (capped). The
+    // published filter above still applies, so deleted/draft items simply
+    // come back absent — never as purchasable records.
+    if (ids) {
+      const idList = String(ids)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 50);
+      const objectIds = [];
+      for (const raw of idList) {
+        if (mongoose.Types.ObjectId.isValid(raw)) {
+          objectIds.push(new mongoose.Types.ObjectId(raw));
+        }
+      }
+      if (objectIds.length > 0) {
+        filter._id = { $in: objectIds };
+      } else if (idList.length > 0) {
+        filter.slug = { $in: idList };
+      }
     }
     if (category) filter.category = String(category);
     if (tag) filter.tags = tag;

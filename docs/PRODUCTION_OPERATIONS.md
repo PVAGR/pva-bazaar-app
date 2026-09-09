@@ -178,7 +178,63 @@ local-only: keep the browser copy, check API health, then use
   owner email must return `{ok:true, data:{…}}`; unknown emails return 404
   (never fake zeros); unknown click codes return 404.
 
-## 10. What NOT to do
+## 10. COMMERCE — authority, verification, recovery
+
+- Authoritative marketplace source: MongoDB `Artifact` (`status:'published'`)
+  via `GET {API}/items` (cursor pagination, limit clamped 1–50) and
+  `GET {API}/items/:slugOrId`. The frontend never substitutes sample data;
+  an empty backend is an empty shelf, a failed request is an explicit error.
+- All commerce routes are mounted on the production (serverless) entry:
+  `/api/items`, `/api/checkout`, `/api/orders`, `/api/item-inquiries`,
+  `/api/sales`, `/api/seller`, `/api/products`, plus referrals/partners.
+  If a commerce path 404s in production while working locally, check the
+  serverless mount table first (`backend/api/index-serverless.js`).
+- Listing lifecycle: `POST {API}/items/register` creates `status:'draft'`
+  (admin publishes); edits via owner `PUT {API}/items/:id/manage`
+  (creator/steward/access-code) or admin routes; deletes are creator-or-admin.
+  The UI reports "pending review" only after server confirmation, using the
+  server-generated id/slug; failed submits keep the entered data in the form
+  with the real error. No idempotency keys — the submit button disables while
+  saving; retries after a confirmed write must be reconciled via `/items/mine`.
+- Cart (`pva:cart`): temporary array of item ids on the device. Display
+  prices come from server revalidation (`GET {API}/items?ids=…`, capped at
+  50; unpublished/sold ids come back absent and are called out). The cart is
+  cleared only after a paid order is server-finalized (see below).
+- What makes an order real: a MongoDB `Order` created by the backend, which
+  re-resolves price/currency/availability from the product id (client totals
+  are never trusted; quantity is fixed at 1). Checkout sessions reference
+  `stripeSessionId`; Stripe webhook plus the idempotent
+  `POST {API}/checkout/finalize-session` fallback mark payment.
+- Success page flow: re-read Stripe session → if `paid`, call finalize →
+  on `finalized:true` drop exactly the stashed session ids
+  (`pva:checkout-session`) from the cart and show the server `orderId`.
+  Anything else keeps the cart and explains the state (pending/failed).
+- Referral attribution: `?ref=` captured to `pva:referral-code` (+
+  `pva:inbound-ref`), sent as `referralCode` with checkout create calls only.
+  The server validates (`active`, 6–16 chars) and derives commission
+  server-side at settle time; unknown/suspended codes simply mean no
+  attribution. Settlement is idempotent per order (`commissionAmountCents`
+  guard + unique `auto_<orderId>` payout batch); refunds reverse via
+  `reverseReferralForOrder`. No self-referral rule exists — reported, not
+  invented. Click pings (`/:code/click`) are deduped per tab session and are
+  approximate traffic, never money.
+- Seller/customer money state: `/orders/mine`, `/orders/escrow`,
+  `/sales/metrics`, seller dashboard — failures render "Unavailable", never
+  `$0.00` or empty history. Absence of data is not a zero balance.
+- Media: listing payloads carry remote URL strings (or admin-multipart
+  flows); binaries live in Cloudinary/media storage, never as Mongo blobs or
+  uploader-local paths.
+- Verify a real listing: `GET {API}/items/:slug` returns it with
+  `status:'published'`. Verify a real order: server `orderId` retrievable via
+  `/orders/mine` (owner) or admin order reads; Stripe dashboard agrees on the
+  session. Recovery: failed checkout keeps the cart — retry; failed finalize
+  keeps cart + order lookup guidance; never re-pay without checking history.
+- Rate limits: global 300/15m; checkout 30/15m on `/api/checkout`; webhooks
+  1000/15m. Stripe webhook delivery requires the full-server raw-body path —
+  it is NOT mounted serverless, so paid-order settlement in production
+  currently depends on the finalize fallback (see remaining work).
+
+## 11. What NOT to do
 - Do not migrate off Vercel, add paid services, or build a parallel
   backend/frontend/database without an explicit decision record.
 - Do not merge localStorage records into server lists, show success toasts
