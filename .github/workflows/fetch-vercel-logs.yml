@@ -43,8 +43,9 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
         run: |
           npm install --global vercel@latest
+          CLEAN_TOKEN="$(printf '%s' "$VERCEL_TOKEN" | tr -d '[:space:]')"
           echo "=== runtime error logs (production, last 3h) ==="
-          vercel logs https://pva-backend-api.vercel.app --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --level error --since 3h --json 2>&1 | head -c 12000 || true
+          vercel logs https://pva-backend-api.vercel.app --token="$CLEAN_TOKEN" --scope="$VERCEL_ORG_ID" --level error --since 3h --json 2>&1 | head -c 12000 || true
           echo ""
           echo "=== runtime logs for HTTP 500 (production) ==="
-          vercel logs https://pva-backend-api.vercel.app --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --status-code 500 --json 2>&1 | head -c 12000 || true
+          vercel logs https://pva-backend-api.vercel.app --token="$CLEAN_TOKEN" --scope="$VERCEL_ORG_ID" --status-code 500 --json 2>&1 | head -c 12000 || true
