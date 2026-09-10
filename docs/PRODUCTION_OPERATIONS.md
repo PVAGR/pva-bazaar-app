@@ -304,3 +304,53 @@ Password / account recovery:
 - Do not store file blobs in MongoDB documents.
 - Do not commit secrets. Variable NAMES go in docs; VALUES go in the
   hosting provider's secret store.
+
+## 13. SITE NAVIGATION / SEARCH
+
+### Primary navigation (simplified)
+
+The top navigation bar shows these items:
+- **Marketplace** → `/marketplace`
+- **Books** → `/books`
+- **Blog** → `/blog`
+- **Archive** → `/archive`
+- **Explore** (dropdown with groups)
+  - KNOWLEDGE: Civilization Library, Institutions
+  - COMMUNITY: Partnerships, Partner Program, Forum
+  - COMMERCE: Showroom, Supplier Portal
+  - ABOUT: About, Contact, Provenance
+
+On mobile (≤800px width), the nav collapses to a hamburger menu with the same groups.
+
+### Universal search (Ctrl+K)
+
+Pressing **Ctrl+K** (or **Cmd+K** on Mac) opens a search overlay that queries:
+- Books (published)
+- Blog posts (published)
+- Library documents (public)
+- Library articles (published)
+- Partner profiles (approved)
+- Marketplace artifacts (published)
+- Archive entries
+- Static routes (local)
+
+The backend endpoint is `GET /api/search?q=<query>&limit=<limit>`:
+- `q` is required, minimum 2 characters
+- `limit` defaults to 30, max 30
+- Returns `{ok, query, count, results:[{type,id,title,subtitle,path}], partial, failedSources}`
+- If MongoDB is unavailable, falls back to static content search
+
+**Frontend behavior:**
+- Debounces input by 300ms
+- Shows states: EMPTY / LOADING / RESULTS / NO_RESULTS / PARTIAL / UNAVAILABLE
+- Backend failure never shows "No results" — shows UNAVAILABLE with route suggestions only
+- Closes on Escape key or route change
+
+### Deep-link 404 fallback
+
+GitHub Pages serves `404.html` for unknown paths. The script redirects:
+1. Known legacy routes (e.g., `/welcome` → `/`)
+2. Asset paths (`.js`, `.css`, `.png`, etc.) → no redirect, 404 stands
+3. All other paths → hash-redirect (`/#/path`) to let React Router handle
+
+This ensures that refreshing a deep link like `/books/read/my-book` works without a 404 flash.
