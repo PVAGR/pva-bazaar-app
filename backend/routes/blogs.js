@@ -2,7 +2,7 @@ const adminSession = require('../middleware/adminSession');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const Blog = require('../models/Blog');
 const Comment = require('../models/Comment');
 
@@ -34,7 +34,12 @@ if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
   });
 }
 
-// Admin-only: create or rotate a blog's edit secret (session-based)
+// Admin-only: create a blog draft ONLINE or rotate its edit secret.
+//
+// Server authority: the record is created as `pending` (a saved draft), never
+// `published`. An empty blog must not become publicly visible before its
+// content has been written. The owner writes content via /:slug/update (edit
+// secret) and only then explicitly publishes via /:slug/publish.
 router.post('/setup', adminSession, async (req, res) => {
   try {
     const slug = (req.body?.slug || '').trim().toLowerCase();
@@ -43,27 +48,32 @@ router.post('/setup', adminSession, async (req, res) => {
       return res.status(400).json({ ok: false, message: 'slug and title are required' });
 
     let blog = await Blog.findOne({ slug });
-    const newSecret = uuidv4();
+    const newSecret = crypto.randomUUID();
     const hashed = await bcrypt.hash(newSecret, 10);
 
     if (!blog) {
-      blog = new Blog({ slug, title, content: '', editHashHashed: hashed, status: 'published' });
+      blog = new Blog({ slug, title, content: '', editHashHashed: hashed, status: 'pending' });
       await blog.save();
       return res.json({
         ok: true,
         slug,
+        status: 'pending',
         editSecret: newSecret,
-        message: 'Blog created. Keep the secret safe!',
+        message: 'Draft saved online. Keep the edit secret safe!',
       });
     }
 
     blog.editHashHashed = hashed;
+    if (blog.status !== 'published') {
+      blog.status = 'pending';
+    }
     await blog.save();
     return res.json({
       ok: true,
       slug,
+      status: blog.status,
       editSecret: newSecret,
-      message: 'Secret rotated. Keep the new secret safe!',
+      message: 'Secret rotated. Keep the new edit secret safe!',
     });
   } catch (err) {
     console.error('blogs.setup error', err);
@@ -76,7 +86,7 @@ router.get('/', async (req, res) => {
   try {
     const blogs = await Blog.find({ status: 'published' })
       .sort({ createdAt: -1 })
-      .select('slug title updatedAt');
+      .select('slug title authorName updatedAt createdAt');
     res.json({ ok: true, blogs });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
@@ -95,7 +105,7 @@ router.get('/pending', adminSession, async (req, res) => {
   }
 });
 
-// Get a blog by slug with approved comments
+// Get a blog by slug with approved comments (published only)
 router.get('/:slug', async (req, res) => {
   try {
     const slug = req.params.slug.trim().toLowerCase();
@@ -110,6 +120,9 @@ router.get('/:slug', async (req, res) => {
         slug: blog.slug,
         title: blog.title,
         content: blog.content,
+        authorName: blog.authorName,
+        status: blog.status,
+        createdAt: blog.createdAt,
         updatedAt: blog.updatedAt,
       },
       comments,
@@ -119,13 +132,16 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// Update a blog (requires edit secret)
+// Update a blog that is saved online (requires edit secret). Does NOT change
+// publication status — a pending draft stays pending, a published post stays
+// published with the updated content.
 router.post('/:slug/update', async (req, res) => {
   try {
     const slug = req.params.slug.trim().toLowerCase();
     const editSecret = (req.body?.edit || req.query?.edit || '').toString();
     const content = (req.body?.content || '').toString();
     const title = (req.body?.title || '').toString();
+    const authorName = (req.body?.authorName || '').toString().trim();
     if (!editSecret) return res.status(400).json({ ok: false, message: 'Missing edit secret' });
 
     const blog = await Blog.findOne({ slug });
@@ -135,26 +151,46 @@ router.post('/:slug/update', async (req, res) => {
 
     if (title) blog.title = title;
     blog.content = content;
+    if (authorName) {
+      blog.authorName = authorName;
+    }
     await blog.save();
-    res.json({ ok: true, message: 'Blog updated', updatedAt: blog.updatedAt });
+    res.json({ ok: true, message: 'Blog updated', status: blog.status, updatedAt: blog.updatedAt });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// Admin-only: publish a pending blog and issue an edit secret (session-based)
+// Admin-only: publish a saved online blog draft. Requires real content so an
+// empty draft can never be pushed public by accident.
 router.post('/:slug/publish', adminSession, async (req, res) => {
   try {
     const slug = req.params.slug.trim().toLowerCase();
     const blog = await Blog.findOne({ slug });
     if (!blog) return res.status(404).json({ ok: false, message: 'Blog not found' });
 
+    if (!blog.title || !String(blog.content || '').trim()) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Add a title and body to the draft before publishing',
+      });
+    }
+
     blog.status = 'published';
-    const newSecret = uuidv4();
-    const hashed = await bcrypt.hash(newSecret, 10);
-    blog.editHashHashed = hashed;
     await blog.save();
-    res.json({ ok: true, message: 'Blog published', editSecret: newSecret });
+    res.json({ ok: true, message: 'Blog published', slug: blog.slug, status: 'published' });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Admin-only: delete a blog draft or published post.
+router.delete('/:slug', adminSession, async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().toLowerCase();
+    const blog = await Blog.findOneAndDelete({ slug });
+    if (!blog) return res.status(404).json({ ok: false, message: 'Blog not found' });
+    res.json({ ok: true, message: 'Blog deleted', slug });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }

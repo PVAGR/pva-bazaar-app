@@ -298,6 +298,11 @@ app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/passport', passportRoutes);
 app.use('/api/verification', verificationRoutes);
+// Public blog + owner publishing (Phase 4): the same route module the full
+// server mounts. Public reads are unauthenticated; create/rotate secrets,
+// publish, and delete require an admin session; content edits use the
+// per-post edit secret. This replaces the old ephemeral in-memory blog API.
+app.use('/api/blogs', require('../routes/blogs'));
 // Public proposal board feed used by the home front door and civic surfaces.
 // Router paths already begin with /proposals, so mount at /api like the full server.
 app.use('/api', require('../routes/proposals'));

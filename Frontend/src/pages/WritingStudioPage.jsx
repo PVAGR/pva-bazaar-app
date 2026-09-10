@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import AdminNav from '../components/AdminNav.jsx';
-import { apiFetch, apiGet, fetchRecoverySnapshots } from '../lib/api.js';
+import { apiGet, fetchRecoverySnapshots } from '../lib/api.js';
+import { saveBlogDraftOnlineToServer, publishBlogPostToServer } from '../lib/blogPublish.js';
 import { addLocalEntry } from '../lib/entries.js';
 import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
 import './WritingStudioPage.css';
@@ -72,19 +73,6 @@ function buildHashUrl(path) {
   return `${window.location.origin}${window.location.pathname}#/${path.replace(/^\/+/, '')}`;
 }
 
-async function apiJson(path, { method = 'GET', token = '', body } = {}) {
-  const response = await apiFetch(path, {
-    method,
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(json?.message || json?.error || `Request failed (${response.status})`);
-  }
-  return json;
-}
-
 async function ensureAdminToken() {
   if (typeof window === 'undefined') throw new Error('Admin token can only be requested in the browser');
   const existing = window.localStorage.getItem('admin:token');
@@ -148,7 +136,6 @@ export default function WritingStudioPage() {
       socialCaption: '',
       publishToArchive: true,
       publishToBlog: true,
-      directBlogPublish: true,
     })
   );
   const [socialProfiles, setSocialProfiles] = useState(() =>
@@ -364,6 +351,40 @@ export default function WritingStudioPage() {
     ].slice(0, 12));
   };
 
+  // Server-authoritative blog draft save. The command center keeps a local
+  // editor draft in this browser only; "Saved online" means a pending post
+  // record now exists in MongoDB and nothing is publicly visible yet.
+  const saveBlogDraftOnline = async () => {
+    if (!blogDraft.title.trim()) {
+      setPublishStatus({ kind: 'error', message: 'Add a title before saving the draft online.' });
+      return;
+    }
+    setPublishing(true);
+    setPublishStatus({ kind: 'working', message: 'Saving draft online...' });
+    try {
+      const adminToken = await ensureAdminToken();
+      const saved = await saveBlogDraftOnlineToServer({
+        slug: draftSlug,
+        title: blogDraft.title.trim(),
+        content: blogDraft.content || '',
+        authorName: blogDraft.authorName.trim() || 'Richard Torres',
+        adminToken,
+      });
+      if (saved?.status === 'published') {
+        setPublishStatus({ kind: 'success', message: 'Draft saved online (the post is already published).' });
+      } else {
+        setPublishStatus({ kind: 'success', message: 'Draft saved online. It is not published yet.' });
+      }
+    } catch (error) {
+      setPublishStatus({
+        kind: 'error',
+        message: `Save failed: ${error?.message || 'Unable to save the draft online'}`,
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const exportStudioBackup = () => {
     const commandCenterNote =
       typeof window !== 'undefined' ? window.localStorage.getItem(COMMAND_CENTER_NOTE_KEY) || '' : '';
@@ -406,7 +427,6 @@ export default function WritingStudioPage() {
         socialCaption: '',
         publishToArchive: true,
         publishToBlog: true,
-        directBlogPublish: true,
       });
       setSocialProfiles(parsed?.socialProfiles && typeof parsed.socialProfiles === 'object' ? parsed.socialProfiles : { signature: '' });
       setRecentPublications(Array.isArray(parsed?.recentPublications) ? parsed.recentPublications : []);
@@ -435,6 +455,7 @@ export default function WritingStudioPage() {
       .map((tag) => tag.trim())
       .filter(Boolean);
     const publicationResults = [];
+    let blogPublishError = '';
 
     try {
       if (blogDraft.publishToArchive) {
@@ -482,86 +503,48 @@ export default function WritingStudioPage() {
 
       if (blogDraft.publishToBlog) {
         const blogUrl = buildHashUrl(`blog/${draftSlug}`);
-        if (blogDraft.directBlogPublish) {
-          try {
-            const adminToken = await ensureAdminToken();
-            const setup = await apiJson('/blogs/setup', {
-              method: 'POST',
-              token: adminToken,
-              body: {
-                slug: draftSlug,
-                title: blogDraft.title.trim(),
-              },
-            });
-
-            await apiJson(`/blogs/${encodeURIComponent(draftSlug)}/update`, {
-              method: 'POST',
-              body: {
-                edit: setup.editSecret,
-                title: blogDraft.title.trim(),
-                content: blogDraft.content,
-              },
-            });
-
-            const result = {
-              type: 'blog',
-              status: 'published',
-              title: blogDraft.title.trim(),
-              url: blogUrl,
-              publishedAt: new Date().toISOString(),
-              shareReady: true,
-            };
-            publicationResults.push(result);
-            rememberPublication(result);
-          } catch (error) {
-            const submitted = await apiJson('/contribute/submit', {
-              method: 'POST',
-              body: {
-                title: blogDraft.title.trim(),
-                content: blogDraft.content,
-                authorName: blogDraft.authorName.trim() || 'Richard Torres',
-              },
-            });
-            const result = {
-              type: 'blog',
-              status: 'submitted',
-              title: blogDraft.title.trim(),
-              url: buildHashUrl(`blog/${submitted.slug || draftSlug}`),
-              publishedAt: new Date().toISOString(),
-              shareReady: false,
-            };
-            publicationResults.push(result);
-            rememberPublication(result);
-          }
-        } else {
-          const submitted = await apiJson('/contribute/submit', {
-            method: 'POST',
-            body: {
-              title: blogDraft.title.trim(),
-              content: blogDraft.content,
-              authorName: blogDraft.authorName.trim() || 'Richard Torres',
-            },
+        try {
+          const adminToken = await ensureAdminToken();
+          // Draft → publish → public GET verification happen server-side via the
+          // backend API helper. "Published" is only recorded after the public
+          // endpoint confirms the exact server record by slug.
+          await publishBlogPostToServer({
+            slug: draftSlug,
+            title: blogDraft.title.trim(),
+            content: blogDraft.content,
+            authorName: blogDraft.authorName.trim() || 'Richard Torres',
+            adminToken,
           });
           const result = {
             type: 'blog',
-            status: 'submitted',
+            status: 'published',
             title: blogDraft.title.trim(),
-            url: buildHashUrl(`blog/${submitted.slug || draftSlug}`),
+            url: blogUrl,
             publishedAt: new Date().toISOString(),
-            shareReady: false,
+            shareReady: true,
           };
           publicationResults.push(result);
           rememberPublication(result);
+        } catch (error) {
+          blogPublishError = error?.message || 'Blog publish failed';
         }
       }
 
-      setPublishStatus({
-        kind: 'success',
-        message: publicationResults.length > 0
-          ? `Published ${publicationResults.map((item) => `${item.type} (${item.status})`).join(', ')}.`
-          : 'Your draft is ready, but nothing was selected to publish.',
-      });
-      setActiveTab('social');
+      if (blogPublishError) {
+        setPublishStatus({
+          kind: 'error',
+          message: `Blog publish failed: ${blogPublishError}`,
+        });
+        setActiveTab('blog');
+      } else {
+        setPublishStatus({
+          kind: 'success',
+          message: publicationResults.length > 0
+            ? `Published ${publicationResults.map((item) => `${item.type} (${item.status})`).join(', ')}.`
+            : 'Your draft is ready, but nothing was selected to publish.',
+        });
+        setActiveTab('social');
+      }
     } catch (error) {
       setPublishStatus({ kind: 'error', message: error?.message || 'Publishing failed' });
     } finally {
@@ -835,10 +818,13 @@ export default function WritingStudioPage() {
             <div className="writing-studio__checks">
               <label><input type="checkbox" checked={blogDraft.publishToArchive} onChange={(event) => setBlogDraft((current) => ({ ...current, publishToArchive: event.target.checked }))} /> Publish to archive</label>
               <label><input type="checkbox" checked={blogDraft.publishToBlog} onChange={(event) => setBlogDraft((current) => ({ ...current, publishToBlog: event.target.checked }))} /> Publish to blog</label>
-              <label><input type="checkbox" checked={blogDraft.directBlogPublish} onChange={(event) => setBlogDraft((current) => ({ ...current, directBlogPublish: event.target.checked }))} /> Try direct blog publish first</label>
+              <span className="writing-studio__muted">Blog posts are saved as an online draft first and only become public after the server confirms publication.</span>
             </div>
 
             <div className="writing-studio__actions">
+              <button type="button" className="writing-studio__ghostBtn" onClick={saveBlogDraftOnline} disabled={publishing}>
+                {publishing ? 'Saving...' : 'Save draft online'}
+              </button>
               <button type="button" className="writing-studio__primaryBtn" onClick={publishStudioPost} disabled={publishing}>
                 {publishing ? 'Publishing...' : 'Publish from studio'}
               </button>
@@ -857,7 +843,6 @@ export default function WritingStudioPage() {
                   socialCaption: '',
                   publishToArchive: true,
                   publishToBlog: true,
-                  directBlogPublish: true,
                 })}
               >
                 Clear draft
