@@ -178,26 +178,35 @@ export const clearGovernanceDraft = () => apiDelete('/governance/drafts');
 export const fetchCurrentUser = () => apiGet('/auth/me');
 export const fetchCurrentUserWithFallback = async () => {
   const token = getToken();
+
+  // A device-local token can never resolve to a server identity. Local users
+  // are display-only; server-side middleware rejects local.* tokens outright.
   if (isLocalToken(token)) {
-    const user = getLocalCurrentUser();
-    if (user) {
-      return { ok: true, user };
-    }
-  }
-  if (!token) {
-    // No session: do not ping /auth/me and fill the console with 401s.
     const localUser = getLocalCurrentUser();
-    return localUser ? { ok: true, user: localUser } : { ok: false, user: null };
+    return localUser
+      ? { ok: true, user: localUser, isLocalOnly: true }
+      : { ok: false, user: null, isLocalOnly: false };
+  }
+
+  if (!token) {
+    // No session: report unauthenticated. A leftover device-local profile is
+    // surfaced for display only, never as a logged-in server account.
+    const localUser = getLocalCurrentUser();
+    return localUser
+      ? { ok: false, user: null, isLocalOnly: true, localUser }
+      : { ok: false, user: null, isLocalOnly: false, localUser: null };
   }
 
   try {
     return await fetchCurrentUser();
   } catch (_err) {
-    const user = getLocalCurrentUser();
-    if (user) {
-      return { ok: true, user };
-    }
-    return { ok: false, user: null };
+    // The server is the only authority: when the server cannot confirm who you
+    // are, there is no fallback "user". A device-local profile may still exist
+    // for display, clearly flagged as device-only.
+    const localUser = getLocalCurrentUser();
+    return localUser
+      ? { ok: false, user: null, isLocalOnly: true, localUser }
+      : { ok: false, user: null, isLocalOnly: false, localUser: null };
   }
 };
 export const fetchRecoverySnapshots = () => apiGet('/recovery/snapshots');

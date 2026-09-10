@@ -29,8 +29,19 @@ function getAdminBootstrapCode() {
 }
 
 function isAdminSelfSignupEnabled() {
-  const raw = String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true').trim().toLowerCase();
+  // Fail closed in production: extra admins may only be created in production
+  // when explicitly enabled via env, or via the bootstrap code path.
+  const raw = String(
+    process.env.ADMIN_SELF_SIGNUP_ENABLED || (process.env.NODE_ENV === 'production' ? 'false' : 'true'),
+  ).trim().toLowerCase();
   return raw !== 'false';
+}
+
+function constantTimeEqual(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
 }
 
 async function countAdminUsers() {
@@ -545,7 +556,7 @@ router.post('/login', async (req, res) => {
     const adminUserLower = String(adminUser || '').toLowerCase();
 
     const envAdminMatch = Boolean(adminUser && adminPass) && (
-      (identifier === adminUser || identifierLower === adminUserLower) && password === adminPass
+      (identifier === adminUser || identifierLower === adminUserLower) && constantTimeEqual(password, adminPass)
     );
 
     if (!envAdminMatch) {

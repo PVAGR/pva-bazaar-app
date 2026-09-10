@@ -3,15 +3,15 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const { ensureSeedUsers, findUser } = require('../lib/mockUserStore');
+const { getJwtSecret } = require('../lib/jwtSecret');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 const JWT_EXPIRY = '7d';
 
 /**
  * Generate JWT token
  */
 function generateToken(userId, expiresIn = JWT_EXPIRY) {
-  return jwt.sign({ id: userId }, JWT_SECRET, { algorithm: 'HS256', expiresIn });
+  return jwt.sign({ id: userId }, getJwtSecret(), { algorithm: 'HS256', expiresIn });
 }
 
 /**
@@ -19,7 +19,7 @@ function generateToken(userId, expiresIn = JWT_EXPIRY) {
  */
 function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    return jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
   } catch (err) {
     throw new Error('Invalid or expired token');
   }
@@ -38,25 +38,14 @@ async function authenticateToken(req, res, next) {
     }
 
     if (String(token || '').startsWith('local.')) {
-      try {
-        const raw = Buffer.from(token.slice(6), 'base64').toString('utf8');
-        const payload = JSON.parse(raw);
-        const localUserId = String(payload.id || payload.userId || payload.sub || '').trim();
-        if (!localUserId) {
-          return res.status(401).json({ error: 'Invalid local session token' });
-        }
-
-        await ensureSeedUsers();
-        const localUser = await findUser({ _id: localUserId });
-        if (!localUser) {
-          return res.status(401).json({ error: 'User not found' });
-        }
-
-        req.user = localUser;
-        return next();
-      } catch (err) {
-        return res.status(401).json({ error: err.message || 'Invalid local session token' });
-      }
+      // Device-local tokens are unsigned and fully browser-fabricated. The
+      // server never accepts them: a browser cannot mint an authenticated
+      // session or a role for itself. Sign in with a real server account.
+      return res.status(401).json({
+        ok: false,
+        error: 'Device-local sessions are not accepted by the server. Sign in with a server account.',
+        code: 'LOCAL_TOKEN_REJECTED',
+      });
     }
 
     const decoded = verifyToken(token);

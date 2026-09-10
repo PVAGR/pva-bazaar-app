@@ -1,15 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/auth');
 const { sendWelcomeEmail } = require('../services/emailService');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const { ensureSeedUsers, findUser, saveUser } = require('../lib/mockUserStore');
-const { getJwtSecret } = require('../lib/jwtSecret');
+const { getJwtSecret, hasConfiguredJwtSecret } = require('../lib/jwtSecret');
 
 const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
 let mongoAuthReadyPromise = null;
+
+function constantTimeEqual(a, b) {
+  const left = Buffer.from(String(a || ''));
+  const right = Buffer.from(String(b || ''));
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
+// Production must fail closed when the signing secret would fall back to a
+// public dev value. Signing/verifying with a known value would let anyone
+// forge user/admin sessions.
+function secretRequired(res) {
+  if (process.env.NODE_ENV === 'production' && !hasConfiguredJwtSecret()) {
+    return res.status(503).json({ ok: false, message: 'Authentication is not configured on the server (JWT secret missing)' });
+  }
+  return null;
+}
 
 function isMongoQuotaLikeError(error) {
   const message = String(error?.message || '').toLowerCase();
@@ -98,12 +117,19 @@ function cleanText(value, maxLen = 200) {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, onboarding } = req.body;
-    const roleIntent = normalizeRoleIntent(onboarding?.roleIntent);
-    const roleOther = sanitizeRoleOther(onboarding?.roleOther);
-    const digestOptIn = Boolean(onboarding?.emailPreferences?.digestOptIn);
-    const roleTrackUpdates = onboarding?.emailPreferences?.roleTrackUpdates !== false;
-    const compliance = onboarding?.compliance && typeof onboarding.compliance === 'object'
+    if (secretRequired(res)) return;
+
+    const { name } = req.body;
+    // Email is canonicalized to lowercase so Mongo uniqueness is case-insensitive
+    // and login/registration always resolve to the same account.
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+    const onboarding = req.body?.onboarding && typeof req.body.onboarding === 'object' ? req.body.onboarding : {};
+    const roleIntent = normalizeRoleIntent(onboarding.roleIntent);
+    const roleOther = sanitizeRoleOther(onboarding.roleOther);
+    const digestOptIn = Boolean(onboarding.emailPreferences?.digestOptIn);
+    const roleTrackUpdates = onboarding.emailPreferences?.roleTrackUpdates !== false;
+    const compliance = onboarding.compliance && typeof onboarding.compliance === 'object'
       ? {
         legalFullName: cleanText(onboarding.compliance.legalFullName, 150),
         legalIdType: cleanText(onboarding.compliance.legalIdType, 80),
@@ -197,6 +223,8 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
+    if (secretRequired(res)) return;
+
     const rawIdentifier = req.body?.email || req.body?.username || '';
     const identifier = String(rawIdentifier).trim();
     const password = String(req.body?.password || '').trim();
@@ -243,7 +271,7 @@ router.post('/login', async (req, res) => {
 
     let envAdminAuthenticated = false;
 
-    if (envAdminPassword && adminIdentifierMatch && password === envAdminPassword) {
+    if (envAdminPassword && adminIdentifierMatch && constantTimeEqual(password, envAdminPassword)) {
       user = useMongoStore
         ? await User.findOne({
             $or: [
@@ -317,8 +345,25 @@ router.post('/login', async (req, res) => {
 // Get current user
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    res.json({ ok: true, user });
+    const id = String(req.user?.id || req.user?._id || '');
+    let user = null;
+    if (id && mongoose.Types.ObjectId.isValid(id)) {
+      user = await User.findById(id).select('-password');
+    } else if (req.user) {
+      // File/legacy store user: the middleware already resolved it.
+      user = req.user;
+    }
+
+    if (!user) {
+      return res.status(401).json({ ok: false, message: 'User not found' });
+    }
+
+    const safeUser = user.toObject ? user.toObject() : user;
+    const rest = { ...safeUser };
+    delete rest.password;
+    // Expose a stable string id for both Mongo and legacy store users.
+    rest.id = rest.id || String(rest._id || '');
+    res.json({ ok: true, user: rest });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
   }

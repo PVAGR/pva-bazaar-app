@@ -5,25 +5,43 @@ import { createLogger } from '../lib/logger';
 
 const logger = createLogger('RequireAdminAuth');
 
+function decodeTokenRole(token) {
+  try {
+    const value = String(token || '');
+    if (!value || value.startsWith('local.')) return '';
+    const parts = value.split('.');
+    if (parts.length !== 3) return '';
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
+    return String(payload?.role || '');
+  } catch (_err) {
+    return '';
+  }
+}
+
 /**
- * RequireAdminAuth - Guards admin-only routes
- * 
- * SECURITY: Only allows access to /admin with valid JWT token
- * Prevents public access to admin dashboard
- * Redirects unauthorized users to home page
+ * RequireAdminAuth - Guards admin-only routes.
+ *
+ * SECURITY: Admin UI only renders for a token that actually carries the
+ * `admin` role claim. Actual authorization is always re-enforced by the
+ * backend; this guard prevents non-admins from reaching admin surfaces and
+ * redirects them to the admin login/bootstrap shell.
  */
 export default function RequireAdminAuth({ children }) {
   const location = useLocation();
   const token = getToken();
-  if (!token) {
-    logger.warn('Unauthorized access attempt to admin dashboard');
-    // Preserve the intended destination so successful admin login can resume navigation.
+  const adminToken =
+    typeof window !== 'undefined'
+      ? (window.localStorage.getItem('admin:token') || window.localStorage.getItem('admin_token') || '')
+      : '';
+  const candidate = adminToken || token;
+  const isAdmin = decodeTokenRole(candidate) === 'admin';
+
+  if (!isAdmin) {
+    logger.warn('Unauthorized non-admin access attempt to admin dashboard');
     const requestedPath = `${location.pathname || '/admin'}${location.search || ''}`;
     return <Navigate to={`/admin?next=${encodeURIComponent(requestedPath)}`} replace />;
   }
 
-  // Token exists - allow access
-  // Note: Backend will validate token on API calls
-  // Additional role check (admin vs user) can be added here if needed
   return children;
 }

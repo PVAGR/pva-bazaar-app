@@ -22,8 +22,8 @@ export default function useConnectionMode() {
         if (!active) return;
         setState({
           status: 'local',
-          label: 'Free local mode active',
-          detail: 'Your sign-in state is being handled in the browser on this device.',
+          label: 'Device-only profile',
+          detail: 'This device has a local profile only. Protected features require signing in with a server account.',
           checkedAt: new Date().toISOString(),
         });
         return;
@@ -51,8 +51,8 @@ export default function useConnectionMode() {
         if (!active) return;
         setState({
           status: 'fallback',
-          label: 'Free local fallback active',
-          detail: 'The hosted backend is unavailable, so browser-side sign-in is handling access.',
+          label: 'Backend unavailable',
+          detail: 'The hosted backend is unreachable. Sign-in and protected features are unavailable until the server responds.',
           checkedAt: new Date().toISOString(),
         });
       }

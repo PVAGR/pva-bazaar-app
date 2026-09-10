@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
-import { loginOrProvisionLocalAccount } from '../lib/localAuthVault';
 import useConnectionMode from '../hooks/useConnectionMode.js';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
@@ -68,27 +67,12 @@ export default function LoginPage() {
       navigate('/onboarding', { replace: true });
     } catch (err) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
-      try {
-        const local = await loginOrProvisionLocalAccount({
-          usernameOrEmail: userCreds.usernameOrEmail.trim(),
-          password: userCreds.password,
-        });
-        setToken(local.token);
-        if (nextFromUrl) {
-          navigate(nextFromUrl, { replace: true });
-          return;
-        }
-        navigate('/onboarding', { replace: true });
-        return;
-      } catch (localErr) {
-        const isNetworkIssue = !err?.response || /network|failed to fetch|fetch/i.test(String(err?.message || ''));
-        setError(
-          localErr?.message ||
-          serverMsg ||
-          (isNetworkIssue ? 'Connection is down right now. Free local sign-in is unavailable on this device until you create one.' : err.message) ||
-          'Login failed'
-        );
-      }
+      const isNetworkIssue = !err?.response || /network|failed to fetch|fetch/i.test(String(err?.message || ''));
+      setError(
+        serverMsg ||
+        (isNetworkIssue ? 'Connection is down right now. Sign-in requires the server — you are not signed in.' : err.message) ||
+        'Login failed'
+      );
     } finally {
       setLoading(false);
     }
@@ -139,7 +123,7 @@ export default function LoginPage() {
             </div>
           ) : null}
           <p className="muted" style={{ marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
-            Buttons are now high-contrast white. If the hosted backend is unreachable, the login will create or use a free shared account store on this device.
+            Accounts are stored on the server. Signing in requires the backend — failed sign-ins are never treated as logged in.
           </p>
 
           <form className="form" onSubmit={handleUserLogin}>
@@ -174,6 +158,9 @@ export default function LoginPage() {
                 Create account
               </Link>
             </div>
+            <p className="muted" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
+              Forgot your password? Online password reset is not available yet — contact the site owner to restore access.
+            </p>
           </form>
         </section>
       </main>

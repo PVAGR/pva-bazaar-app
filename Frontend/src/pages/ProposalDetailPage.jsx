@@ -72,7 +72,7 @@ export default function ProposalDetailPage() {
         if (!active) return;
         const eligible = passportResponse?.item?.passportStatus === 'verified' && passportResponse?.item?.governanceToken === true;
         setVerifiedCitizen(Boolean(eligible));
-        setUserId(String(userResponse?.user?.id || userResponse?.user?._id || ''));
+        setUserId(userResponse?.isLocalOnly ? '' : String(userResponse?.user?.id || userResponse?.user?._id || ''));
       } catch (_error) {
         if (!active) return;
         setVerifiedCitizen(false);
