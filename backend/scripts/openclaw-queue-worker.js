@@ -59,6 +59,12 @@ function backendHeaders() {
   if (process.env.OPENCLAW_API_KEY) {
     headers.Authorization = `Bearer ${process.env.OPENCLAW_API_KEY}`;
   }
+  // OpenClaw bridge auth is fail-closed: internal callers must present the
+  // bridge secret when one is configured or their requests get 401s.
+  const bridgeSecret = String(process.env.OPENCLAW_BRIDGE_SECRET || '').trim();
+  if (bridgeSecret) {
+    headers['X-OpenClaw-Secret'] = bridgeSecret;
+  }
   return headers;
 }
 

@@ -41,7 +41,46 @@ const ROUTES = [
   '/contacts',
   '/templates',
   '/creator/dashboard',
+  // Phase 7: confirmed public routes that were missing from the sweep.
+  '/books',
+  '/blog',
+  '/partnerships',
+  '/partners',
+  '/contact',
+  '/cart',
+  '/recovery',
 ];
+
+// Deep links verified with a REAL slug/id fetched from the live API, so the
+// sweep proves detail pages render, not just that the router matches.
+async function resolveDeepLinkRoutes() {
+  const apiBase = (process.env.BACKEND_URL || 'https://pva-backend-api.vercel.app').replace(/\/+$/, '');
+  const routes = [];
+
+  try {
+    const res = await fetch(`${apiBase}/api/blogs?limit=1`, { signal: AbortSignal.timeout(15000) });
+    const data = await res.json().catch(() => null);
+    const slug = data?.blogs?.[0]?.slug;
+    if (slug) routes.push(`/blog/${encodeURIComponent(slug)}`);
+  } catch { /* advisory: no published blog posts yet */ }
+
+  try {
+    const res = await fetch(`${apiBase}/api/book-publishing/public?limit=1`, { signal: AbortSignal.timeout(15000) });
+    const data = await res.json().catch(() => null);
+    const slug = data?.items?.[0]?.slug;
+    if (slug) routes.push(`/books/read/${encodeURIComponent(slug)}`);
+  } catch { /* advisory */ }
+
+  try {
+    const res = await fetch(`${apiBase}/api/items?limit=1`, { signal: AbortSignal.timeout(15000) });
+    const data = await res.json().catch(() => null);
+    const item = data?.items?.[0];
+    const slugOrId = item?.slug || item?._id || item?.id;
+    if (slugOrId) routes.push(`/marketplace/${encodeURIComponent(slugOrId)}`);
+  } catch { /* advisory */ }
+
+  return routes;
+}
 
 function fullUrl(route) {
   return `${FRONTEND}/#${route}`;
@@ -121,12 +160,16 @@ async function checkRoute(browser, route) {
 
 async function main() {
   console.log(`Route sweep target: ${FRONTEND}`);
-  console.log(`Routes to check: ${ROUTES.length}`);
+
+  const deepLinks = await resolveDeepLinkRoutes();
+  const allRoutes = [...ROUTES, ...deepLinks];
+
+  console.log(`Routes to check: ${allRoutes.length} (${deepLinks.length} live deep link(s))`);
 
   const browser = await chromium.launch({ headless: true });
   const results = [];
 
-  for (const route of ROUTES) {
+  for (const route of allRoutes) {
     const result = await checkRoute(browser, route);
     results.push(result);
     if (result.ok) {

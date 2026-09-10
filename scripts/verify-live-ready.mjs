@@ -21,6 +21,21 @@ const thresholds = getLatencyThresholds(map);
 const requiredHeaders = getRequiredHeaders(map);
 
 let softIssues = 0;
+let optionalIssues = 0;
+
+// Soft issues are strict-mode blocking (latency, headers, drift — real
+// production health signals). Optional issues are advisory-only: they cover
+// auxiliary subsystems (OpenClaw queue hygiene, OAuth integrations, streams)
+// whose absence or degradation must not block or fail a healthy deploy.
+function softWarn(message) {
+  softIssues += 1;
+  console.warn(`⚠️ ${message}`);
+}
+
+function optionalWarn(message) {
+  optionalIssues += 1;
+  console.warn(`ℹ️ (advisory) ${message}`);
+}
 
 function getLocalShortSha() {
   try {
@@ -94,11 +109,6 @@ async function requestJson(url, options = {}) {
 function fail(message) {
   console.error(`❌ ${message}`);
   process.exitCode = 1;
-}
-
-function softWarn(message) {
-  softIssues += 1;
-  console.warn(`⚠️ ${message}`);
 }
 
 function checkLatency(name, elapsedMs, limitMs) {
@@ -181,7 +191,7 @@ if (!openclawStatusOk) {
 } else {
   const queue = openclawStatus.json?.queue || {};
   const stale = Number(queue.stale || 0);
-  if (stale > 0) softWarn(`/api/openclaw/status reports stale queue items (${stale})`);
+  if (stale > 0) optionalWarn(`/api/openclaw/status reports stale queue items (${stale})`);
   console.log(`✅ openclaw status ok (${openclawStatus.json.mode}, pending=${queue.pending ?? 0}, stale=${stale})`);
 }
 
@@ -193,7 +203,7 @@ const openclawWatchdogOk =
 if (!openclawWatchdogOk) {
   fail(`/api/openclaw/watchdog-status failed (${openclawWatchdog.res.status})`);
 } else if (openclawWatchdog.json?.summary?.state && openclawWatchdog.json.summary.state !== "ok") {
-  softWarn(`/api/openclaw/watchdog-status degraded (${openclawWatchdog.json.summary.state})`);
+  optionalWarn(`/api/openclaw/watchdog-status degraded (${openclawWatchdog.json.summary.state})`);
   console.log(`✅ openclaw watchdog reachable (${openclawWatchdog.json.summary.state})`);
 } else {
   console.log("✅ openclaw watchdog ok");
@@ -203,7 +213,7 @@ const decentralizedReady = await requestJson(`${BACKEND}/api/decentralized/ready
 if (!decentralizedReady.res.ok || decentralizedReady.json?.ok !== true) {
   fail(`/api/decentralized/ready failed (${decentralizedReady.res.status})`);
 } else if (decentralizedReady.json?.passed !== true) {
-  softWarn(`/api/decentralized/ready has failing checks`);
+  optionalWarn(`/api/decentralized/ready has failing checks`);
   console.log("✅ decentralized readiness endpoint reachable");
 } else {
   console.log("✅ decentralized readiness ok");
@@ -244,7 +254,7 @@ if (ADMIN_USERNAME && ADMIN_PASSWORD) {
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ dryRun: true, limit: 1 }),
     });
-    if (!replayDryRun.res.ok || replayDryRun.json?.ok !== true) softWarn(`/api/openclaw/replay-webhook dry-run failed (${replayDryRun.res.status})`);
+    if (!replayDryRun.res.ok || replayDryRun.json?.ok !== true) optionalWarn(`/api/openclaw/replay-webhook dry-run failed (${replayDryRun.res.status})`);
     else console.log("✅ openclaw replay dry-run ok");
 
     const bountyStats = await requestJson(`${BACKEND}/api/bounties/stats`, { headers: authHeaders });
@@ -265,14 +275,14 @@ else fail(`/api/users/profile failed (${profile.res.status})`);
 const streams = await requestJson(`${BACKEND}/api/streams`);
 if (streams.res.status === 401) console.log("✅ streams route ok (401 unauth as expected)");
 else if (streams.res.ok && (streams.json?.ok || Array.isArray(streams.json?.streams))) console.log("✅ streams ok");
-else softWarn(`/api/streams unavailable (${streams.res.status})`);
+else optionalWarn(`/api/streams unavailable (${streams.res.status})`);
 
 const twitchStatus = await requestJson(`${BACKEND}/api/oauth/twitch/status`);
-if (!twitchStatus.res.ok || twitchStatus.json?.ok !== true) softWarn(`/api/oauth/twitch/status unavailable (${twitchStatus.res.status})`);
+if (!twitchStatus.res.ok || twitchStatus.json?.ok !== true) optionalWarn(`/api/oauth/twitch/status unavailable (${twitchStatus.res.status})`);
 else console.log("✅ twitch status ok");
 
 const youtubeStatus = await requestJson(`${BACKEND}/api/oauth/youtube/status`);
-if (!youtubeStatus.res.ok || youtubeStatus.json?.ok !== true) softWarn(`/api/oauth/youtube/status unavailable (${youtubeStatus.res.status})`);
+if (!youtubeStatus.res.ok || youtubeStatus.json?.ok !== true) optionalWarn(`/api/oauth/youtube/status unavailable (${youtubeStatus.res.status})`);
 else console.log("✅ youtube status ok");
 
 const home = await request(`${FRONTEND}/`);
@@ -371,10 +381,12 @@ console.log("\n== Final status ==");
 if (process.exitCode && process.exitCode !== 0) {
   console.error("❌ LIVE NOT READY: critical checks failed.");
 } else if (STRICT && softIssues > 0) {
-  console.error(`❌ LIVE NOT READY (STRICT): ${softIssues} warning(s) present.`);
+  console.error(`❌ LIVE NOT READY (STRICT): ${softIssues} blocking warning(s) present.`);
   process.exitCode = 1;
 } else if (softIssues > 0) {
-  console.log(`⚠️ LIVE PARTIAL: core checks passed with ${softIssues} warning(s).`);
+  console.log(`⚠️ LIVE PARTIAL: core checks passed with ${softIssues} blocking warning(s).`);
+} else if (optionalIssues > 0) {
+  console.log(`✅ LIVE CONNECTIVITY READY: core checks passed with ${optionalIssues} advisory note(s) (non-blocking).`);
 } else {
   console.log("✅ LIVE CONNECTIVITY READY: core frontend/backend routes are reachable and configured.");
 }

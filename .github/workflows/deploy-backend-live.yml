@@ -80,7 +80,7 @@ jobs:
             exit 1
           fi
 
-      - name: Sync Telegram webhook env to Vercel
+      - name: Sync Telegram + OpenClaw bridge env to Vercel
         continue-on-error: true
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
@@ -89,11 +89,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
           TELEGRAM_WEBHOOK_URL: https://pva-backend-api.vercel.app/webhooks/telegram/updates
+          OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
         run: |
           set -euo pipefail
           if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
-            echo "::warning title=Missing Telegram secret::TELEGRAM_BOT_TOKEN not configured; skipping webhook env sync"
-            exit 0
+            echo "::warning title=Missing Telegram secret::TELEGRAM_BOT_TOKEN not configured; skipping Telegram env sync"
+          fi
+          if [ -z "${OPENCLAW_BRIDGE_SECRET:-}" ]; then
+            echo "::warning title=Missing OpenClaw secret::OPENCLAW_BRIDGE_SECRET not configured; OpenClaw bridge auth will reject requests until it is set"
           fi
 
           node - <<'NODE'
@@ -109,6 +112,9 @@ jobs:
             TELEGRAM_PUBLIC_MODE: 'true',
             OPENCLAW_TELEGRAM_SOURCE: 'telegram-openclaw-webhook',
             OPENCLAW_CHAT_TIMEOUT_MS: '12000',
+            // Fail-closed OpenClaw auth: the backend rejects bridge requests
+            // when this is unset, so it MUST be synced on every deploy.
+            OPENCLAW_BRIDGE_SECRET: process.env.OPENCLAW_BRIDGE_SECRET || '',
           };
 
           const endpoint = new URL(`https://api.vercel.com/v10/projects/${projectId}/env`);
