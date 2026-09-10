@@ -97,6 +97,16 @@ export default function Layout({ children }) {
     setExploreOpen(false);
   }, [location.pathname]);
 
+  // Close mobile menu with the Escape key (a11y)
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    const onKeydown = (event) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeydown);
+    return () => window.removeEventListener('keydown', onKeydown);
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem('pva:cart');
@@ -339,6 +349,16 @@ export default function Layout({ children }) {
                     {route.title}
                   </NavLink>
                 ))}
+                <button
+                  type="button"
+                  className="layout__mobileNavLink"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setSearchOpen(true);
+                  }}
+                >
+                  Search
+                </button>
               </div>
             </div>
             {EXPLORE_GROUPS.map((group) => (

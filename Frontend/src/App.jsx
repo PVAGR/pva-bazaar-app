@@ -71,6 +71,7 @@ const VerificationPage = lazy(() => import('./pages/VerificationPage.jsx'));
 const WritingStudioPage = lazy(() => import('./pages/WritingStudioPage.jsx'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'));
 const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage.jsx'));
+const BlogArchivePostPage = lazy(() => import('./pages/BlogArchivePostPage.jsx'));
 const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
 const CommoditiesPage = lazy(() => import('./pages/CommoditiesPage.jsx'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/blog" element={<Layout><BlogIndexPage /></Layout>} />
+        <Route path="/blog/a/:id" element={<Layout><BlogArchivePostPage /></Layout>} />
         <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
         <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
