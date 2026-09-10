@@ -274,6 +274,8 @@ app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
 app.use('/api/items', itemsRoutes);
 app.use('/api/archive', archiveRoutes);
+// Public combined blog feed (published ArchiveEntry + published Blog records).
+app.use('/api/blog-feed', require('../routes/blogFeed'));
 app.use('/api/search', searchRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes);

@@ -1434,6 +1434,22 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
   }
 }
 
+// fetchBlogFeed({ limit=20 }) — combined public blog feed (published
+// ArchiveEntry + published Blog records, merged server-side).
+// Returns { ok, items } where each item has a stable id ("archive:<id>" /
+// "blog:<slug>"), title, excerpt, publishedAt, and path.
+export async function fetchBlogFeed({ limit = 20 } = {}) {
+  try {
+    const response = await apiGet(`/blog-feed?limit=${encodeURIComponent(limit)}`);
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items, error: '' };
+    }
+    return { ok: false, items: [], error: response?.message || 'Unable to load posts right now.' };
+  } catch (err) {
+    return { ok: false, items: [], error: err?.message || 'Connection issue while loading posts.' };
+  }
+}
+
 export async function createArchiveEntry(entry) {
   try {
     const response = await apiPost('/archive', entry);

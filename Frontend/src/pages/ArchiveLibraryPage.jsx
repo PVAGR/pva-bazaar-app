@@ -716,6 +716,9 @@ export default function ArchiveLibraryPage() {
                   </p>
                 </>
               )}
+              <p>
+                <Link to="/blog" className="archive-welcome__blogLink">View all posts on the Blog →</Link>
+              </p>
             </div>
           )}
 

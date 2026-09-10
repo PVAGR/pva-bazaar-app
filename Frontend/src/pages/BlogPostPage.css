@@ -86,3 +86,103 @@
   color: var(--site-text-muted);
   white-space: nowrap;
 }
+
+/* Blog index toolbar: sort modes + archive cross-link */
+.blog-index__intro {
+  margin: 0;
+  color: var(--site-text-muted);
+}
+
+.blog-index__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.blog-index__sort {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.blog-index__sortBtn {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.blog-index__sortBtn:hover {
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
+  border-color: var(--site-border-strong);
+}
+
+.blog-index__sortBtn--active {
+  background: var(--site-accent);
+  border-color: var(--site-accent);
+  color: #fff;
+}
+
+.blog-index__sortBtn:focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 2px;
+}
+
+.blog-index__archiveLink {
+  color: var(--site-accent-strong);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.blog-index__archiveLink:hover {
+  text-decoration: underline;
+}
+
+/* Feed cards: vertical layout with excerpt */
+.blog-index__item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.blog-index__itemTitle {
+  color: var(--site-accent-strong);
+  font-size: 1.05rem;
+}
+
+.blog-index__itemExcerpt {
+  color: var(--site-text-muted);
+  white-space: normal;
+  line-height: 1.55;
+  font-size: 0.92rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.blog-index__itemMeta {
+  color: var(--site-text-muted);
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.blog-index__status--empty p {
+  margin: 0.2rem 0;
+}
+
+.blog-index__status--empty a {
+  color: var(--site-accent-strong);
+  font-weight: 700;
+}

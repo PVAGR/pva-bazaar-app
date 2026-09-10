@@ -1703,6 +1703,30 @@ textarea:focus-visible {
 }
 
 /* ============================================================
+   MOBILE HEADER DECLUTTER (≤480px)
+   Search lives in the hamburger nav; the header keeps only the
+   essential actions so nothing overflows at 320px.
+   ============================================================ */
+@media (max-width: 480px) {
+  .layout__status > .layout__navLink {
+    display: none; /* header Search button — reachable via hamburger nav */
+  }
+
+  .layout__status {
+    gap: 0.35rem;
+    padding: 0.3rem 0.45rem;
+  }
+
+  .layout__statusAction {
+    font-size: 0.82rem;
+  }
+
+  .layout__tagline {
+    display: none;
+  }
+}
+
+/* ============================================================
    UNIVERSAL SEARCH OVERLAY
    ============================================================ */
 .universal-search-overlay {
