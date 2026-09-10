@@ -5,6 +5,8 @@
 // BEFORE the general JSON parser so Stripe signature verification receives
 // the exact request bytes.
 import { describe, expect, it } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import request from 'supertest';
 
 // Set before requiring the app so the webhook handler runs its signature path.
@@ -56,5 +58,26 @@ describe('serverless entry mounts Stripe webhook with raw body (Phase 3)', () =>
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/signature/i);
     expect(res.body.error).not.toMatch(/payload must be/i);
+  });
+});
+
+describe('serverless closure avoids ESM-only require() (production Node 20)', () => {
+  // Production runs Node 20, which cannot require() the ESM-only uuid builds
+  // that fresh installs resolve (ERR_REQUIRE_ESM -> whole function 500s).
+  // The commerce files mounted by Phase 3 must not require('uuid'); they use
+  // crypto.randomUUID() instead. This guards the exact 2026-09-09 outage.
+  const guarded = ['../../lib/itemInventory', '../../routes/checkout'];
+
+  it.each(guarded)('%s has no top-level require("uuid")', (rel) => {
+    const abs = path.resolve(__dirname, `${rel}.js`);
+    const src = fs.readFileSync(abs, 'utf8');
+    expect(src).not.toMatch(/require\(\s*["']uuid["']\s*\)/);
+  });
+
+  it('reservation ids are still UUID-shaped', async () => {
+    const { randomUUID } = await import('crypto');
+    expect(randomUUID()).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
   });
 });

@@ -1,5 +1,4 @@
 const Artifact = require("../models/Artifact");
-const { v4: uuidv4 } = require("uuid");
 
 function isInStock(doc) {
   if (!doc) return false;
