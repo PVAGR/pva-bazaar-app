@@ -1,6 +1,10 @@
 const { reserveOne, finalizeSale, releaseReservation } = require("../lib/itemInventory");
-const { v4: uuidv4 } = require("uuid");
+// Node 20 (production serverless runtime) cannot require() the ESM-only uuid
+// builds that fresh installs resolve, so reservation ids use the builtin.
 const crypto = require('crypto');
+// Node 20 (production serverless runtime) cannot require() the ESM-only uuid
+// builds that fresh installs resolve, so reservation ids use the builtin.
+const { randomUUID: uuidv4 } = crypto;
 const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
