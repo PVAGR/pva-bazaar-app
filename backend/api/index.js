@@ -119,6 +119,10 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       connectSrc: ["'self'", "https://pva-backend-api.vercel.app", "https://pvabazaar.org"],
       frameSrc: ["'none'"],
+      // BookReaderPage embeds the backend's rendered book view in an
+      // iframe from pvabazaar.org. Allow only our own origins to frame
+      // API responses - nobody else.
+      frameAncestors: ["'self'", "https://pvabazaar.org"],
     },
   },
   hsts: {
