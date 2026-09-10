@@ -457,7 +457,9 @@ function getConfig() {
 }
 
 function isAuthorized(req, bridgeSecret) {
-  if (!bridgeSecret) return true;
+  // Fail closed: an unset bridge secret must NOT open the door. The admin
+  // JWT path (isBridgeOrAdminAuthorized) remains the operator fallback.
+  if (!bridgeSecret) return false;
   const candidate = req.headers['x-openclaw-secret'];
   return typeof candidate === 'string' && candidate === bridgeSecret;
 }
@@ -542,6 +544,35 @@ async function getQueueStats() {
     latestOutboundAt: latestOutbound?.createdAt || null,
     latestOutboundEvent: latestOutbound?.event || null,
   };
+}
+
+// Self-heal: in serverless deployments there is no persistent worker, so an
+// outbound message that stays unprocessed past the expiry window is dead —
+// nothing will ever deliver it. Mark it processed (expired) so queue stats,
+// watchdog, and deploy readiness recover without human intervention.
+async function expireAbandonedOutbound() {
+  const expiryDays = Math.max(parseInt(process.env.OPENCLAW_OUTBOUND_EXPIRY_DAYS || '7', 10), 1);
+  const cutoff = new Date(Date.now() - expiryDays * 24 * 60 * 60 * 1000);
+
+  await dbConnect();
+  const OpenClawMessage = require('../models/OpenClawMessage');
+
+  const result = await OpenClawMessage.updateMany(
+    {
+      direction: 'outbound',
+      processed: false,
+      createdAt: { $lt: cutoff },
+    },
+    {
+      $set: {
+        processed: true,
+        'metadata.expiredAt': new Date().toISOString(),
+        'metadata.expiredReason': `unprocessed beyond ${expiryDays}d (no active worker)`,
+      },
+    },
+  );
+
+  return { expiryDays, expired: result.modifiedCount || 0 };
 }
 
 async function getWorkerStatus() {
@@ -1035,6 +1066,9 @@ router.get('/status', async (_req, res) => {
   // Get a quick queue snapshot so the admin UI has real numbers
   let queue = null;
   try {
+    // Self-heal first: expire outbound messages abandoned past the expiry
+    // window (serverless has no persistent worker to deliver them).
+    await expireAbandonedOutbound();
     queue = await getQueueStats();
   } catch (_err) {
     // best-effort
@@ -2354,6 +2388,20 @@ router.post('/recover', async (req, res) => {
         try {
           await axios.post(config.webhookUrl, payload, { headers, timeout: 12000 });
           forwarded += 1;
+          // A successfully forwarded message is DELIVERED. Mark it processed
+          // so it stops counting as pending/stale forever (the webhook handler
+          // only stores inbound messages and never closes the loop).
+          await OpenClawMessage.updateOne(
+            { _id: entry._id },
+            {
+              $set: {
+                processed: true,
+                'metadata.webhookForwardedAt': new Date().toISOString(),
+                'metadata.webhookForwardStatus': 'ok',
+                'metadata.webhookForwardedBy': 'openclaw-recover',
+              },
+            },
+          );
         } catch (_err) {
           failed += 1;
         }

@@ -81,6 +81,15 @@ Backend (Vercel project settings):
   (defaults to `false` there; admin creation then requires the bootstrap code).
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_EMAIL` / `ADMIN_USER_ID` —
   emergency owner recovery credentials (see §11; rotate after use).
+- `OPENCLAW_BRIDGE_SECRET` — shared secret for OpenClaw bridge endpoints
+  (`/api/openclaw/recover`, `/maintenance/cleanup`, `/queue-stats`,
+  `/agent-config`, `/dispatch`, ...). Auth is **fail-closed**: when unset,
+  bridge-header requests are rejected with 401; only admin JWTs pass. The
+  deploy workflow syncs this from GitHub secrets to Vercel on every deploy.
+- `OPENCLAW_OUTBOUND_EXPIRY_DAYS` — (optional, default `7`) outbound queue
+  messages pending longer than this are auto-expired (marked processed) on
+  the next `/api/openclaw/status` poll. Serverless has no persistent worker,
+  so this is the queue's self-heal.
 - `NODE_ENV=production` on the hosted backend.
 
 Frontend (build-time, `VITE_*`):
@@ -133,7 +142,8 @@ local-only: keep the browser copy, check API health, then use
   and never leave the device. Treat any "local-only" book as un-backed-up
   until it verifies online.
 - Runbook pointers: `docs/DEVICE_LOSS_RECOVERY_RUNBOOK.md`,
-  `docs/DEPLOYMENT.md`.
+  `docs/OWNER_ABSENCE_RUNBOOK.md` (autonomous operations + backup reality
+  table), `docs/DEPLOYMENT.md`.
 
 ## 8. PARTNERS — authority and verification
 

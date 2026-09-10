@@ -43,6 +43,51 @@ The app is configured to deploy on **Vercel**: frontend static build plus server
 
 ---
 
+## Rollback
+
+Both deploy pipelines deploy the commit they are given; rolling back means
+redeploying a known-good commit. Nothing is mutated in place, so a bad deploy
+never destroys the last working version — it just becomes the new "latest"
+until you redeploy over it.
+
+### Backend (Vercel)
+
+```bash
+# Option A: redeploy an older commit via the deploy workflow (preferred —
+# it re-runs env sync + readiness verification).
+gh workflow run deploy-backend-live.yml --ref <known-good-sha>
+
+# Option B: Vercel dashboard → Deployments → open the last good deployment
+# → "Promote to Production". Instant, no rebuild.
+```
+
+### Frontend (GitHub Pages + Vercel)
+
+```bash
+# deploy-frontend.yml accepts the ref to deploy + a rollback_reason input.
+gh workflow run deploy-frontend.yml --ref <known-good-sha> -f rollback_reason="reverting bad deploy <sha>"
+```
+
+For GitHub Pages specifically, the workflow force-pushes the build artifact
+to the `gh-pages` branch (or equivalent), so promoting an old deployment in
+the Vercel dashboard does NOT fix Pages — rerun the workflow instead.
+
+### Verify which version is live
+
+```bash
+curl -s https://pva-backend-api.vercel.app/api/version
+# Compare shortSha against git log --oneline
+```
+
+### When to roll back vs. roll forward
+
+- **Roll forward** (push a fix) when the bad deploy is a code bug you can
+  patch quickly — this is the default.
+- **Roll back** when the bad deploy breaks the deploy pipeline itself, or
+  you need production healthy while investigating.
+
+---
+
 ## Resilience and audit
 
 - **Payment failures:** Handled in the webhook (`checkout.session.expired`, `checkout.session.async_payment_failed`). The user can be notified by email (see `sendPaymentFailedEmail`) so there are no hidden traps.
