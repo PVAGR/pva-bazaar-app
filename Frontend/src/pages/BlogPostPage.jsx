@@ -66,6 +66,7 @@ export default function BlogPostPage() {
           <p className="pill">PVA blog</p>
           <h1>{state.blog.title}</h1>
           <p className="blog-post__meta">
+            {state.blog.authorName ? `${state.blog.authorName} · ` : ''}
             {state.blog.updatedAt ? new Date(state.blog.updatedAt).toLocaleString() : 'Published'}
           </p>
         </div>
@@ -75,6 +76,7 @@ export default function BlogPostPage() {
           </ReactMarkdown>
         </article>
         <nav className="blog-post__footer">
+          <Link className="blog-post__back" to="/blog">Blog</Link>
           <Link className="blog-post__back" to="/studio">Writing studio</Link>
           <Link className="blog-post__back" to="/archive">Archive</Link>
         </nav>
