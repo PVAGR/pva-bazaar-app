@@ -11,6 +11,14 @@ module.exports = function adminSession(req, res, next) {
   if (!token) {
     return res.status(401).json({ ok: false, message: 'Not authenticated (no token)' });
   }
+  if (String(token || '').startsWith('local.')) {
+    // Device-local tokens are unsigned and fully browser-fabricated.
+    return res.status(401).json({
+      ok: false,
+      message: 'Device-local sessions are not accepted by the server.',
+      code: 'LOCAL_TOKEN_REJECTED',
+    });
+  }
   try {
     const decoded = jwt.verify(token, getJwtSecret());
     if (decoded.role !== 'admin') {

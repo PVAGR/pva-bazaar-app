@@ -77,6 +77,10 @@ Backend (Vercel project settings):
   uploads degrade gracefully without them).
 - `PINATA_JWT` (or key/secret pair) — Pinata IPFS uploads (optional).
 - `ADMIN_SECRET` / admin bootstrap vars — admin token issuance.
+- `ADMIN_SELF_SIGNUP_ENABLED` — must stay unset or `false` in production
+  (defaults to `false` there; admin creation then requires the bootstrap code).
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_EMAIL` / `ADMIN_USER_ID` —
+  emergency owner recovery credentials (see §11; rotate after use).
 - `NODE_ENV=production` on the hosted backend.
 
 Frontend (build-time, `VITE_*`):
@@ -234,7 +238,65 @@ local-only: keep the browser copy, check API health, then use
   it is NOT mounted serverless, so paid-order settlement in production
   currently depends on the finalize fallback (see remaining work).
 
-## 11. What NOT to do
+## 11. AUTH — accounts, sessions, admin authority, owner recovery
+
+Authoritative stores (nothing here lives in localStorage):
+
+| Concern | Authority | Notes |
+|---|---|---|
+| Registered users | MongoDB `User` | Registration/login only ever writes server-side |
+| Sessions | Server-signed JWTs (HS256) | User token 7 days, admin token 12 hours |
+| Admin right | Mongo `User.role === 'admin'` + server-issued admin JWT | Checked on every admin route (`adminSession`) |
+| Password reset | NONE (documented limitation) | No email/SMTP reset exists — see recovery below |
+
+- **Browser localStorage is never authoritative.** It holds only the session
+  token (`token`, legacy `authToken`/`jwt`, `admin:token`/`admin_token`) and a
+  clearly device-only profile (`pva:local-auth-*`). It can never contain a
+  registered user, a valid session, or an admin grant.
+- The backend **rejects unsigned `local.`-prefixed tokens outright**
+  (HTTP 401, code `LOCAL_TOKEN_REJECTED`) on both `authenticateToken` and
+  `adminSession`. A forged `local.<base64>` token claiming any email/id/role
+  is never treated as a session. Offline/device profiles are display-only.
+- Failed logins/registrations never produce success: the UI shows the server
+  error, stores no token, and creates no device account.
+- **Admin self-signup is locked in production by default.**
+  `ADMIN_SELF_SIGNUP_ENABLED` defaults to `false` when `NODE_ENV=production`.
+  The first admin can be bootstrapped only while zero admins exist; any
+  additional admin requires `ADMIN_BOOTSTRAP_CODE`/`ADMIN_SECRET_CODE`. Do NOT
+  enable open self-signup in production.
+- Admin authentication paths: `POST /api/admin/token` (owner secret
+  `ADMIN_SECRET_CODE`, constant-time compare, issues a 12h admin JWT),
+  `POST /api/admin/login` (DB admin credentials or env-admin bootstrap), and
+  the optional GitHub OAuth allowlist flow.
+- **Secrets fail closed.** In production, `JWT_SECRET` is required: if it is
+  missing, registration/login/admin token issuance return HTTP 503 instead of
+  signing with a fallback secret. `GET /api/auth/diagnostic`,
+  `GET /api/admin/bootstrap-status`, and `GET /api/admin/oauth/github/status`
+  expose booleans/names only — never secret values.
+
+Password / account recovery:
+
+- **Password reset is not available online** (no SMTP/email infrastructure).
+  Users must sign in on each new device with their password; the account is
+  server-side, so clearing browser storage never deletes it.
+- **Emergency owner recovery:** set `ADMIN_USERNAME` + `ADMIN_PASSWORD`
+  (and optionally `ADMIN_EMAIL`, `ADMIN_USER_ID`) in the hosting secret store,
+  then sign in through `POST /api/auth/login` (or `/api/admin/login`) with
+  those credentials. The server finds-or-creates the admin user (pinned to
+  `ADMIN_USER_ID` when set), issues a 12h admin JWT, and the owner then resets
+  the password in the admin user tools. Comparisons are constant-time. Rotate
+  the temporary credentials immediately after recovery.
+- **Rotating `JWT_SECRET`:** replace the env value and redeploy. All existing
+  user and admin sessions become invalid (401) — users re-sign in, and the
+  owner re-issues an admin token via `POST /api/admin/token` with
+  `ADMIN_SECRET_CODE`. At that point the previous secret is dead: verify with
+  a health check that `/api/auth/diagnostic` and `bootstrap-status` behave and
+  that a request signed with the old value returns 401.
+- Device continuity backups (encrypted localStorage snapshots uploaded to the
+  account through `/api/recovery/snapshots`) are a convenience, not a
+  password-reset mechanism.
+
+## 12. What NOT to do
 - Do not migrate off Vercel, add paid services, or build a parallel
   backend/frontend/database without an explicit decision record.
 - Do not merge localStorage records into server lists, show success toasts

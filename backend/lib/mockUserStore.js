@@ -123,7 +123,12 @@ async function ensureStoreLoaded() {
 
 async function seedDefaultUsers() {
   if (store.seeded) return;
-  for (const seed of seedUsers) {
+  // Production must never contain a built-in admin with credentials published
+  // in the repository. Only non-admin seeds are allowed when NODE_ENV is
+  // production, so the file fallback store can never mint an admin session.
+  const isProduction = String(process.env.NODE_ENV || '').trim() === 'production';
+  const seeds = isProduction ? seedUsers.filter((seed) => seed.role !== 'admin') : seedUsers;
+  for (const seed of seeds) {
     const existing = store.users.find((user) =>
       (seed.username && user.username === seed.username) || user.email === seed.email,
     );
