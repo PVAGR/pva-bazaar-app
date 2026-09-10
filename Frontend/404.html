@@ -29,7 +29,14 @@
   <script>
     (function () {
       const path = (globalThis.location?.pathname || '/').replace(/\/+$/, '') || '/';
+      const query = globalThis.location?.search || '';
       const normalized = path.toLowerCase();
+
+      // Asset paths should not redirect (let 404 stand)
+      if (/\.(html?|js|css|png|jpe?g|gif|svg|ico|woff2?|ttf|eot|webp|avif|mp4|webm|ogg|mp3|pdf|zip|json|xml|txt|map)$/i.test(path)) {
+        return;
+      }
+
       const redirects = {
         '/welcome': '/',
         '/welcome.html': '/',
@@ -81,14 +88,27 @@
         '/disclaimer': '/disclaimer.html',
         '/disclaimer.html': '/disclaimer.html',
       };
+
       const target = redirects[normalized];
-      if (target && target !== globalThis.location?.pathname) {
+
+      if (target) {
+        // Known redirect — use it
         const message = document.getElementById('redirectMessage');
         if (message) {
           message.textContent = `Redirecting to the closest live page for ${path || '/'}.`;
         }
         globalThis.setTimeout(() => {
-          globalThis.location.replace(target);
+          globalThis.location.replace(target + query);
+        }, 40);
+      } else {
+        // Unknown non-asset path — hash-redirect fallback for React Router
+        const hashPath = '/#' + path;
+        const message = document.getElementById('redirectMessage');
+        if (message) {
+          message.textContent = `Redirecting to ${hashPath}...`;
+        }
+        globalThis.setTimeout(() => {
+          globalThis.location.replace(hashPath + query);
         }, 40);
       }
     })();

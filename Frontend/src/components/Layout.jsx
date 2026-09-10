@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 // eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import { Helmet } from 'react-helmet-async';
 // eslint-disable-next-line no-unused-vars -- used in JSX below (repo eslint config has no React plugin)
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
+import UniversalSearch, { useUniversalSearchShortcut } from './UniversalSearch.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken, clearToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
@@ -25,6 +26,48 @@ function parseJwtPayload(token) {
   }
 }
 
+// Primary nav items (simplified for Phase 6)
+const PRIMARY_NAV = [
+  { to: '/marketplace', title: 'Marketplace' },
+  { to: '/books', title: 'Books' },
+  { to: '/blog', title: 'Blog' },
+  { to: '/archive', title: 'Archive' },
+];
+
+// Explore dropdown groups
+const EXPLORE_GROUPS = [
+  {
+    label: 'Knowledge',
+    links: [
+      { to: '/civilization-library', title: 'Civilization Library' },
+      { to: '/institutions', title: 'Institutions' },
+    ],
+  },
+  {
+    label: 'Community',
+    links: [
+      { to: '/partnerships', title: 'Partnerships' },
+      { to: '/partners', title: 'Partner Program' },
+      { to: '/forum', title: 'Forum' },
+    ],
+  },
+  {
+    label: 'Commerce',
+    links: [
+      { to: '/showroom', title: 'Showroom' },
+      { to: '/creator', title: 'Supplier Portal' },
+    ],
+  },
+  {
+    label: 'About',
+    links: [
+      { to: '/about', title: 'About PVA' },
+      { to: '/contact', title: 'Contact' },
+      { to: '/provenance', title: 'Provenance' },
+    ],
+  },
+];
+
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
   const connectionMode = useConnectionMode();
@@ -32,6 +75,27 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
   const token = getToken();
   const [cartCount, setCartCount] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
+
+  // Universal search shortcut
+  useUniversalSearchShortcut(useCallback(() => setSearchOpen(true), []));
+
+  // Listen for pva:open-search custom event (from homepage)
+  useEffect(() => {
+    function handleOpenSearch() {
+      setSearchOpen(true);
+    }
+    window.addEventListener('pva:open-search', handleOpenSearch);
+    return () => window.removeEventListener('pva:open-search', handleOpenSearch);
+  }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setExploreOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     try {
@@ -99,14 +163,7 @@ export default function Layout({ children }) {
     }
   }, [routeIdentity]);
 
-  // Global ?ref= capture — works on every route (query lives inside the hash
-  // with HashRouter). Stored under the same keys the Next app + checkout use so
-  // any subsequent purchase is attributed to the referrer, and the referrer's
-  // click is reported to the backend so it is visible online (not just in a browser).
-  //
-  // Click-ping safety: fire-and-forget, never blocks navigation, never shows
-  // UI, and is deduplicated per referral code per tab session (sessionStorage)
-  // so refreshes and remounts cannot inflate click counts or storm the API.
+  // Global ?ref= capture
   useEffect(() => {
     try {
       const hashRef = (globalThis.location.hash || '').match(/[?&]ref=([^&#]*)/);
@@ -114,8 +171,6 @@ export default function Layout({ children }) {
       ref = decodeURIComponent(ref);
       if (ref) {
         const normalized = ref.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-        // Backend codes are 6–16 chars (see normalizeCode + getStoredReferralCode).
-        // Shorter strings are never attributable, so they are not pinged either.
         if (normalized.length >= 6) {
           window.localStorage.setItem('pva:referral-code', normalized);
           window.localStorage.setItem('pva:inbound-ref', normalized);
@@ -130,7 +185,6 @@ export default function Layout({ children }) {
             } catch (_e) { /* ignore */ }
             fetch(apiUrl(`/referrals/${encodeURIComponent(normalized)}/click`), { method: 'POST' })
               .catch((pingErr) => {
-                // Click tracking must never break navigation; log and move on.
                 console.warn('[referral] click ping failed:', pingErr?.message || pingErr);
               });
           }
@@ -138,10 +192,6 @@ export default function Layout({ children }) {
       }
     } catch (_err) { /* non-blocking */ }
   }, []);
-
-  const primaryNavRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
-  ), []);
 
   return (
     <div className={`layout ${darkMode ? 'layout--dark' : 'layout--light'}`}>
@@ -158,7 +208,7 @@ export default function Layout({ children }) {
           </NavLink>
 
           <nav className="layout__nav" aria-label="Primary">
-            {primaryNavRoutes.map((route) => (
+            {PRIMARY_NAV.map((route) => (
               <NavLink
                 key={route.to}
                 to={route.to}
@@ -167,9 +217,51 @@ export default function Layout({ children }) {
                 {route.title}
               </NavLink>
             ))}
+            <div
+              className="layout__explore"
+              aria-expanded={exploreOpen}
+              onMouseEnter={() => setExploreOpen(true)}
+              onMouseLeave={() => setExploreOpen(false)}
+            >
+              <button
+                type="button"
+                className="layout__navLink layout__exploreToggle"
+                onClick={() => setExploreOpen(!exploreOpen)}
+                aria-haspopup="true"
+              >
+                Explore
+              </button>
+              <div className="layout__exploreDropdown">
+                {EXPLORE_GROUPS.map((group) => (
+                  <div key={group.label} className="layout__exploreGroup">
+                    <div className="layout__exploreGroupLabel">{group.label}</div>
+                    <div className="layout__exploreLinks">
+                      {group.links.map((link) => (
+                        <NavLink
+                          key={link.to}
+                          to={link.to}
+                          className="layout__exploreLink"
+                          onClick={() => setExploreOpen(false)}
+                        >
+                          {link.title}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <div className="layout__status" aria-live="polite">
+            <button
+              type="button"
+              className="layout__navLink"
+              onClick={() => setSearchOpen(true)}
+              title="Search (Ctrl+K)"
+            >
+              Search
+            </button>
             <NavLink className="layout__statusAction" to="/cart" style={{ fontWeight: 600, marginRight: '8px', position: 'relative' }} title="Shopping Cart">
               Cart{cartCount > 0 ? <span style={{ background: '#1a7d3a', color: '#fff', borderRadius: '50%', padding: '0 6px', fontSize: '11px', fontWeight: 700, marginLeft: '4px' }}>{cartCount}</span> : null}
             </NavLink>
@@ -215,6 +307,58 @@ export default function Layout({ children }) {
               </span>
             ) : null}
           </div>
+
+          <button
+            type="button"
+            className="layout__hamburger"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <nav
+            id="mobile-nav"
+            className="layout__mobileNav"
+            aria-hidden={!mobileMenuOpen}
+          >
+            <div className="layout__mobileNavGroup">
+              <div className="layout__mobileNavLabel">Core</div>
+              <div className="layout__mobileNavLinks">
+                {PRIMARY_NAV.map((route) => (
+                  <NavLink
+                    key={route.to}
+                    to={route.to}
+                    className="layout__mobileNavLink"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {route.title}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+            {EXPLORE_GROUPS.map((group) => (
+              <div key={group.label} className="layout__mobileNavGroup">
+                <div className="layout__mobileNavLabel">{group.label}</div>
+                <div className="layout__mobileNavLinks">
+                  {group.links.map((link) => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      className="layout__mobileNavLink"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.title}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </nav>
         </div>
       </header>
 
@@ -228,6 +372,7 @@ export default function Layout({ children }) {
         </div>
       </footer>
 
+      <UniversalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       <OpenClawFloatingAssistant />
     </div>
   );

@@ -3,6 +3,11 @@ const router = express.Router();
 const VectorSearchService = require('../utils/vectorSearchService');
 const Artifact = require('../models/Artifact');
 const ArchiveEntry = require('../models/ArchiveEntry');
+const BookProject = require('../models/BookProject');
+const Blog = require('../models/Blog');
+const LibraryDocument = require('../models/LibraryDocument');
+const LibraryArticle = require('../models/LibraryArticle');
+const PartnerProfile = require('../models/PartnerProfile');
 const { searchStaticArchive, searchStaticArtifacts } = require('../lib/staticContent');
 const { getMongoState } = require('../lib/mongoConnection');
 
@@ -36,6 +41,262 @@ function buildStaticSearchResults(qSafe, lim) {
     await vectorSearch.vectorDB.initialize();
   } catch (_) {}
 })();
+
+// Universal search endpoint — searches across all public content types
+router.get('/', async (req, res) => {
+  try {
+    const { q, limit = 30 } = req.query;
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ ok: false, error: 'Query parameter "q" is required' });
+    }
+
+    const qSafe = q.trim().slice(0, 100);
+    if (qSafe.length < 2) {
+      return res.status(400).json({ ok: false, error: 'Query must be at least 2 characters' });
+    }
+
+    const lim = Math.min(Math.max(parseInt(limit, 10) || 30, 1), 30);
+    const perSource = Math.ceil(lim / 6); // 3-5 results per source
+
+    const useStatic = shouldUseStaticSearchFallback();
+
+    const results = [];
+    const failedSources = [];
+
+    if (useStatic) {
+      // Static fallback — only archive entries and artifacts
+      const entries = searchStaticArchive(qSafe, lim).map((e) => ({
+        type: 'entry',
+        id: e.id || e._id || e.externalId || e.slug || '',
+        title: e.title || 'Untitled',
+        subtitle: e.excerpt?.slice(0, 80) || '',
+        path: '/archive',
+      }));
+      const items = searchStaticArtifacts(qSafe, lim).map((item) => ({
+        type: 'artifact',
+        id: item.id || item._id || item.slug || '',
+        title: item.title || item.name || 'Untitled',
+        subtitle: item.description?.slice(0, 80) || '',
+        path: item.slug ? `/marketplace/${item.slug}` : '/marketplace',
+      }));
+      return res.json({
+        ok: true,
+        query: qSafe,
+        count: entries.length + items.length,
+        results: [...entries, ...items].slice(0, lim),
+        partial: false,
+        failedSources: [],
+      });
+    }
+
+    const regex = new RegExp(escapeRegExp(qSafe), 'i');
+
+    // Search each source in parallel
+    const searches = [
+      // Books (status: published)
+      BookProject.find({
+        status: 'published',
+        $or: [
+          { title: regex },
+          { subtitle: regex },
+          { authorName: regex },
+          { description: regex },
+        ],
+      })
+        .select('title subtitle authorName slug status')
+        .sort({ updatedAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'book',
+          id: d._id || d.id || '',
+          title: d.title || 'Untitled',
+          subtitle: d.subtitle || d.authorName || '',
+          path: d.slug ? `/books/read/${d.slug}` : '/books',
+        })))
+        .catch(() => {
+          failedSources.push('books');
+          return [];
+        }),
+
+      // Blog posts (status: published)
+      Blog.find({
+        status: 'published',
+        $or: [
+          { title: regex },
+          { content: regex },
+        ],
+      })
+        .select('title slug status createdAt')
+        .sort({ createdAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'blog',
+          id: d._id || d.id || '',
+          title: d.title || 'Untitled',
+          subtitle: '',
+          path: d.slug ? `/blog/${d.slug}` : '/blog',
+        })))
+        .catch(() => {
+          failedSources.push('blog');
+          return [];
+        }),
+
+      // Library documents (status: published, visibility: public)
+      LibraryDocument.find({
+        status: 'published',
+        visibility: 'public',
+        $or: [
+          { title: regex },
+          { description: regex },
+          { category: regex },
+          { domain: regex },
+        ],
+      })
+        .select('title description category domain status visibility')
+        .sort({ updatedAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'libraryDocument',
+          id: d._id || d.id || '',
+          title: d.title || 'Untitled',
+          subtitle: d.description?.slice(0, 80) || '',
+          path: '/library',
+        })))
+        .catch(() => {
+          failedSources.push('libraryDocuments');
+          return [];
+        }),
+
+      // Library articles (status: published)
+      LibraryArticle.find({
+        status: 'published',
+        $or: [
+          { title: regex },
+          { markdown: regex },
+        ],
+      })
+        .select('title slug status createdAt')
+        .sort({ createdAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'libraryArticle',
+          id: d._id || d.id || '',
+          title: d.title || 'Untitled',
+          subtitle: '',
+          path: d.slug ? `/civilization-library/article/${d.slug}` : '/civilization-library',
+        })))
+        .catch(() => {
+          failedSources.push('libraryArticles');
+          return [];
+        }),
+
+      // Partner profiles (status: approved)
+      PartnerProfile.find({
+        status: 'approved',
+        $or: [
+          { businessName: regex },
+          { ownerName: regex },
+          { headline: regex },
+        ],
+      })
+        .select('businessName ownerName headline slug status')
+        .sort({ updatedAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'partner',
+          id: d._id || d.id || '',
+          title: d.businessName || 'Untitled',
+          subtitle: d.headline || d.ownerName || '',
+          path: '/partners',
+        })))
+        .catch(() => {
+          failedSources.push('partners');
+          return [];
+        }),
+
+      // Artifacts (status: published)
+      Artifact.find({
+        status: 'published',
+        $or: [
+          { title: regex },
+          { name: regex },
+          { description: regex },
+          { category: regex },
+          { artisan: regex },
+        ],
+      })
+        .select('title name description category artisan price slug status')
+        .sort({ updatedAt: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'artifact',
+          id: d._id || d.id || '',
+          title: d.title || d.name || 'Untitled',
+          subtitle: d.description?.slice(0, 80) || '',
+          path: d.slug ? `/marketplace/${d.slug}` : '/marketplace',
+        })))
+        .catch(() => {
+          failedSources.push('artifacts');
+          return [];
+        }),
+
+      // Archive entries
+      ArchiveEntry.find({
+        $or: [
+          { title: regex },
+          { excerpt: regex },
+          { category: regex },
+        ],
+      })
+        .select('title excerpt category date externalId')
+        .sort({ date: -1 })
+        .limit(perSource)
+        .lean()
+        .then((docs) => docs.map((d) => ({
+          type: 'entry',
+          id: d._id || d.id || d.externalId || '',
+          title: d.title || 'Untitled',
+          subtitle: d.excerpt?.slice(0, 80) || '',
+          path: '/archive',
+        })))
+        .catch(() => {
+          failedSources.push('entries');
+          return [];
+        }),
+    ];
+
+    const searchResults = await Promise.all(searches);
+    searchResults.forEach((arr) => results.push(...arr));
+
+    // Sort by relevance (title match first, then recency)
+    results.sort((a, b) => {
+      const aTitleMatch = a.title.toLowerCase().includes(qSafe.toLowerCase()) ? 0 : 1;
+      const bTitleMatch = b.title.toLowerCase().includes(qSafe.toLowerCase()) ? 0 : 1;
+      if (aTitleMatch !== bTitleMatch) return aTitleMatch - bTitleMatch;
+      return 0;
+    });
+
+    const finalResults = results.slice(0, lim);
+
+    res.json({
+      ok: true,
+      query: qSafe,
+      count: finalResults.length,
+      results: finalResults,
+      partial: failedSources.length > 0,
+      failedSources,
+    });
+  } catch (error) {
+    console.error('[search] universalSearch error:', error);
+    res.status(500).json({ ok: false, error: 'An error occurred during search' });
+  }
+});
 
 // Vector search endpoint
 router.get('/vector', async (req, res) => {

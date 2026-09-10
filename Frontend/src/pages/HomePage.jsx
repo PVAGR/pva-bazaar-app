@@ -87,9 +87,16 @@ export default function HomePage({ entries = [] }) {
           books, and build something that lasts.
         </p>
         <div className="home-hero__actions">
-          <Link className="pva-btn pva-btn--primary" to="/archive">Open the archive</Link>
-          <Link className="pva-btn pva-btn--ghost" to="/marketplace">Browse the marketplace</Link>
-          <Link className="pva-btn pva-btn--ghost" to="/get-started">Join free</Link>
+          <button
+            type="button"
+            className="pva-btn pva-btn--ghost"
+            onClick={() => window.dispatchEvent(new CustomEvent('pva:open-search'))}
+          >
+            Search
+          </button>
+          <Link className="pva-btn pva-btn--primary" to="/archive">Browse</Link>
+          <Link className="pva-btn pva-btn--ghost" to="/books/published">Books</Link>
+          <Link className="pva-btn pva-btn--ghost" to="/blog">Blog</Link>
         </div>
       </section>
 
