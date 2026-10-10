@@ -42,3 +42,11 @@ Notes for fetchers:
 2. Use readable-site.json for structured route metadata.
 3. Static HTML fallback pages exist for direct browser access without JavaScript.
 4. Private account surfaces require authentication.
+
+Generated public content:
+- Public content index: https://pvabazaar.org/public-content/index.json
+- Public content health: https://pvabazaar.org/public-content/health.html
+- Archive index: https://pvabazaar.org/archive/
+- Archive entries: 29
+- Vimana Technology: https://pvabazaar.org/archive/vimana-technology/
+- Vimana Technology plain text: https://pvabazaar.org/archive/vimana-technology/text.txt
