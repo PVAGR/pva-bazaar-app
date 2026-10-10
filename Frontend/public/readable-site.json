@@ -177,7 +177,7 @@
     "Use sitemap.xml for static file URLs under /pages and /writings.",
     "Hash routes are the live SPA navigation, while the .html pages provide no-JavaScript fallbacks."
   ],
-  "updatedAt": "2026-10-10T17:39:50.841Z",
+  "updatedAt": "2026-10-10T19:19:23.590Z",
   "routes": [
     {
       "name": "Home",
@@ -462,7 +462,7 @@
   ],
   "routeCount": 40,
   "publicContent": {
-    "generatedAt": "2026-10-10T17:39:50.840Z",
+    "generatedAt": "2026-10-10T19:19:23.590Z",
     "source": "Generated from archive/*.md and writings/*.html at build time.",
     "indexUrl": "https://pvabazaar.org/public-content/index.json",
     "archiveEntries": 29,
