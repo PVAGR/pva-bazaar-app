@@ -9,7 +9,9 @@
   "machineReadable": {
     "llms": "https://pvabazaar.org/llms.txt",
     "sitemap": "https://pvabazaar.org/sitemap.xml",
-    "status": "https://pvabazaar.org/status.html"
+    "status": "https://pvabazaar.org/status.html",
+    "publicContentIndex": "https://pvabazaar.org/public-content/index.json",
+    "publicContentHealth": "https://pvabazaar.org/public-content/health.html"
   },
   "summary": {
     "type": "public knowledge marketplace + archive + publishing suite",
@@ -154,6 +156,18 @@
       "path": "/disclaimer.html",
       "url": "https://pvabazaar.org/disclaimer.html",
       "description": "Important public disclaimer about site claims."
+    },
+    {
+      "name": "Archive Index",
+      "path": "/archive/",
+      "url": "https://pvabazaar.org/archive/",
+      "description": "Generated non-JavaScript index of public archive entries."
+    },
+    {
+      "name": "Public Content Index",
+      "path": "/public-content/index.json",
+      "url": "https://pvabazaar.org/public-content/index.json",
+      "description": "Machine-readable index of public content records and canonical reading URLs."
     }
   ],
   "guidanceForFetchers": [
@@ -162,7 +176,7 @@
     "Use sitemap.xml for static file URLs under /pages and /writings.",
     "Hash routes are the live SPA navigation, while the .html pages provide no-JavaScript fallbacks."
   ],
-  "updatedAt": "2026-07-11T16:54:47.646Z",
+  "updatedAt": "2026-10-10T17:39:51.002Z",
   "routes": [
     {
       "name": "Home",
@@ -472,5 +486,14 @@
       "description": "Static status page for no-JavaScript access.",
       "kind": "static-html"
     }
-  ]
+  ],
+  "publicContent": {
+    "generatedAt": "2026-10-10T17:39:51.002Z",
+    "source": "Generated from archive/*.md and writings/*.html at build time.",
+    "indexUrl": "https://pvabazaar.org/public-content/index.json",
+    "archiveEntries": 29,
+    "writings": 19,
+    "featuredAcceptanceUrl": "https://pvabazaar.org/archive/vimana-technology/"
+  },
+  "routeCount": 44
 }

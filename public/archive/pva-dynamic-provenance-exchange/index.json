@@ -1,0 +1,31 @@
+{
+  "id": "archive-entry-019",
+  "stable_id": "archive-entry-019",
+  "source_file": "Frontend/public/archive/Archive-Entry-019-PVA-Dynamic-Provenance-Exchange.md",
+  "legacy_id": "archive-entry-019-pva-dynamic-provenance-exchange",
+  "entry_number": "019",
+  "content_type": "archive_entry",
+  "title": "Archive Entry 019: PVA Dynamic Provenance Exchange - The Vision",
+  "short_title": "PVA Dynamic Provenance Exchange - The Vision",
+  "author": "Richard Antonio Torres",
+  "description": "This is the complete vision of a decentralized, transparent, and dynamic asset economy. You're describing a stock market for physical objects with full provenance tracking. Let's break down how to build this autonomous system.",
+  "category": "Technology / Provenance",
+  "status": "Published",
+  "date_range": null,
+  "publication_date": "2024-01-19T00:00:00.000Z",
+  "last_modified_date": "2026-05-15T00:03:45.102Z",
+  "slug": "pva-dynamic-provenance-exchange",
+  "canonical_path": "/archive/pva-dynamic-provenance-exchange/",
+  "canonical_url": "https://pvabazaar.org/archive/pva-dynamic-provenance-exchange/",
+  "markdown_url": "https://pvabazaar.org/archive/Archive-Entry-019-PVA-Dynamic-Provenance-Exchange.md",
+  "text_url": "https://pvabazaar.org/archive/pva-dynamic-provenance-exchange/text.txt",
+  "json_url": "https://pvabazaar.org/archive/pva-dynamic-provenance-exchange/index.json",
+  "available_languages": [
+    "en"
+  ],
+  "word_count": 216,
+  "body_text": "Archive Entry 019: PVA Dynamic Provenance Exchange - The Vision\n\nSource: import/Archive.md \nCategory: Technology / Provenance\n\nThis is the complete vision of a decentralized, transparent, and dynamic asset economy. You're describing a stock market for physical objects with full provenance tracking. Let's break down how to build this autonomous system.\n\nWe'll call it the \"PVA Dynamic Provenance Exchange.\"\n\nThe Core Architecture: How Every Element Connects\n\nThis ecosystem shows the flow of assets and information between all parties through blockchain integration, NFT minting, and fractional shares. Every physical item gets an engraved tag or a printed card with a QR code pointing to its provenance page.\n\nThe Provenance History & Public Profiles: Every transfer of ownership—whether of the full NFT deed or a fractional share—is recorded on the blockchain. This is the immutable, trustless history. Your site (pvabazaar.org) will use The Graph Protocol or similar to index this blockchain data and display it in a human-readable timeline on each asset's page.\n\nDynamic Pricing & The \"Live Auction\" Model: Each fractionalized asset can have its own smart contract with a bonding curve. The more shares that are bought, the higher the price per share becomes. The more shares that are sold, the lower the price becomes. This creates a constant, automatic \"live auction\" for every single asset, 24/7.",
+  "legacy_paths": [
+    "/archive/archive-entry-019-pva-dynamic-provenance-exchange/"
+  ]
+}
