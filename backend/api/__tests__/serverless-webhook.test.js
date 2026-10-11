@@ -81,3 +81,22 @@ describe('serverless closure avoids ESM-only require() (production Node 20)', ()
     );
   });
 });
+
+describe('serverless entry exposes monitored product surfaces', () => {
+  it.each([
+    ['/api/ai-help/guides/getting-started', 200],
+    ['/api/journal', 401],
+    ['/api/messages/conversations', 401],
+    ['/api/marketplace', 410],
+    ['/api/market', 410],
+    ['/api/artifacts', 410],
+  ])('GET %s returns %i instead of falling through to 404', async (url, expectedStatus) => {
+    const res = await request(app).get(url);
+    expect(res.status).toBe(expectedStatus);
+  });
+
+  it('mounts forum categories route in the serverless entry', async () => {
+    const res = await request(app).get('/api/forums/categories');
+    expect(res.status).not.toBe(404);
+  });
+});

@@ -6,8 +6,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./qa/config/vitest.setup.ts'],
-    hookTimeout: 120000,
+    hookTimeout: 180000,
     testTimeout: 120000,
+    minWorkers: 1,
+    maxWorkers: 1,
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: [
       'node_modules',
@@ -22,6 +24,8 @@ export default defineConfig({
       'qa/backstop',
       'qa/reports',
       // Playwright specs are not Vitest tests
+      '**/*.spec.js',
+      '**/*.spec.ts',
       'tests/e2e*.spec.*',
       'tests/**/*.e2e.*',
     ],

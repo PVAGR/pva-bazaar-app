@@ -42,6 +42,18 @@ const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
 const agentRoutes = require('../routes/agent');
 const passportRoutes = require('../routes/passport');
 const verificationRoutes = require('../routes/verification');
+const forumsRoutes = require('../routes/forums');
+const aiHelpRoutes = require('../routes/ai-help');
+const journalRoutes = require('../routes/journal');
+const messagesRoutes = require('../routes/messages');
+
+function legacyGate(_req, res) {
+  res.status(410).json({
+    ok: false,
+    message: 'This endpoint is part of legacy marketplace features and has been retired.',
+    migration: 'Use the current /api/items, /api/archive, /api/blogs, and /api/pages endpoints.',
+  });
+}
 
 // Security headers with Helmet
 app.use(helmet({
@@ -304,6 +316,10 @@ app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/passport', passportRoutes);
 app.use('/api/verification', verificationRoutes);
+app.use('/api/forums', forumsRoutes);
+app.use('/api/ai-help', aiHelpRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/messages', messagesRoutes);
 // Public blog + owner publishing (Phase 4): the same route module the full
 // server mounts. Public reads are unauthenticated; create/rotate secrets,
 // publish, and delete require an admin session; content edits use the
@@ -330,6 +346,15 @@ app.use('/api/products', require('../routes/products'));
 // verification works. finalize-session remains as the idempotent fallback.
 app.use('/webhooks', require('../routes/webhooksStripe'));
 app.use('/api/webhooks', require('../routes/webhooksStripe'));
+app.use('/api/artifacts', legacyGate);
+app.use('/api/market', legacyGate);
+app.use('/api/marketplace', legacyGate);
+app.use('/api/categories', legacyGate);
+app.use('/api/transactions', legacyGate);
+app.use('/portfolio', legacyGate);
+app.use('/blockchain', legacyGate);
+app.use('/api/certificates', legacyGate);
+app.use('/api/activity', legacyGate);
 
 app.get('/api/openapi.json', (req, res) => {
   try {

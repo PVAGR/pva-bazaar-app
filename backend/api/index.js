@@ -1,7 +1,6 @@
 if (process.env.VERCEL === '1' && process.env.FORCE_FULL_EXPRESS !== 'true') {
   module.exports = require('./index-serverless');
-  return;
-}
+} else {
 
 const express = require('express');
 const helmet = require('helmet');
@@ -1213,4 +1212,5 @@ if (require.main === module) {
         console.log(`✅ Autonomous agent scheduler active`);
       });
     });
+}
 }

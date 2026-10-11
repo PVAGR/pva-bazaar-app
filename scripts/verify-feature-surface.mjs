@@ -5,7 +5,7 @@
  *   node scripts/verify-feature-surface.mjs
  *   BACKEND_URL=https://pva-bazaar-app-1.onrender.com node scripts/verify-feature-surface.mjs
  */
-const DEFAULT_BACKEND = "https://pva-bazaar-app-1.onrender.com";
+const DEFAULT_BACKEND = "https://pva-backend-api.vercel.app";
 const TIMEOUT_MS = 45_000;
 
 const base = String(process.env.BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
